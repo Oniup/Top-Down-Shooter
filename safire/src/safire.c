@@ -1,15 +1,11 @@
 #include "../include/safire/safire.h"
 
-struct SFRcontext {
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
-  SFRpipeline_t* pipeline;
-  SFRecs_t* ecs;
-};
-
-void sfr_init(const char* window_title, uint32_t window_width, uint32_t window_height, bool fullscreen) {
-  printf("init safire ...\n");
-  printf("window title: %s, window size: [%u, %u]\n", window_title, window_width, window_height);
-  sfr_pipeline_init();
+// void safire(const char* window_title, uint32_t window_width, uint32_t window_height, bool fullscreen, SFRentity_t* game_manager) {
+void safire(const char* window_title, int window_width, int window_height, bool fullscreen) {  
+  sfr_pipeline_init(window_title, window_width, window_height, fullscreen);
   sfr_ecs_init();
   sfr_run();
   sfr_free();
@@ -22,7 +18,12 @@ void sfr_free() {
 }
 
 void sfr_run() {
-  printf("run safire ...\n");
+  SFRwindow_t* window = sfr_pipeline_get_window();
+  while (!sfr_window_closing(window)) {
+    sfr_window_clear(window);
+    sfr_window_swap_buffers(window);
+    glfwPollEvents();
+  }
 }
 
 SFRpipeline_t* sfr_get_pipeline() {
