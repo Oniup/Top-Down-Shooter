@@ -4,6 +4,7 @@
 // main includes
 #include "pipeline.h"
 #include "ecs.h"
+#include "input.h"
 #include "utils.h"
 
 typedef struct SFRcontext SFRcontext_t;

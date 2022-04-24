@@ -27,9 +27,13 @@ void sfr_pipeline_init(const char* window_title, int window_width, int window_he
   pipeline->textures_count = 0;
 }
 
-void sfr_pipeline_flush() {
+void sfr_pipeline_render() {
   sfr_window_clear(pipeline->window);
   sfr_window_swap_buffers(pipeline->window);
+}
+
+bool sfr_pipeline_window_closing() {
+  return sfr_window_closing(pipeline->window);
 }
 
 void sfr_pipeline_free() {

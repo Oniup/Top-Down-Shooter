@@ -10,7 +10,8 @@ typedef struct SFRtexture SFRtexture_t;
 typedef struct SFRvertex SFRvertex_t;
 
 extern void sfr_pipeline_init(const char* window_title, int window_width, int window_height, bool fullscreen);
-extern void sfr_pipeline_flush();
+extern void sfr_pipeline_render();
+extern bool sfr_pipeline_window_closing();
 extern void sfr_pipeline_free();
 
 extern SFRshader_t** sfr_pipeline_get_shaders();
