@@ -1,6 +1,10 @@
 #ifndef __SAFIRE_KEYBINDINGS_H__
 #define __SAFIRE_KEYBINDINGS_H__
 
+#ifdef __cplusplus 
+extern "C" {
+#endif
+
 typedef enum SFRkeybinding SFRkeybinding_t;
 typedef enum SFRkey_mod_binding SFRkey_mod_binding_t;
 typedef enum SFRmouse_binding SFRmouse_binding_t;
@@ -262,5 +266,9 @@ enum SFRgamepad_binding {
   SFR_GAMEPAD_AXIS_RIGHT_TRIGGER = 5,
   SFR_GAMEPAD_AXIS_LAST          = SFR_GAMEPAD_AXIS_RIGHT_TRIGGER
 };
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif // __SAFIRE_KEY_BINDINGS_H__

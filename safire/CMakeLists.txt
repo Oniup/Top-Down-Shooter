@@ -1,3 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(safire VERSION 0.0.4 LANGUAGES C)
+
+set(SAFIRE_NAME safire)
+
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -16,18 +21,18 @@ add_library(
 target_include_directories(glad PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/vender")
 
 add_library(
-  safire STATIC
+  ${SAFIRE_NAME} STATIC
   ${SAFIRE_HEADERS}
   ${SAFIRE_SOURCES}
 )
 target_link_libraries(
-  safire 
+  ${SAFIRE_NAME}
   PRIVATE glad
   PRIVATE glfw
   PRIVATE OpenGL::GL
 )
 target_include_directories(
-  safire 
+  ${SAFIRE_NAME}
   PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/vender"
   PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/"
 )

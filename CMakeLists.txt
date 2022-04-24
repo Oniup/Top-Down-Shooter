@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(topdown_shooter VERSION 0.0.1)
+project(topdown_shooter VERSION 0.0.1 LANGUAGES C)
 
 add_subdirectory(safire)
 

@@ -39,10 +39,13 @@ void sfr_input_init() {
 }
 
 bool sfr_input_keyboard_once(SFRaction_t action, SFRkeybinding_t input) {
+  // TODO: once presses/released, return true for that frame, once frame done, return false, until they press/release again 
+  // in other words, only return the value once for that frame
   return false;
 }
 
 bool sfr_input_mouse_once(SFRaction_t action, SFRmouse_binding_t input) {
+  // TODO: ...
   return false;
 }
 
@@ -69,13 +72,15 @@ void sfr_input_get_mouse_pos(vec2 mouse_pos) {
 }
 
 SFRkeybinding_t* sfr_input_keyboard_get_current(SFRaction_t action) {
+  // TODO: implementation of the key that is being pressed once needs to be done before doing this ...
   return NULL;
 }
 
 SFRmouse_binding_t* sfr_input_mouse_get_current(SFRaction_t action) {
+  // TODO: implementation of the key that is being pressed once needs to be done before doing this ...
   return NULL;
 }
 
 void sfr_input_cursor_mode(SFRcursor_mode_t mode) {
-  glfwSetInputMode(sinput.window, GLFW_CURSOR, (int)mode);
+  glfwSetInputMode(sinput.window->window, GLFW_CURSOR, (int)mode);
 }

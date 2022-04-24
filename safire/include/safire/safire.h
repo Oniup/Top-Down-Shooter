@@ -1,6 +1,10 @@
 #ifndef __SAFIRE_H__
 #define __SAFIRE_H__
 
+#ifdef __cplusplus 
+extern "C" {
+#endif
+
 // main includes
 #include "pipeline.h"
 #include "ecs.h"
@@ -15,16 +19,15 @@ struct SFRcreate_info {
   uint32_t window_size[2];
 };
 
-// TODO: game manager entity needed in the parameters here later
-extern void safire(const char* window_title, int window_width, int window_height, bool fullscreen);
-// extern void safire(const char* window_title, uint32_t window_width, uint32_t window_height, bool fullscreen, SFRentity_t* game_manager);
+SAFIRE_API void safire(const char* window_title, int window_width, int window_height, bool fullscreen, SFRscene_t* opening_scene);
+SAFIRE_API void sfr_free();
+SAFIRE_API void sfr_run();
 
-extern void sfr_free();
+SAFIRE_API SFRentity_t* sfr_instantiate(const char* name);
+SAFIRE_API void sfr_destroy(SFRentity_t* entity);
 
-extern void sfr_run();
-extern SFRpipeline_t* sfr_get_pipeline();
-extern SFRecs_t* sfr_get_ecs();
-
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __SAFIRE_H__

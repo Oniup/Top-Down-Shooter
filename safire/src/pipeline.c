@@ -13,7 +13,7 @@ struct SFRpipeline {
   SFRwindow_t* window;
 };
 
-SFRpipeline_t* pipeline = NULL;
+static SFRpipeline_t* pipeline = NULL;
 
 void sfr_pipeline_init(const char* window_title, int window_width, int window_height, bool fullscreen) {
   pipeline = (SFRpipeline_t*)malloc(sizeof(SFRpipeline_t));
@@ -25,6 +25,10 @@ void sfr_pipeline_init(const char* window_title, int window_width, int window_he
   pipeline->textures = NULL;
   pipeline->shaders_count = 0;
   pipeline->textures_count = 0;
+}
+
+SFRpipeline_t* sfr_pipeline_instance() {
+  return pipeline;
 }
 
 void sfr_pipeline_render() {
