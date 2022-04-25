@@ -17,11 +17,7 @@ SFRwindow_t* sfr_window_create(const char* window_title, int window_width, int w
   SFRwindow_t* window = (SFRwindow_t*)malloc(sizeof(SFRwindow_t));
   SAFIRE_ASSERT(window, "[SAFIRE::PIPELINE_WINDOW] something went wrong ...");
 
-  size_t title_length = strlen(window_title);
-  window->title = (char*)malloc(sizeof(char*) * title_length);
-  window->title[title_length] = '\0';
-  strncpy(window->title, window_title, title_length);
-
+  window->title = window_title != NULL ? sfr_str(window_title) : NULL;
   window->fullscreen = fullscreen;
   window->transparent = transparent;
 
@@ -69,9 +65,7 @@ SFRwindow_t* sfr_window_create(const char* window_title, int window_width, int w
 
 void sfr_window_free(SFRwindow_t* window) {
   SAFIRE_ASSERT(window, "[SAFIRE::PIPELINE_WINDOW] failed to free window");
-  if (window->title != NULL) {
-    free(window->title);
-  }
+  sfr_str_free(&window->title);
   glfwDestroyWindow(window->window);
   free(window);
 }
@@ -85,12 +79,9 @@ void sfr_window_set_title(SFRwindow_t* window, const char* title) {
   SAFIRE_ASSERT(title, "[SAFIRE::PIPELINE_WINDOW] failed to set title");
   glfwSetWindowTitle(window->window, title);
   if (window->title != NULL) {
-    free(window->title);
+    sfr_str_free(&window->title);
   }
-  size_t length = strlen(title);
-  window->title = (char*)malloc(sizeof(char*) * length);
-  window->title[length] = '\0';
-  strncpy(window->title, title, length);
+  window->title = sfr_str(title);
 }
 
 void sfr_window_clear(SFRwindow_t* window) {

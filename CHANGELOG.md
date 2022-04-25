@@ -1,5 +1,15 @@
 # Change logs from beginning to end
 
+## VERSION 0.0.5 (25/5/2022)
+
+* setup ecs
+  * more in depth framework
+  * setup scenes
+* creates the game folder
+  * include
+  * scenes
+  * src
+
 ## VERSION 0.0.4 (24/4/2022)
 
 * basic mockup designs for ecs

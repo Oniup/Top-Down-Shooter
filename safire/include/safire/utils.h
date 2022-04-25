@@ -41,6 +41,12 @@ extern "C" {
 #define B 2
 #define A 3
 
+typedef float SFRtimer_t;
+
+SAFIRE_API SFRtimer_t sfr_timer_start(float duration);
+SAFIRE_API void sfr_timer_add_time(SFRtimer_t* timer, float additional);
+SAFIRE_API bool sfr_timer_finished(SFRtimer_t* timer);
+
 /* ==================== the following is from safire-utils.h =================== */
 /* ================= https://github.com/Oniup/Safire-Utils.git ================= */
 

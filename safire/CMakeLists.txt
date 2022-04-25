@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(safire VERSION 0.0.4 LANGUAGES C)
+project(safire VERSION 0.0.5 LANGUAGES C)
 
 set(SAFIRE_NAME safire)
 
@@ -11,7 +11,7 @@ add_subdirectory(vender/glfw)
 find_package(OpenGL REQUIRED)
 
 file(GLOB_RECURSE SAFIRE_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*.c")
-file(GLOB_RECURSE SAFIRE_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include/*.h")
+file(GLOB_RECURSE SAFIRE_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include/safire*.h")
 
 add_library(
   glad STATIC

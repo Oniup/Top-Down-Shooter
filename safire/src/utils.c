@@ -2,6 +2,27 @@
 
 #include <time.h>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+SFRtimer_t sfr_timer_start(float duration) {
+  SFRtimer_t timer = (float)glfwGetTime() + duration;
+  return timer;
+}
+
+void sfr_timer_add_time(SFRtimer_t* timer, float additional) {
+  *timer += additional;
+}
+
+bool sfr_timer_finished(SFRtimer_t* timer) {
+  float current_time = (float)glfwGetTime();
+  if (current_time > *timer) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 int sfr_rand_int32() {
   time_t t1; 
   srand ((unsigned)time(&t1));
@@ -40,10 +61,10 @@ uint64_t sfr_rand_uint64() {
 
 char* sfr_str(const char* str) {
   uint32_t length = sfr_str_length(str);
-  char* str = (char*)malloc(sizeof(char*) * length);
-  memcpy(str, str, length);
-  str[length] = '\0';
-  return str;
+  char* new_str = (char*)malloc(sizeof(char*) * length);
+  memcpy(new_str, str, length);
+  new_str[length] = '\0';
+  return new_str;
 }
 
 char* sfr_str_alloc(uint32_t length) {
@@ -82,7 +103,7 @@ uint32_t sfr_str_length(const char* src) {
 
 bool sfr_str_cmp(const char* str1, const char* str2) {
   uint32_t i = 0;
-  while (i < SFR_MAX_STACK_CHAR_BUFFER_LENGTH) {
+  while (i < 100000) {
     if (str1[i] == '\0' && str2[i] == '\0') {
       return true;
     } else if(str1[i] != str2[i]) {
