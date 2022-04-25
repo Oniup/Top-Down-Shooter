@@ -19,7 +19,7 @@ struct SFRcreate_info {
   uint32_t window_size[2];
 };
 
-SAFIRE_API void safire(const char* window_title, int window_width, int window_height, bool fullscreen, SFRscene_t** scenes);
+SAFIRE_API void safire(const char* window_title, int window_width, int window_height, bool fullscreen, SFRscene_t** scenes, uint32_t scenes_count);
 SAFIRE_API void sfr_free();
 SAFIRE_API void sfr_run();
 

@@ -7,8 +7,16 @@
 #ifndef __SAFIRE_SCENE_START_MANAGER_H__
 #define __SAFIRE_SCENE_START_MANAGER_H__
 
-#include <safire/utils.h>
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
 
-SAFIRE_API void print_message();
+#include <safire/safire.h>
+
+SAFIRE_API SFRscene_t** sfr_get_scenes(uint32_t* count);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // __SAFIRE_SCENE_START_MANAGER_H__

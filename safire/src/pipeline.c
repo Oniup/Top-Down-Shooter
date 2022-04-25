@@ -4,13 +4,13 @@
 #include <GLFW/glfw3.h>
 
 struct SFRpipeline {
-  SFRshader_t* shaders;
-  uint32_t shaders_count;
+  SFRshader_t*              shaders;
+  uint32_t                  shaders_count;
 
-  SFRtexture_t* textures;
-  uint32_t textures_count;
+  SFRtexture_t*             textures;
+  uint32_t                  textures_count;
 
-  SFRwindow_t* window;
+  SFRwindow_t*              window;
 };
 
 static SFRpipeline_t* pipeline = NULL;

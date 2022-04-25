@@ -1,33 +1,35 @@
 #include "../include/safire/ecs.h"
 
 struct SFRecs {
-  uint32_t current_scene;;
-  SFRscene_t** scenes;
-  uint32_t scenes_count;
+  uint32_t                  current_scene;
+  SFRscene_t**              scenes;
+  uint32_t                  scenes_count;
 
-  SFRentity_t** entities;
-  SFRcomponent_t** components;
-  uint32_t entities_count;
-  uint32_t components_count;  
+  SFRentity_t**             entities;
+  SFRcomponent_t**          components;
+  uint32_t                  entities_count;
+  uint32_t                  components_count;  
 
-  SFRentity_t** adding_entities;
-  SFRcomponent_t** adding_components;
-  uint32_t adding_entities_count;
-  uint32_t adding_components_count;
+  SFRentity_t**             adding_entities;
+  SFRcomponent_t**          adding_components;
+  uint32_t                  adding_entities_count;
+  uint32_t                  adding_components_count;
 
-  uint32_t* terminate_entities;
-  uint32_t terminate_entities_count;
+  uint32_t*                 terminate_entities;
+  uint32_t                  terminate_entities_count;
 };
+
+#define SFR_CURRENT_SCENE ecs->scenes[ecs->current_scene]
 
 static SFRecs_t* ecs = NULL;
 
-void sfr_ecs_init(SFRscene_t** scenes) {
+void sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count) {
   ecs = (SFRecs_t*)malloc(sizeof(SFRecs_t));
   SAFIRE_ASSERT(ecs, "[SAFIRE::ECS] failed to create ecs for some reason ...");
 
   ecs->current_scene = 0;
-  ecs->scenes = NULL;
-  ecs->scenes_count = 0;
+  ecs->scenes = scenes;
+  ecs->scenes_count = scenes_count;
 
   ecs->entities = NULL;
   ecs->components = NULL;
@@ -42,6 +44,12 @@ void sfr_ecs_init(SFRscene_t** scenes) {
   ecs->terminate_entities = NULL;
   ecs->terminate_entities_count = 0;
 
+  SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
+
+  for (uint32_t i = 0; i < ecs->scenes_count; i++) {
+    printf("scene name: %s\n", scenes[i]->name);
+  }
+
   // TODO: create scene instance
 }
 
@@ -53,6 +61,9 @@ void sfr_ecs_free() {
   sfr_ecs_clear_stack();
 
   for (uint32_t i = 0; i < ecs->scenes_count; i++) {
+    if (ecs->scenes[i]->free != NULL) {
+      ecs->scenes[i]->free(ecs->scenes[i]);
+    }
     sfr_str_free(&ecs->scenes[i]->name);
     free(ecs->scenes[i]);
   }
@@ -86,19 +97,43 @@ void sfr_ecs_clear_stack() {
   ecs->components_count = 0;
 }
 
-void sfr_ecs_load_scene(uint32_t id) {
-  sfr_ecs_clear_stack();
-  
-  // scene startup (this should include all the startup entities and components)
-  ecs->scenes[id]->start(ecs->scenes[id]);
+void sfr_ecs_update(float delta_time) {
+  // TODO:: entities update loop implementation ...
+  if (SFR_CURRENT_SCENE->update != NULL) {
+    SFR_CURRENT_SCENE->update(SFR_CURRENT_SCENE, delta_time);
+  }
 }
 
-SFRscene_t* sfr_scene(sfr_scene_start start) {
-  return NULL;
+void sfr_ecs_late_update(float late_delta_time) {
+  // TODO:: entities late update loop implementation ...
+  if (SFR_CURRENT_SCENE->late_update != NULL) {
+    SFR_CURRENT_SCENE->late_update(SFR_CURRENT_SCENE, late_delta_time);
+  }
+}
+
+void sfr_ecs_load_scene(uint32_t id) {
+  sfr_ecs_clear_stack();
+
+  if (SFR_CURRENT_SCENE->free != NULL) {
+    SFR_CURRENT_SCENE->free(SFR_CURRENT_SCENE);
+  }
+
+  ecs->current_scene = id;
+  SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
+}
+ 
+SFRscene_t* sfr_scene(const char* name, sfr_scene_function_pointers init) {
+  SAFIRE_ASSERT(init, "[SAFIRE::ECS] failed to create scene as the start function pointer doesn't exist");
+
+  SFRscene_t* scene = (SFRscene_t*)malloc(sizeof(SFRscene_t));
+  scene->name = sfr_str(name);
+  init(scene);
+
+  return scene;
 }
 
 uint32_t sfr_find_scene(const char* name) {
-
+  return 0;
 }
 
 SFRentity_t* sfr_ecs_push_entity(const char* name) {
@@ -110,7 +145,10 @@ SFRcomponent_t* sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* comp
 }
 
 void sfr_ecs_entity_free(SFRentity_t* entity) {
-
+  if (entity != NULL) {
+    sfr_str_free(&entity->name);
+    free(entity);
+  }
 }
 
 void sfr_ecs_component_free(SFRcomponent_t* component) {

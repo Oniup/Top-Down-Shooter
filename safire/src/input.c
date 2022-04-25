@@ -5,19 +5,19 @@
 #include <GLFW/glfw3.h>
 
 struct SFRinput {
-  SFRkeybinding_t* press_once_key;
-  SFRmouse_binding_t* press_once_mouse;
+  SFRkeybinding_t*          press_once_key;
+  SFRmouse_binding_t*       press_once_mouse;
 
-  uint32_t press_once_key_count;
-  uint32_t press_once_mouse_count;
+  uint32_t                  press_once_key_count;
+  uint32_t                  press_once_mouse_count;
 
-  SFRkeybinding_t* release_once_key;
-  SFRmouse_binding_t* release_once_mouse;
+  SFRkeybinding_t*          release_once_key;
+  SFRmouse_binding_t*       release_once_mouse;
 
-  uint32_t release_once_key_count;
-  uint32_t release_once_mouse_count;
+  uint32_t                  release_once_key_count;
+  uint32_t                  release_once_mouse_count;
 
-  SFRwindow_t* window;
+  SFRwindow_t*              window;
 };
 
 static struct SFRinput sinput;

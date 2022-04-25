@@ -1,6 +1,18 @@
-# Change logs from beginning to end
+# Safire Change logs
 
-## VERSION 0.0.5 (25/5/2022)
+## VERSION 0.0.6 (25/4/2022)
+
+* ecs's scene implementation
+  * create scenes and add them to the stack
+    * start (initialises adds all the starting entities to the scene)
+    * update loop (acts kind of like a game manager)
+    * late update loop
+    * custom data for scene
+      * free pointer function for handling this data
+  * can swap between scenes and show free all entities and then load that scene
+* also made the code more readable for function declarations and data types in the structs
+
+## VERSION 0.0.5 (25/4/2022)
 
 * setup ecs
   * more in depth framework
@@ -19,7 +31,7 @@
   * better compatibility support
     * build library into static and shared for windows and linux
     * dll support
-  * stole some code from my utils library safire-utils: https://github.com/Oniup/Safire-Utils.git
+  * stole some code from my utils library safire-utils, can be found on [Github](https://github.com/Oniup/Safire-Utils.git)
     * better strings
     * generating random numbers
 * framework for ecs setup (mostly)
