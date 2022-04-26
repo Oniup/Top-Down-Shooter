@@ -12,7 +12,7 @@ add_executable(${CMAKE_PROJECT_NAME} main.c ${GAME_SOURCES} ${GAME_SCENE_SOURCES
 target_include_directories(
   ${CMAKE_PROJECT_NAME}
   # safire game engine
-  PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/safire/vender/"
+  PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/safire/dependencies/"
   PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/safire/include/"
   # the game and its scenes
   PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}/"

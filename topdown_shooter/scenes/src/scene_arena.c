@@ -1,5 +1,8 @@
 #include "../scene_arena.h"
 
+// entities
+#include <topdown_shooter/player_controller.h>
+
 typedef struct TDSarena {
   char* message;
 } TDSarena_t;

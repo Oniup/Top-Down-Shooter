@@ -61,7 +61,6 @@ struct SFRentity {
   uint32_t                  components_count;
 };
 
-typedef void (*component_attach)        (SFRcomponent_t*);
 typedef void (*component_update)        (SFRcomponent_t*, float);
 typedef void (*component_late_update)   (SFRcomponent_t*, float);
 typedef void (*component_free)          (SFRcomponent_t*);
@@ -72,7 +71,6 @@ struct SFRcomponent {
   SFRentity_t*              owner;
   void*                     data;
 
-  component_attach attach;
   component_update update;
   component_late_update late_update;
   component_free free;
@@ -80,6 +78,9 @@ struct SFRcomponent {
 
 SAFIRE_API SFRentity_t*     sfr_ecs_push_entity(const char* name);
 SAFIRE_API SFRcomponent_t*  sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* component);
+
+SAFIRE_API SFRcomponent_t*  sfr_ecs_component(const char* name, component_update update, 
+                                              component_late_update late_update, component_free free);
 
 SAFIRE_API void             sfr_ecs_entity_free(SFRentity_t* entity);
 SAFIRE_API void             sfr_ecs_component_free(SFRcomponent_t* component);

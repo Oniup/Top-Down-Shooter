@@ -154,6 +154,22 @@ SFRcomponent_t* sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* comp
   return NULL;
 }
 
+SFRcomponent_t*  sfr_ecs_component(const char* name, component_update update, component_late_update late_update, component_free free) {
+  SFRcomponent_t* component = (SFRcomponent_t*)malloc(sizeof(SFRcomponent_t*));
+  SAFIRE_ASSERT(component, "[SAFIRE::ECS_COMPONENT] failed to assgin memory to component for some reason");
+
+  component->name = sfr_str(name);
+  component->update = &update;
+  component->late_update = &late_update;
+  component->free = &free;
+
+  component->owner = NULL;
+  component->uuid = 0;
+  component->data = NULL;
+
+  return component;
+}
+
 void sfr_ecs_entity_free(SFRentity_t* entity) {
   if (entity != NULL) {
     sfr_str_free(&entity->name);
