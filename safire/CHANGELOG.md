@@ -1,5 +1,10 @@
 # Safire Change logs
 
+## VERSION 0.0.7 (26/4/2022)
+
+* made code more cleaner *(VERSION 0.0.6.1)*
+  * spacing and tabbing for functions and type defines in the header files
+
 ## VERSION 0.0.6 (25/4/2022)
 
 * ecs's scene implementation

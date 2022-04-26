@@ -122,7 +122,7 @@ void sfr_ecs_load_scene(uint32_t id) {
   SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
 }
  
-SFRscene_t* sfr_scene(const char* name, sfr_scene_function_pointers init) {
+SFRscene_t* sfr_scene(const char* name, sfr_scene_init init) {
   SAFIRE_ASSERT(init, "[SAFIRE::ECS] failed to create scene as the start function pointer doesn't exist");
 
   SFRscene_t* scene = (SFRscene_t*)malloc(sizeof(SFRscene_t));

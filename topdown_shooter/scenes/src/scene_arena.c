@@ -26,6 +26,9 @@ void scene_arena_start(SFRscene_t* scene) {
   TDSarena_t* data = ((TDSarena_t*)scene->data);
   data->message = sfr_str("this is a test from the arena");
 
+  sfr_instantiate("Player");
+  
+
   /**
    * TODO: scene setup
    * spawn entity into the scene
@@ -37,8 +40,7 @@ void scene_arena_start(SFRscene_t* scene) {
 }
 
 void scene_arena_update(SFRscene_t* scene, float delta_time) {
-  TDSarena_t* arena = ((TDSarena_t*)scene->data);
-  printf("%s\n", arena->message);
+  // TODO: manage player health and score ...
 }
 
 void scene_arena_free(SFRscene_t* scene) {

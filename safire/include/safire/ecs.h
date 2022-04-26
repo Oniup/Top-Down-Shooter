@@ -7,11 +7,13 @@ extern "C" {
 
 #include "utils.h"
 
-typedef struct SFRecs SFRecs_t;
-typedef struct SFRentity SFRentity_t;
-typedef struct SFRcomponent SFRcomponent_t;
+typedef struct SFRecs                   SFRecs_t;
+typedef struct SFRentity                SFRentity_t;
+typedef struct SFRcomponent             SFRcomponent_t;
+typedef struct SFRscene                 SFRscene_t;
 
-typedef struct SFRscene SFRscene_t;
+
+
 
 SAFIRE_API void             sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count);
 SAFIRE_API SFRecs_t*        sfr_ecs_instance();
@@ -26,11 +28,11 @@ SAFIRE_API void             sfr_ecs_load_scene(uint32_t id);
 
 
 
-typedef void (*sfr_scene_function_pointers)(SFRscene_t*);
-typedef void (*sfr_scene_start)(SFRscene_t*);
-typedef void (*sfr_scene_update)(SFRscene_t*, float);
-typedef void (*sfr_scene_late_update)(SFRscene_t*, float);
-typedef void (*sfr_scene_free_data)(SFRscene_t*);
+typedef void (*sfr_scene_init)          (SFRscene_t*);
+typedef void (*sfr_scene_start)         (SFRscene_t*);
+typedef void (*sfr_scene_update)        (SFRscene_t*, float);
+typedef void (*sfr_scene_late_update)   (SFRscene_t*, float);
+typedef void (*sfr_scene_free_data)     (SFRscene_t*);
 
 struct SFRscene {
   char*                     name;
@@ -42,7 +44,7 @@ struct SFRscene {
   sfr_scene_free_data       free;
 };
 
-SAFIRE_API SFRscene_t*      sfr_scene(const char* name, sfr_scene_function_pointers start);
+SAFIRE_API SFRscene_t*      sfr_scene(const char* name, sfr_scene_init start);
 SAFIRE_API uint32_t         sfr_find_scene(const char* name);
 
 
@@ -53,12 +55,20 @@ struct SFRentity {
   char*                     name;
 };
 
+typedef void (*component_attach)        (SFRcomponent_t*);
+typedef void (*component_update)        (SFRcomponent_t*, float);
+typedef void (*component_late_update)   (SFRcomponent_t*, float);
+typedef void (*component_free)          (SFRcomponent_t*);
+
 struct SFRcomponent {
   uint64_t                  uuid;
   char*                     name;
   SFRentity_t*              owner;
 
-  // TODO: add pointer functions here ...  
+  component_attach attach;
+  component_update update;
+  component_late_update late_update;
+  component_free free;
 };
 
 SAFIRE_API SFRentity_t*     sfr_ecs_push_entity(const char* name);

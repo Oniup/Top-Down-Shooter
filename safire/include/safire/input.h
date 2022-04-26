@@ -8,8 +8,11 @@ extern "C" {
 #include "utils.h"
 #include "keybindings.h"
 
-typedef enum SFRaction SFRaction_t;
-typedef enum SFRcursor_mode SFRcursor_mode_t;
+typedef enum SFRaction                  SFRaction_t;
+typedef enum SFRcursor_mode             SFRcursor_mode_t;
+
+
+
 
 // this is the same value as the glfw macro GLFW_RELEASE
 enum SFRaction {

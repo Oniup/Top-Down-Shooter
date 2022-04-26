@@ -7,11 +7,14 @@ extern "C" {
 
 #include "utils.h"
 
-typedef struct SFRpipeline SFRpipeline_t;
-typedef struct SFRwindow SFRwindow_t;
-typedef struct SFRshader SFRshader_t;
-typedef struct SFRtexture SFRtexture_t;
-typedef struct SFRvertex SFRvertex_t;
+typedef struct SFRpipeline              SFRpipeline_t;
+typedef struct SFRwindow                SFRwindow_t;
+typedef struct SFRshader                SFRshader_t;
+typedef struct SFRtexture               SFRtexture_t;
+typedef struct SFRvertex                SFRvertex_t;
+
+
+
 
 SAFIRE_API void             sfr_pipeline_init(const char* window_title, int window_width, int window_height, bool fullscreen);
 SAFIRE_API SFRpipeline_t*   sfr_pipeline_instance();
@@ -29,7 +32,8 @@ SAFIRE_API void             sfr_pipeline_push_texture(const char* name, const ch
 
 
 
-typedef struct GLFWwindow GLFWwindow;
+typedef struct GLFWwindow               GLFWwindow;
+
 struct SFRwindow {
   char*                     title;
   GLFWwindow*               window;

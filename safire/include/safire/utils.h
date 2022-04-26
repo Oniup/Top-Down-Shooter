@@ -41,21 +41,24 @@ extern "C" {
 #define B 2
 #define A 3
 
-typedef float SFRtimer_t;
+typedef float                           SFRtimer_t;
 
-SAFIRE_API SFRtimer_t sfr_timer_start(float duration);
-SAFIRE_API void sfr_timer_add_time(SFRtimer_t* timer, float additional);
-SAFIRE_API bool sfr_timer_finished(SFRtimer_t* timer);
+SAFIRE_API SFRtimer_t       sfr_timer_start(float duration);
+SAFIRE_API void             sfr_timer_add_time(SFRtimer_t* timer, float additional);
+SAFIRE_API bool             sfr_timer_finished(SFRtimer_t* timer);
+
+
+
 
 /* ==================== the following is from safire-utils.h =================== */
 /* ================= https://github.com/Oniup/Safire-Utils.git ================= */
 
 #ifndef NDEBUG
 # include <assert.h>
-# define SAFIRE_ASSERT(x, message) assert(x && message)
-# define SAFIRE_ASSERT2(x, y, message) assert(x && y && message)
-# define SAFIRE_ASSERT3(x, y, z, message) assert(x && y && z && message)
-# define SAFIRE_ASSERT4(x, y, z, w, message) assert(x && y && z && w && message)
+# define SAFIRE_ASSERT(x, message)            assert(x && message)
+# define SAFIRE_ASSERT2(x, y, message)        assert(x && y && message)
+# define SAFIRE_ASSERT3(x, y, z, message)     assert(x && y && z && message)
+# define SAFIRE_ASSERT4(x, y, z, w, message)  assert(x && y && z && w && message)
 #else
 # define SAFIRE_ASSERT(x, message)
 # define SAFIRE_ASSERT2(x, y, message)
@@ -63,49 +66,52 @@ SAFIRE_API bool sfr_timer_finished(SFRtimer_t* timer);
 # define SAFIRE_ASSERT4(x, y, z, w, message)
 #endif // NDEBUG
 
-SAFIRE_API int sfr_rand_int32();
-SAFIRE_API uint32_t sfr_rand_uint32();
-SAFIRE_API uint64_t sfr_rand_uint64();
+SAFIRE_API int              sfr_rand_int32();
+SAFIRE_API uint32_t         sfr_rand_uint32();
+SAFIRE_API uint64_t         sfr_rand_uint64();
+
+
+
 
 /*!
  * @brief allocates memory and copies over the str to the new string
  * @param[in] str desired string to be copied into new string
  * @returns (char*) a new c style string
 */
-SAFIRE_API char* sfr_str(const char* str);
+SAFIRE_API char*            sfr_str(const char* str);
 /*!
  * @brief allocates uninitialised memory to the char* buffer
  * @param[in] length the desired length that will be allocated
  * @returns (char*) a new c style string of uninitialised memory
 */
-SAFIRE_API char* sfr_str_alloc(uint32_t length);
+SAFIRE_API char*            sfr_str_alloc(uint32_t length);
 /*!
  * @brief allocates and copies the desired string to the destination string
  * @param[in] src string to be copied into the destired string
  * @param[in] dest the desired string that will have src message copied over to
  * @returns (uint32_t) the length of the string that was copied over to the dest
 */
-SAFIRE_API uint32_t sfr_str_set(char* dest, const char* src);
+SAFIRE_API uint32_t         sfr_str_set(char* dest, const char* src);
 /*!
  * @brief allocates and copies the desired string to the destination string
  * @param[in] src string to be copied into the destired string
  * @param[in] dest the desired string that will have src message copied over to
  * @param[in] length the length of the src string, optimisation over 'sfr_str_set' if known length
 */
-SAFIRE_API void sfr_str_set_length(char* dest, const char* src, uint32_t length);
+SAFIRE_API void             sfr_str_set_length(char* dest, const char* src, uint32_t length);
 /*!
  * @brief returns the length of a string
  * @param[in] src desired string to find the length of
  * @returns (uint32_t ) the length of the string
 */
-SAFIRE_API uint32_t sfr_str_length(const char* src);
+SAFIRE_API uint32_t         sfr_str_length(const char* src);
 /*!
  * @brief returns true if the two strings are the same
  * @param[in] str1 the string that will check if same as str2
  * @param[in] str2 the string that will check if same as str1
  * @returns (bool) true if the two strings are the same
 */
-SAFIRE_API bool sfr_str_cmp(const char* str1, const char* str2);
+SAFIRE_API bool             sfr_str_cmp(const char* str1, const char* str2);
 /*!
  * @brief returns true if the two strings are the same
  * @param[in] str1 the string that will check if same as str2
@@ -113,12 +119,15 @@ SAFIRE_API bool sfr_str_cmp(const char* str1, const char* str2);
  * @param[in] length the length of both strings, optimisation over 'str_strcmp' if known lengths are the same
  * @returns (bool) true if the two strings are the same
 */
-SAFIRE_API bool sfr_str_cmp_length(const char* str1, const char* str2, uint32_t length);
+SAFIRE_API bool             sfr_str_cmp_length(const char* str1, const char* str2, uint32_t length);
 /*!
  * @brief frees the strings memory and sets the strings pointer to NULL
  * @param[in] src desired string to be freed
 */
-SAFIRE_API void sfr_str_free(char** str);
+SAFIRE_API void             sfr_str_free(char** str);
+
+
+
 
 #ifdef __cplusplus 
 }
