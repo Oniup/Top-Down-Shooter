@@ -146,12 +146,77 @@ uint32_t sfr_find_scene(const char* name) {
   return 0;
 }
 
-SFRentity_t* sfr_ecs_push_entity(const char* name) {
+SFRentity_t* sfr_ecs_push_entity(const char* name, const char* tag) {
+#ifndef NDEBUG
+  if (name != NULL) {
+    uint32_t length = sfr_str_length(name);
+    if (length > 0) {
+
+#endif
+
+      // incrase entity buffer size
+      uint32_t c = ecs->entities_count;
+      ecs->entities_count++;
+      if (ecs->entities != NULL) {
+        SFRentity_t** temp = (SFRentity_t**)realloc(ecs->entities, sizeof(SFRentity_t*) * ecs->entities_count);
+        SAFIRE_ASSERT(temp, "[SAFIRE::ECS_ENTITY_PUSH] failed to resize entity buffer for some reason");
+        ecs->entities = temp;
+      } else {
+        ecs->entities = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * ecs->entities_count);
+      }
+
+      // setting the entity data 
+      ecs->entities[c] = (SFRentity_t*)malloc(sizeof(SFRentity_t));
+      SAFIRE_ASSERT(ecs->entities[c], "[SAFIRE::ECS_ENTITY_PUSH] failed to assign memory to entity for some reason");
+
+      ecs->entities[c]->name = sfr_str(name);
+      ecs->entities[c]->uuid = sfr_rand_uint64();
+      ecs->entities[c]->tag = tag != NULL ? sfr_str(tag) : NULL;
+      ecs->entities[c]->components = NULL;
+      ecs->entities[c]->components_count = 0;
+
+      return ecs->entities[c];
+
+#ifndef NDEBUG
+    }
+  }
   return NULL;
+#endif
 }
 
 SFRcomponent_t* sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* component) {
+  #ifndef NDEBUG
+  if (component != NULL) {
+    uint32_t length = sfr_str_length(component->name);
+    if (length > 0) {
+
+#endif
+
+      // incrase entity buffer size
+      uint32_t c = ecs->components_count;
+      ecs->components_count++;
+      if (ecs->components != NULL) {
+        SFRcomponent_t** temp = (SFRcomponent_t**)realloc(ecs->components, sizeof(SFRcomponent_t*) * ecs->components_count);
+        SAFIRE_ASSERT(temp, "[SAFIRE::ECS_COMPONENT_PUSH=] failed to resize component buffer for some reason");
+        ecs->components = temp;
+      } else {
+        ecs->components = (SFRcomponent_t**)malloc(sizeof(SFRcomponent_t*) * ecs->entities_count);
+      }
+
+      // setting the entity data 
+      ecs->components[c] = component;
+      SAFIRE_ASSERT(ecs->components[c], "[SAFIRE::ECS_COMPONENT_PUSH] failed to assign memory to component for some reason");
+
+      ecs->components[c]->uuid = sfr_rand_uint64();
+      ecs->components[c]->owner = entity;
+
+      return ecs->components[c];
+
+#ifndef NDEBUG
+    }
+  }
   return NULL;
+#endif
 }
 
 SFRcomponent_t*  sfr_ecs_component(const char* name, component_update update, component_late_update late_update, component_free free) {
@@ -159,9 +224,9 @@ SFRcomponent_t*  sfr_ecs_component(const char* name, component_update update, co
   SAFIRE_ASSERT(component, "[SAFIRE::ECS_COMPONENT] failed to assgin memory to component for some reason");
 
   component->name = sfr_str(name);
-  component->update = &update;
-  component->late_update = &late_update;
-  component->free = &free;
+  component->update = update;
+  component->late_update = late_update;
+  component->free = free;
 
   component->owner = NULL;
   component->uuid = 0;
@@ -172,8 +237,6 @@ SFRcomponent_t*  sfr_ecs_component(const char* name, component_update update, co
 
 void sfr_ecs_entity_free(SFRentity_t* entity) {
   if (entity != NULL) {
-    sfr_str_free(&entity->name);
-
     if (entity->components != NULL) {
       // freeing the component data
       uint32_t target = 0;
@@ -183,6 +246,12 @@ void sfr_ecs_entity_free(SFRentity_t* entity) {
         sfr_ecs_erase_component(target);
       }
       free(entity->components);
+    }
+
+    sfr_str_free(&entity->name);
+
+    if (entity->tag != NULL) {
+      sfr_str_free(&entity->tag);
     }
     
     free(entity);
@@ -202,40 +271,6 @@ void sfr_ecs_component_free(SFRcomponent_t* component) {
 
     free(component);
   }
-}
-
-uint32_t sfr_ecs_entity_find_index_name(uint32_t offset, const char* name) {
-  // Im pre sure that there is a better way of doing this, but idk how to improve this
-  uint32_t length = sfr_str_length(name);
-  for (uint32_t i = offset; i < ecs->entities_count; i++) {
-    if (sfr_str_cmp_length(name, ecs->entities[i]->name, length)) {
-      return i;
-    }
-  }
-
-  return UINT32_MAX;
-}
-
-uint32_t sfr_ecs_entity_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
-  // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
-  for (uint32_t i = offset; i < ecs->entities_count; i++) {
-    if (uuid == ecs->entities[i]->uuid) {
-      return i;
-    }
-  }
-
-  return UINT32_MAX;
-}
-
-uint32_t sfr_ecs_component_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
-  // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
-  for (uint32_t i = offset; i < ecs->components_count; i++) {
-    if (uuid == ecs->components[i]->uuid) {
-      return i;
-    }
-  }
-
-  return UINT32_MAX;
 }
 
 SFRentity_t* sfr_ecs_find_entity_name(const char* name) {
@@ -346,4 +381,56 @@ SFRcomponent_t** sfr_ecs_find_list_components(const char* name, uint32_t* compon
 
   *component_count = count;
   return buffer;
+}
+
+
+uint32_t sfr_ecs_entity_find_index_name(uint32_t offset, const char* name) {
+  // Im pre sure that there is a better way of doing this, but idk how to improve this
+  uint32_t length = sfr_str_length(name);
+  for (uint32_t i = offset; i < ecs->entities_count; i++) {
+    if (sfr_str_cmp_length(name, ecs->entities[i]->name, length)) {
+      return i;
+    }
+  }
+
+  return UINT32_MAX;
+}
+
+uint32_t sfr_ecs_entity_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
+  // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
+  for (uint32_t i = offset; i < ecs->entities_count; i++) {
+    if (uuid == ecs->entities[i]->uuid) {
+      return i;
+    }
+  }
+
+  return UINT32_MAX;
+}
+
+uint32_t sfr_ecs_component_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
+  // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
+  for (uint32_t i = offset; i < ecs->components_count; i++) {
+    if (uuid == ecs->components[i]->uuid) {
+      return i;
+    }
+  }
+
+  return UINT32_MAX;
+}
+
+void sfr_ecs_debug_print_entities() {
+  if (ecs->entities_count > 0) {
+    for (uint32_t i = 0; i < ecs->entities_count; i++) {
+      printf(
+        "[%d]: n('%s'), t('%s'), c(%d)\n", 
+        i, ecs->entities[i]->name, ecs->entities[i]->tag, ecs->entities[i]->components_count
+      );
+    }
+  } else {
+    printf("currently no entities in buffer\n");
+  }
+}
+
+void sfr_ecs_debug_print_components() {
+  printf("TODO: print component list here");
 }

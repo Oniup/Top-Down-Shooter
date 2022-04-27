@@ -3,13 +3,22 @@
 
 #include <safire/safire.h>
 
+#define TDS_PLAYER_CONTROLLER "player controller"
+
 typedef struct TDSplayer_controller TDSplayer_controller_t;
+
+
+
 
 struct TDSplayer_controller {
   float move_speed;
   int damage;
 };
 
-#define TDS_PLAYER_CONTROLLER "player controller"
+SAFIRE_API SFRcomponent_t*  tds_attach_player_controller(SFRentity_t* entity);
+SAFIRE_API void             tds_player_damage(SFRcomponent_t* player_controller_comp, uint32_t damage);
+
+
+
 
 #endif // __TDS_PLAYER_CONTROLLER_H__

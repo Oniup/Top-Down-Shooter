@@ -1,6 +1,6 @@
 #include "../include/safire/components.h"
 
-SFRcomponent_t* sfr_attach_transform(SFRentity_t* entity) {
+SFRcomponent_t* sfr_attach_transform() {
   SFRcomponent_t* component = sfr_ecs_component(
     "SFRtransform", NULL, NULL, NULL
   );

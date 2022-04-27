@@ -28,7 +28,7 @@ struct SFRtransform {
   vec4                      rotation;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_attach_transform(SFRentity_t* entity);
+SAFIRE_API SFRcomponent_t*  sfr_attach_transform();
 
 
 
@@ -44,7 +44,7 @@ struct SFRcollider2d {
   vec2 size;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_attach_transform(SFRentity_t* entity);
+SAFIRE_API SFRcomponent_t*  sfr_attach_collider2d();
 
 
 

@@ -76,7 +76,7 @@ struct SFRcomponent {
   component_free free;
 };
 
-SAFIRE_API SFRentity_t*     sfr_ecs_push_entity(const char* name);
+SAFIRE_API SFRentity_t*     sfr_ecs_push_entity(const char* name, const char* tag);
 SAFIRE_API SFRcomponent_t*  sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* component);
 
 SAFIRE_API SFRcomponent_t*  sfr_ecs_component(const char* name, component_update update, 
@@ -97,6 +97,9 @@ SAFIRE_API SFRcomponent_t** sfr_ecs_find_list_components(const char* name, uint3
 SAFIRE_API uint32_t         sfr_ecs_entity_find_index_name(uint32_t offset, const char* name);
 SAFIRE_API uint32_t         sfr_ecs_entity_find_index_uuid(uint32_t offset, SFRuuid_t uuid);
 SAFIRE_API uint32_t         sfr_ecs_component_find_index_uuid(uint32_t offset, SFRuuid_t uuid);
+
+SAFIRE_API void             sfr_ecs_debug_print_entities();
+SAFIRE_API void             sfr_ecs_debug_print_components();
 
 
 

@@ -8,7 +8,7 @@
   * instructions for building program
 * ecs implementation
   * finding entities and components *(VERSION 0.0.6.2)*
-  * create entities *(VERSION 0.0.7)*
+  * create entities *(VERSION 0.0.6.4)*
   * create and add components to entities
   * erase entity and its components from the scene
 

@@ -37,7 +37,7 @@ float sfr_elapsed_time() {
 }
 
 SFRentity_t* sfr_instantiate(const char* name) {
-  return sfr_ecs_push_entity(name);
+  return NULL;
 }
 
 void sfr_destroy(SFRentity_t* entity) {

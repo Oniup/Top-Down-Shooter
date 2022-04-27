@@ -4,7 +4,7 @@
 #include <topdown_shooter/player_controller.h>
 
 typedef struct TDSarena {
-  char* message;
+  bool can_print_debug;
 } TDSarena_t;
 
 void scene_arena_start(SFRscene_t* scene);
@@ -27,10 +27,9 @@ void scene_arena_function_pointer(SFRscene_t* scene) {
 void scene_arena_start(SFRscene_t* scene) {
   scene->data = (TDSarena_t*)malloc(sizeof(TDSarena_t));
   TDSarena_t* data = ((TDSarena_t*)scene->data);
-  data->message = sfr_str("this is a test from the arena");
+  data->can_print_debug = true;
 
-  sfr_instantiate("Player");
-  
+  SAFIRE_ASSERT(sfr_ecs_push_entity("Player1", "player"), "ERROR: failed to init player entity for some reason");
 
   /**
    * TODO: scene setup
@@ -44,11 +43,22 @@ void scene_arena_start(SFRscene_t* scene) {
 
 void scene_arena_update(SFRscene_t* scene, float delta_time) {
   // TODO: manage player health and score ...
+  TDSarena_t* arena = ((TDSarena_t*)scene->data);
+
+  if (arena->can_print_debug) {
+    if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_P)) {
+      sfr_ecs_debug_print_entities();
+      arena->can_print_debug = false;
+    }
+  } else {
+    if (sfr_input_keyboard(SFR_INPUT_RELEASE, SFR_KEY_P)) {
+      arena->can_print_debug = true;
+    }
+  }
 }
 
 void scene_arena_free(SFRscene_t* scene) {
   TDSarena_t* arena = ((TDSarena_t*)scene->data);
 
-  sfr_str_free(&arena->message);
   free(scene->data);
 }
