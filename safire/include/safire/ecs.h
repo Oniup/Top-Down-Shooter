@@ -99,6 +99,8 @@ SAFIRE_API void             sfr_ecs_component_free(SFRcomponent_t* component);
 SAFIRE_API void             sfr_ecs_entity_target_free(uint32_t id);
 SAFIRE_API void             sfr_ecs_component_target_free(uint32_t id);
 
+SAFIRE_API void             sfr_ecs_entity_set_layer(SFRentity_t* entity, uint32_t layer);
+
 SAFIRE_API SFRentity_t*     sfr_ecs_find_entity_name(const char* name);
 SAFIRE_API SFRentity_t**    sfr_ecs_find_list_entities(const char* tag, uint32_t* entity_count);
 SAFIRE_API SFRentity_t*     sfr_ecs_find_entity_uuid(SFRuuid_t uuid);

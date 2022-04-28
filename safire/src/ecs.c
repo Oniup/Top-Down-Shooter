@@ -46,6 +46,9 @@ static SFRecs_t* _ecs = NULL;
 #define SFR_CURRENT_SCENE _ecs->scenes[_ecs->current_scene]
 
 
+void                      _sfr_ecs_move_component(uint32_t target, uint32_t dest);
+
+
 void sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count) {
   _ecs = (SFRecs_t*)malloc(sizeof(SFRecs_t));
   SAFIRE_ASSERT(_ecs, "[SAFIRE::ECS] failed to create ecs for some reason ...");
@@ -349,9 +352,28 @@ void sfr_ecs_component_free(SFRcomponent_t* component) {
       if (component->data != NULL) {
         free(component->data);
       }
+    } else if(component->data != NULL) {
+      free(component->data);
     }
 
     free(component);
+  }
+}
+
+void sfr_ecs_entity_target_free(uint32_t id) {
+  // TODO: ...
+}
+
+void sfr_ecs_component_target_free(uint32_t id) {
+  // TODO: ...
+}
+
+void sfr_ecs_entity_set_layer(SFRentity_t* entity, uint32_t layer) {
+  entity->layer = layer;
+  for (uint32_t i = 0; i < entity->components_count; i++) {
+    if (sfr_str_cmp(entity->components[i]->name, "SFRsprite_renderer")) {
+
+    }
   }
 }
 
@@ -502,7 +524,7 @@ uint32_t sfr_ecs_component_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
 
 void sfr_ecs_debug_print_entities() {
   if (_ecs->entities_count > 0) {
-    printf("entity list:\n");
+    printf("entity list (%d):\n", _ecs->entities_count);
     for (uint32_t i = 0; i < _ecs->entities_count; i++) {
       printf(
         "[%d]: n('%s'), t('%s'), c(%d)\n", 
@@ -516,11 +538,11 @@ void sfr_ecs_debug_print_entities() {
 
 void sfr_ecs_debug_print_components() {
   if (_ecs->components_count > 0) {
-    printf("component list:\n");
+    printf("component list (%d):\n", _ecs->components_count);
     for (uint32_t i = 0; i < _ecs->components_count; i++) {
       printf(
-        "[%d]: n('%s'), d(%d), u(%d), l(%d), f(%d), t(\n", 
-        i, _ecs->components[i]->name, _ecs->components[i]->data != NULL,
+        "[%d]: n('%s'), e('%s'), d(%d), u(%d), l(%d), f(%d), t(", 
+        i, _ecs->components[i]->name, _ecs->components[i]->owner->name, _ecs->components[i]->data != NULL,
         _ecs->components[i]->update != NULL, _ecs->components[i]->late_update != NULL,
         _ecs->components[i]->free != NULL
       );
@@ -541,7 +563,19 @@ void sfr_ecs_debug_print_components() {
       }
       printf(")\n");
     }
+
+    printf(
+      ")\nstart indices:\n* non functional: %d\n* functional: %d\n* physics: %d\n* graphics: %d\n\n",
+      _ecs->component_indices->non_function_start_index,
+      _ecs->component_indices->functional_start_index,
+      _ecs->component_indices->physics_start_index,
+      _ecs->component_indices->graphics_start_index
+    );
   } else {
     printf("currently no components in the buffer\n");
   }
+}
+
+void _sfr_ecs_move_component(uint32_t target, uint32_t dest) {
+  // TODO: ...
 }

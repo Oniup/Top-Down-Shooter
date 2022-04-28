@@ -29,7 +29,9 @@ void scene_arena_start(SFRscene_t* scene) {
   TDSarena_t* data = ((TDSarena_t*)scene->data);
   data->can_print_debug = true;
 
-  SAFIRE_ASSERT(sfr_ecs_push_entity("Player1", "player"), "ERROR: failed to init player entity for some reason");
+  SFRentity_t* player = sfr_ecs_push_entity("Player1", "player");
+  sfr_ecs_push_component(player, tds_player_controller());
+  sfr_ecs_push_component(player, sfr_sprite_renderer());
 
   /**
    * TODO: scene setup
