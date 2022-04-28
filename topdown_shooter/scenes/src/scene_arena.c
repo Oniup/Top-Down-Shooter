@@ -48,6 +48,7 @@ void scene_arena_update(SFRscene_t* scene, float delta_time) {
   if (arena->can_print_debug) {
     if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_P)) {
       sfr_ecs_debug_print_entities();
+      sfr_ecs_debug_print_components();
       arena->can_print_debug = false;
     }
   } else {

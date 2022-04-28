@@ -6,7 +6,9 @@ extern "C" {
 #endif
 
 #include "utils.h"
-#include "ecs.h"
+
+typedef struct SFRentity                SFRentity_t;
+typedef struct SFRcomponent             SFRcomponent_t;
 
 #define SFR_TRANSFORM                   "SFRtransform";
 #define SFR_COLLIDER2D                  "SFRcollider2d";
@@ -22,13 +24,18 @@ typedef struct SFRsprite_animation      SFRsprite_animation_t;
 typedef enum   SFRcollider2d_type       SFRcollider2d_type_t;
 
 
+SAFIRE_API SFRcomponent_t** sfr_attach_default_comps(SFRentity_t* entity, uint32_t* count);
+
+
+
+
 struct SFRtransform {
   vec3                      position;
   vec3                      scale;
   vec4                      rotation;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_attach_transform();
+SAFIRE_API SFRcomponent_t*  sfr_transform();
 
 
 

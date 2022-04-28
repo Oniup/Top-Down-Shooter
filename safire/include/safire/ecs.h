@@ -12,6 +12,8 @@ typedef struct SFRentity                SFRentity_t;
 typedef struct SFRcomponent             SFRcomponent_t;
 typedef struct SFRscene                 SFRscene_t;
 
+typedef enum SFRcomponent_type          SFRcomponent_type_t;
+
 typedef uint64_t                        SFRuuid_t;
 
 SAFIRE_API void             sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count);
@@ -56,9 +58,17 @@ struct SFRentity {
   SFRuuid_t                 uuid;
   char*                     name;
   char*                     tag;
+  uint32_t                  layer;
 
-  SFRuuid_t*                components;
+  SFRcomponent_t**          components;
   uint32_t                  components_count;
+};
+
+enum SFRcomponent_type {
+  SFR_COMPONENT_TYPE_NON_FUNCTIONAL      = 0,
+  SFR_COMPONENT_TYPE_FUNCTIONAL,
+  SFR_COMPONENT_TYPE_PHYSICS,
+  SFR_COMPONENT_TYPE_GRAPHICS
 };
 
 typedef void (*component_update)        (SFRcomponent_t*, float);
@@ -70,6 +80,7 @@ struct SFRcomponent {
   char*                     name;
   SFRentity_t*              owner;
   void*                     data;
+  SFRcomponent_type_t       type;
 
   component_update update;
   component_late_update late_update;

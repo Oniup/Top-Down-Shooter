@@ -9,7 +9,8 @@
 * ecs implementation
   * finding entities and components *(VERSION 0.0.6.2)*
   * create entities *(VERSION 0.0.6.4)*
-  * create and add components to entities
+  * create and add components to entities *(VERSION 0.0.6.5) (memory corruption when creating component)*
+  * set the default components for every entity
   * erase entity and its components from the scene
 
 ## VERSION 0.0.6 (25/4/2022)

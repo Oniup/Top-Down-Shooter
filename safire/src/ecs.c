@@ -1,6 +1,9 @@
 #include "../include/safire/ecs.h"
 
-typedef struct SFRecs_names_used        SFRecs_names_used_t;
+#include "../include/safire/components.h"
+
+typedef struct _SFRecs_names_used       _SFRecs_names_used_t;
+typedef struct _SFRcomponent_indices    _SFRcomponent_indices_t;
 
 struct SFRecs {
   uint32_t                  current_scene;
@@ -12,43 +15,68 @@ struct SFRecs {
   uint32_t                  entities_count;
   uint32_t                  components_count;  
 
+  _SFRcomponent_indices_t*   component_indices;
+
   SFRentity_t**             adding_entities;
   SFRcomponent_t**          adding_components;
   uint32_t                  adding_entities_count;
   uint32_t                  adding_components_count;  
 
-  SFRecs_names_used_t*      names_used;
+  _SFRecs_names_used_t*      names_used;
   uint32_t                  names_used_count;
 };
 
+struct _SFRecs_names_used {  
+  char*                     name;
+  uint32_t                  count;
+};
 
-#define SFR_CURRENT_SCENE ecs->scenes[ecs->current_scene]
+// based on the SFRcomponent_type_t enum
+struct _SFRcomponent_indices {
+  uint32_t                  non_function_start_index;                                     // these can be skipped in run loop
+  uint32_t                  functional_start_index;
+  uint32_t                  physics_start_index;
+  uint32_t                  graphics_start_index;
+};
 
 
-static SFRecs_t* ecs = NULL;
+static SFRecs_t* _ecs = NULL;
+
+
+#define SFR_CURRENT_SCENE _ecs->scenes[_ecs->current_scene]
 
 
 void sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count) {
-  ecs = (SFRecs_t*)malloc(sizeof(SFRecs_t));
-  SAFIRE_ASSERT(ecs, "[SAFIRE::ECS] failed to create ecs for some reason ...");
+  _ecs = (SFRecs_t*)malloc(sizeof(SFRecs_t));
+  SAFIRE_ASSERT(_ecs, "[SAFIRE::ECS] failed to create ecs for some reason ...");
 
-  ecs->current_scene = 0;
-  ecs->scenes = scenes;
-  ecs->scenes_count = scenes_count;
+  _ecs->current_scene = 0;
+  _ecs->scenes = scenes;
+  _ecs->scenes_count = scenes_count;
 
-  ecs->entities = NULL;
-  ecs->components = NULL;
-  ecs->entities_count = 0;
-  ecs->components_count = 0;
+  _ecs->entities = NULL;
+  _ecs->components = NULL;
+  _ecs->entities_count = 0;
+  _ecs->components_count = 0;
 
-  ecs->adding_entities = NULL;
-  ecs->adding_components = NULL;
-  ecs->adding_entities_count = 0;
-  ecs->adding_components_count = 0;
+  // so that components are placed in the correct location in the buffer
+  _ecs->component_indices = (_SFRcomponent_indices_t*)malloc(sizeof(_SFRcomponent_indices_t));
+  _ecs->component_indices->non_function_start_index = 0;
+  _ecs->component_indices->functional_start_index = 0;
+  _ecs->component_indices->physics_start_index = 0;
+  _ecs->component_indices->graphics_start_index = 0;
+
+  _ecs->adding_entities = NULL;
+  _ecs->adding_components = NULL;
+  _ecs->adding_entities_count = 0;
+  _ecs->adding_components_count = 0;
+
+  _ecs->names_used = NULL;
+  _ecs->names_used_count = 0;
 
   SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
 
-  for (uint32_t i = 0; i < ecs->scenes_count; i++) {
+  for (uint32_t i = 0; i < _ecs->scenes_count; i++) {
     printf("scene name: %s\n", scenes[i]->name);
   }
 
@@ -56,47 +84,44 @@ void sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count) {
 }
 
 SFRecs_t* sfr_ecs_instance() {
-  return ecs;
+  return _ecs;
 }
 
 void sfr_ecs_free() {
   sfr_ecs_clear_stack();
 
-  for (uint32_t i = 0; i < ecs->scenes_count; i++) {
-    if (ecs->scenes[i]->free != NULL) {
-      ecs->scenes[i]->free(ecs->scenes[i]);
+  for (uint32_t i = 0; i < _ecs->scenes_count; i++) {
+    if (_ecs->scenes[i]->free != NULL) {
+      _ecs->scenes[i]->free(_ecs->scenes[i]);
     }
-    sfr_str_free(&ecs->scenes[i]->name);
-    free(ecs->scenes[i]);
+    sfr_str_free(&_ecs->scenes[i]->name);
+    free(_ecs->scenes[i]);
   }
-  free(ecs->scenes);
+  free(_ecs->scenes);
 
-  free(ecs);
-  ecs = NULL;
+  free(_ecs->component_indices);
+  free(_ecs->names_used);
+
+  free(_ecs);
+  _ecs = NULL;
 }
 
 void sfr_ecs_clear_stack() {
-  if (ecs->entities != NULL) {
-    if (ecs->entities_count > 0) {
-      for (uint32_t i = 0; i < ecs->entities_count; i++) {
-        sfr_ecs_entity_free(ecs->entities[i]);
+  if (_ecs->entities != NULL) {
+    if (_ecs->entities_count > 0) {
+      for (uint32_t i = 0; i < _ecs->entities_count; i++) {
+        sfr_ecs_entity_free(_ecs->entities[i]);
       }
     }
-    free(ecs->entities);
-    ecs->entities = NULL;
+    free(_ecs->entities);
+    _ecs->entities = NULL;
   }
-  ecs->entities_count = 0;
+  _ecs->entities_count = 0;
 
-  if (ecs->components != NULL) {
-    if (ecs->components_count > 0) {
-      for (uint32_t i = 0; i < ecs->components_count; i++) {
-        sfr_ecs_component_free(ecs->components[i]);
-      }
-    } 
-    free(ecs->components);
-    ecs->components = NULL;
-  }
-  ecs->components_count = 0;
+  _ecs->component_indices->non_function_start_index = 0;
+  _ecs->component_indices->functional_start_index = 0;
+  _ecs->component_indices->physics_start_index = 0;
+  _ecs->component_indices->graphics_start_index = 0;
 }
 
 void sfr_ecs_update(float delta_time) {
@@ -118,7 +143,12 @@ void sfr_ecs_erase_entity(uint32_t index) {
 }
 
 void sfr_ecs_erase_component(uint32_t index) {
-  // TODO: ...
+  if (index < _ecs->components_count) {
+    sfr_ecs_component_free(_ecs->components[index]);
+    // TODO: erase component properly ...
+  } else {
+    printf("[SAFIRE_WARNING::ERASE_COMPONENT] cannot erase componenent when the index is larger than the component buffer");
+  }
 }
 
 void sfr_ecs_load_scene(uint32_t id) {
@@ -128,7 +158,7 @@ void sfr_ecs_load_scene(uint32_t id) {
     SFR_CURRENT_SCENE->free(SFR_CURRENT_SCENE);
   }
 
-  ecs->current_scene = id;
+  _ecs->current_scene = id;
   SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
 }
  
@@ -155,27 +185,31 @@ SFRentity_t* sfr_ecs_push_entity(const char* name, const char* tag) {
 #endif
 
       // incrase entity buffer size
-      uint32_t c = ecs->entities_count;
-      ecs->entities_count++;
-      if (ecs->entities != NULL) {
-        SFRentity_t** temp = (SFRentity_t**)realloc(ecs->entities, sizeof(SFRentity_t*) * ecs->entities_count);
+      uint32_t c = _ecs->entities_count;
+      _ecs->entities_count++;
+      if (_ecs->entities != NULL) {
+        SFRentity_t** temp = (SFRentity_t**)realloc(_ecs->entities, sizeof(SFRentity_t*) * _ecs->entities_count);
         SAFIRE_ASSERT(temp, "[SAFIRE::ECS_ENTITY_PUSH] failed to resize entity buffer for some reason");
-        ecs->entities = temp;
+        _ecs->entities = temp;
       } else {
-        ecs->entities = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * ecs->entities_count);
+        _ecs->entities = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * _ecs->entities_count);
       }
 
       // setting the entity data 
-      ecs->entities[c] = (SFRentity_t*)malloc(sizeof(SFRentity_t));
-      SAFIRE_ASSERT(ecs->entities[c], "[SAFIRE::ECS_ENTITY_PUSH] failed to assign memory to entity for some reason");
+      _ecs->entities[c] = (SFRentity_t*)malloc(sizeof(SFRentity_t));
+      SAFIRE_ASSERT(_ecs->entities[c], "[SAFIRE::ECS_ENTITY_PUSH] failed to assign memory to entity for some reason");
 
-      ecs->entities[c]->name = sfr_str(name);
-      ecs->entities[c]->uuid = sfr_rand_uint64();
-      ecs->entities[c]->tag = tag != NULL ? sfr_str(tag) : NULL;
-      ecs->entities[c]->components = NULL;
-      ecs->entities[c]->components_count = 0;
+      _ecs->entities[c]->name = sfr_str(name);
+      _ecs->entities[c]->uuid = sfr_rand_uint64();
+      _ecs->entities[c]->tag = tag != NULL ? sfr_str(tag) : NULL;
+      _ecs->entities[c]->layer = 0;
+      _ecs->entities[c]->components = NULL;
+      _ecs->entities[c]->components_count = 0;
+      
+      _ecs->entities[c]->components = sfr_attach_default_comps(_ecs->entities[c], &_ecs->entities[c]->components_count);
+      
 
-      return ecs->entities[c];
+      return _ecs->entities[c];
 
 #ifndef NDEBUG
     }
@@ -192,25 +226,68 @@ SFRcomponent_t* sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* comp
 
 #endif
 
-      // incrase entity buffer size
-      uint32_t c = ecs->components_count;
-      ecs->components_count++;
-      if (ecs->components != NULL) {
-        SFRcomponent_t** temp = (SFRcomponent_t**)realloc(ecs->components, sizeof(SFRcomponent_t*) * ecs->components_count);
-        SAFIRE_ASSERT(temp, "[SAFIRE::ECS_COMPONENT_PUSH=] failed to resize component buffer for some reason");
-        ecs->components = temp;
+      _ecs->components_count++;
+      if (_ecs->components != NULL) {
+        _ecs->components = (SFRcomponent_t**)realloc(_ecs->components, sizeof(SFRcomponent_t*) * _ecs->components_count);
+        SAFIRE_ASSERT(_ecs->components, "[SAFIRE::ECS_COMPONENT_PUSH] failed to resize component buffer for some reason");
       } else {
-        ecs->components = (SFRcomponent_t**)malloc(sizeof(SFRcomponent_t*) * ecs->entities_count);
+        _ecs->components = (SFRcomponent_t**)malloc(sizeof(SFRcomponent_t*) * _ecs->components_count);
       }
 
+      // finding where it will be stored and then incert into that location in the component buffer
+      uint32_t t_index = 0;
+      switch (component->type) {
+      case SFR_COMPONENT_TYPE_NON_FUNCTIONAL:
+        t_index = _ecs->component_indices->non_function_start_index;
+        _ecs->component_indices->functional_start_index++;
+        _ecs->component_indices->physics_start_index++;
+        _ecs->component_indices->graphics_start_index++;
+        break;
+
+      case SFR_COMPONENT_TYPE_FUNCTIONAL:
+        t_index = _ecs->component_indices->functional_start_index;
+        _ecs->component_indices->physics_start_index++;
+        _ecs->component_indices->graphics_start_index++;
+        break;
+
+      case SFR_COMPONENT_TYPE_PHYSICS:
+        t_index = _ecs->component_indices->physics_start_index;
+        _ecs->component_indices->graphics_start_index++;
+        break;
+
+      case SFR_COMPONENT_TYPE_GRAPHICS:
+        // incerting component into correct location based on the entity layer
+        t_index = _ecs->component_indices->graphics_start_index;
+        for (uint32_t i = _ecs->component_indices->graphics_start_index; i < _ecs->components_count; i++) {
+          if (entity->layer <= _ecs->components[i]->owner->layer) {
+            t_index += i;
+            break;
+          }
+        }
+        break;
+      }
+
+      // incert component into correct location
+      if (t_index - 1 == _ecs->components_count) {
+        uint32_t temp_size = _ecs->components_count - t_index - 1;
+        SFRcomponent_t** temp = (SFRcomponent_t**)malloc(sizeof(SFRcomponent_t*) * temp_size);
+        memcpy(temp, _ecs->components + temp_size, sizeof(SFRcomponent_t**) * temp_size);
+        memcpy(_ecs->components + t_index, temp, sizeof(SFRcomponent_t**) * temp_size);
+        free(temp);
+        temp = NULL;
+      }
+      
       // setting the entity data 
-      ecs->components[c] = component;
-      SAFIRE_ASSERT(ecs->components[c], "[SAFIRE::ECS_COMPONENT_PUSH] failed to assign memory to component for some reason");
+      _ecs->components[t_index] = component;
+      SAFIRE_ASSERT(
+        _ecs->components[t_index], 
+        "[SAFIRE::_ecs_COMPONENT_PUSH] failed to assign memory to component for some reason"
+      );
 
-      ecs->components[c]->uuid = sfr_rand_uint64();
-      ecs->components[c]->owner = entity;
+      _ecs->components[t_index]->uuid = sfr_rand_uint64();
+      _ecs->components[t_index]->owner = entity;
 
-      return ecs->components[c];
+      return _ecs->components[t_index];
 
 #ifndef NDEBUG
     }
@@ -219,14 +296,19 @@ SFRcomponent_t* sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* comp
 #endif
 }
 
-SFRcomponent_t*  sfr_ecs_component(const char* name, component_update update, component_late_update late_update, component_free free) {
-  SFRcomponent_t* component = (SFRcomponent_t*)malloc(sizeof(SFRcomponent_t*));
+SFRcomponent_t* sfr_ecs_component(const char* name, component_update update, component_late_update late_update, component_free free) {
+  /*
+  the following line of code caused a memory curroption error that took like 2 hours to figure out
+  curroption code: SFRcomponent_t* component = (SFRcomponent_t*)malloc(sizeof(SFRcomponent_t*)); 
+  */
+  SFRcomponent_t* component = (SFRcomponent_t*)malloc(sizeof(SFRcomponent_t)); 
   SAFIRE_ASSERT(component, "[SAFIRE::ECS_COMPONENT] failed to assgin memory to component for some reason");
 
   component->name = sfr_str(name);
   component->update = update;
   component->late_update = late_update;
   component->free = free;
+  component->type = SFR_COMPONENT_TYPE_FUNCTIONAL;
 
   component->owner = NULL;
   component->uuid = 0;
@@ -241,8 +323,8 @@ void sfr_ecs_entity_free(SFRentity_t* entity) {
       // freeing the component data
       uint32_t target = 0;
       for (uint32_t i = 0; i < entity->components_count; i++) {
-        target = sfr_ecs_component_find_index_uuid(target, entity->components[i]);
-        sfr_ecs_component_free(ecs->components[target]);
+        target = sfr_ecs_component_find_index_uuid(target, entity->components[i]->uuid);
+        SAFIRE_ASSERT(target != UINT32_MAX, "[SAFIRE::ECS_ENTITY_FREE] failed to find target");
         sfr_ecs_erase_component(target);
       }
       free(entity->components);
@@ -276,9 +358,9 @@ void sfr_ecs_component_free(SFRcomponent_t* component) {
 SFRentity_t* sfr_ecs_find_entity_name(const char* name) {
   // Im pre sure that there is a better way of doing this, but idk how to improve this
   uint32_t length = sfr_str_length(name);
-  for (uint32_t i = 0; i < ecs->entities_count; i++) {
-    if (sfr_str_cmp_length(name, ecs->entities[i]->name, length)) {
-      return ecs->entities[i];
+  for (uint32_t i = 0; i < _ecs->entities_count; i++) {
+    if (sfr_str_cmp_length(name, _ecs->entities[i]->name, length)) {
+      return _ecs->entities[i];
     }
   }
 
@@ -290,8 +372,8 @@ SFRentity_t** sfr_ecs_find_list_entities(const char* tag, uint32_t* entity_count
   uint32_t count = 0;
   uint32_t length = sfr_str_length(tag);
 
-  for (uint32_t i = 0; i < ecs->entities_count; i++) {
-    if (sfr_str_cmp_length(tag, ecs->entities[i]->tag, length)) {
+  for (uint32_t i = 0; i < _ecs->entities_count; i++) {
+    if (sfr_str_cmp_length(tag, _ecs->entities[i]->tag, length)) {
       count += 1;
       if (buffer != NULL) {
         SFRentity_t** temp =  (SFRentity_t**)realloc(buffer, sizeof(SFRentity_t*) * count);
@@ -315,7 +397,7 @@ SFRentity_t** sfr_ecs_find_list_entities(const char* tag, uint32_t* entity_count
         }
       }
 
-      buffer[i] = ecs->entities[i];
+      buffer[i] = _ecs->entities[i];
     }
   }
 
@@ -325,9 +407,9 @@ SFRentity_t** sfr_ecs_find_list_entities(const char* tag, uint32_t* entity_count
 
 SFRentity_t* sfr_ecs_find_entity_uuid(uint64_t uuid) {
   // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
-  for (uint32_t i = 0; i < ecs->entities_count; i++) {
-    if (uuid == ecs->entities[i]->uuid) {
-      return ecs->entities[i];
+  for (uint32_t i = 0; i < _ecs->entities_count; i++) {
+    if (uuid == _ecs->entities[i]->uuid) {
+      return _ecs->entities[i];
     }
   }
 
@@ -336,9 +418,9 @@ SFRentity_t* sfr_ecs_find_entity_uuid(uint64_t uuid) {
 
 SFRcomponent_t* sfr_ecs_find_component_uuid(SFRuuid_t uuid) {
   // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
-  for (uint32_t i = 0; i < ecs->components_count; i++) {
-    if (uuid == ecs->components[i]->uuid) {
-      return ecs->components[i];
+  for (uint32_t i = 0; i < _ecs->components_count; i++) {
+    if (uuid == _ecs->components[i]->uuid) {
+      return _ecs->components[i];
     }
   }
 
@@ -350,8 +432,8 @@ SFRcomponent_t** sfr_ecs_find_list_components(const char* name, uint32_t* compon
   uint32_t count = 0;
   uint32_t length = sfr_str_length(name);
 
-  for (uint32_t i = 0; i < ecs->components_count; i++) {
-    if (sfr_str_cmp_length(name, ecs->components[i]->name, length)) {
+  for (uint32_t i = 0; i < _ecs->components_count; i++) {
+    if (sfr_str_cmp_length(name, _ecs->components[i]->name, length)) {
       count += 1;
       if (buffer != NULL) {
         SFRcomponent_t** temp =  (SFRcomponent_t**)realloc(buffer, sizeof(SFRcomponent_t*) * count);
@@ -375,7 +457,7 @@ SFRcomponent_t** sfr_ecs_find_list_components(const char* name, uint32_t* compon
         }
       }
 
-      buffer[i] = ecs->components[i];
+      buffer[i] = _ecs->components[i];
     }
   }
 
@@ -387,8 +469,8 @@ SFRcomponent_t** sfr_ecs_find_list_components(const char* name, uint32_t* compon
 uint32_t sfr_ecs_entity_find_index_name(uint32_t offset, const char* name) {
   // Im pre sure that there is a better way of doing this, but idk how to improve this
   uint32_t length = sfr_str_length(name);
-  for (uint32_t i = offset; i < ecs->entities_count; i++) {
-    if (sfr_str_cmp_length(name, ecs->entities[i]->name, length)) {
+  for (uint32_t i = offset; i < _ecs->entities_count; i++) {
+    if (sfr_str_cmp_length(name, _ecs->entities[i]->name, length)) {
       return i;
     }
   }
@@ -398,8 +480,8 @@ uint32_t sfr_ecs_entity_find_index_name(uint32_t offset, const char* name) {
 
 uint32_t sfr_ecs_entity_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
   // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
-  for (uint32_t i = offset; i < ecs->entities_count; i++) {
-    if (uuid == ecs->entities[i]->uuid) {
+  for (uint32_t i = offset; i < _ecs->entities_count; i++) {
+    if (uuid == _ecs->entities[i]->uuid) {
       return i;
     }
   }
@@ -409,8 +491,8 @@ uint32_t sfr_ecs_entity_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
 
 uint32_t sfr_ecs_component_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
   // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
-  for (uint32_t i = offset; i < ecs->components_count; i++) {
-    if (uuid == ecs->components[i]->uuid) {
+  for (uint32_t i = offset; i < _ecs->components_count; i++) {
+    if (uuid == _ecs->components[i]->uuid) {
       return i;
     }
   }
@@ -419,18 +501,47 @@ uint32_t sfr_ecs_component_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
 }
 
 void sfr_ecs_debug_print_entities() {
-  if (ecs->entities_count > 0) {
-    for (uint32_t i = 0; i < ecs->entities_count; i++) {
+  if (_ecs->entities_count > 0) {
+    printf("entity list:\n");
+    for (uint32_t i = 0; i < _ecs->entities_count; i++) {
       printf(
         "[%d]: n('%s'), t('%s'), c(%d)\n", 
-        i, ecs->entities[i]->name, ecs->entities[i]->tag, ecs->entities[i]->components_count
+        i, _ecs->entities[i]->name, _ecs->entities[i]->tag, _ecs->entities[i]->components_count
       );
     }
   } else {
-    printf("currently no entities in buffer\n");
+    printf("currently no entities in the buffer\n");
   }
 }
 
 void sfr_ecs_debug_print_components() {
-  printf("TODO: print component list here");
+  if (_ecs->components_count > 0) {
+    printf("component list:\n");
+    for (uint32_t i = 0; i < _ecs->components_count; i++) {
+      printf(
+        "[%d]: n('%s'), d(%d), u(%d), l(%d), f(%d), t(\n", 
+        i, _ecs->components[i]->name, _ecs->components[i]->data != NULL,
+        _ecs->components[i]->update != NULL, _ecs->components[i]->late_update != NULL,
+        _ecs->components[i]->free != NULL
+      );
+      
+      switch (_ecs->components[i]->type) {
+      case SFR_COMPONENT_TYPE_NON_FUNCTIONAL:
+        printf("non functional");
+        break;
+      case SFR_COMPONENT_TYPE_FUNCTIONAL:
+        printf("functional");
+        break;
+      case SFR_COMPONENT_TYPE_PHYSICS:
+        printf("physics");
+        break;
+      case SFR_COMPONENT_TYPE_GRAPHICS:
+        printf("graphics");
+        break;
+      }
+      printf(")\n");
+    }
+  } else {
+    printf("currently no components in the buffer\n");
+  }
 }

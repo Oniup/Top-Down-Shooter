@@ -16,8 +16,8 @@ void safire(const char* window_title, int window_width, int window_height, bool 
 
 void sfr_free() {
   printf("free safire ...\n");
-  sfr_pipeline_free();
   sfr_ecs_free();
+  sfr_pipeline_free();
 }
 
 void sfr_run() {
