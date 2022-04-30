@@ -23,6 +23,14 @@ bool sfr_timer_finished(SFRtimer_t* timer) {
   }
 }
 
+void sfr_clear_terminal() {
+#ifndef WIN32
+  system("clear");
+#else
+  system("clr");
+#endif
+}
+
 int sfr_rand_int32() {
   time_t t1; 
   srand ((unsigned)time(&t1));
@@ -47,14 +55,13 @@ uint32_t sfr_rand_uint32() {
 // https://stackoverflow.com/questions/33010010/how-to-generate-random-64-bit-unsigned-integer-in-c
 #define IMAX_BITS(m) ((m)/((m)%255+1) / 255%255*8 + 7-86/((m)%255+12))
 #define RAND_MAX_WIDTH IMAX_BITS(RAND_MAX)
+// SAFIRE_ASSERT((RAND_MAX & (RAND_MAX + 1u)) == 0, "RAND_MAX not a Mersenne number");
 
-uint64_t sfr_rand_uint64() {
-  time_t t1; 
-  srand ((unsigned)time(&t1));
+uint64_t sfr_rand_uint64(void) {
   uint64_t r = 0;
   for (int i = 0; i < 64; i += RAND_MAX_WIDTH) {
-   r <<= RAND_MAX_WIDTH;
-   r ^= (unsigned)rand();
+    r <<= RAND_MAX_WIDTH;
+    r ^= (unsigned) rand();
   }
   return r;
 }

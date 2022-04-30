@@ -6,7 +6,7 @@ void _sfr_transform_free(SFRcomponent_t* component);
 
 SFRcomponent_t* sfr_transform() {
   SFRcomponent_t* component = sfr_ecs_component(
-    "SFRtransform", NULL, NULL, _sfr_transform_free
+    SFR_TRANSFORM, NULL, NULL, _sfr_transform_free
   );
 
   component->type = SFR_COMPONENT_TYPE_NON_FUNCTIONAL;

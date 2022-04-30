@@ -29,9 +29,17 @@ void scene_arena_start(SFRscene_t* scene) {
   TDSarena_t* data = ((TDSarena_t*)scene->data);
   data->can_print_debug = true;
 
-  SFRentity_t* player = sfr_ecs_push_entity("Player1", "player");
-  sfr_ecs_push_component(player, tds_player_controller());
-  sfr_ecs_push_component(player, sfr_sprite_renderer());
+  for (uint32_t i = 0; i < 2; i++) {
+    SFRentity_t* player = NULL;
+    if (i == 0) {
+      player = sfr_ecs_push_entity("Player1", "player");
+    } else {
+      player = sfr_ecs_push_entity("Player2", "player");
+    }
+    sfr_ecs_push_component(player, tds_player_controller());
+    sfr_ecs_push_component(player, sfr_sprite_renderer());
+    sfr_ecs_push_component(player, sfr_sprite_animator(player));
+  }
 
   /**
    * TODO: scene setup
@@ -52,10 +60,16 @@ void scene_arena_update(SFRscene_t* scene, float delta_time) {
       sfr_ecs_debug_print_entities();
       sfr_ecs_debug_print_components();
       arena->can_print_debug = false;
+    } else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_K) && sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_LEFT_SHIFT)) {
+      if (sfr_ecs_get_entities_count() > 0) {
+        sfr_ecs_erase_entity(0);
+        arena->can_print_debug = false;
+      }
     }
   } else {
-    if (sfr_input_keyboard(SFR_INPUT_RELEASE, SFR_KEY_P)) {
+    if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_H)) {
       arena->can_print_debug = true;
+      sfr_clear_terminal();
     }
   }
 }

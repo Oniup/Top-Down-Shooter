@@ -50,6 +50,9 @@ SAFIRE_API bool             sfr_timer_finished(SFRtimer_t* timer);
 
 
 
+SAFIRE_API void             sfr_clear_terminal();
+
+
 /* ==================== the following is from safire-utils.h =================== */
 /* ================= https://github.com/Oniup/Safire-Utils.git ================= */
 
