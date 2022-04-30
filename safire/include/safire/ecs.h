@@ -21,8 +21,11 @@ SAFIRE_API SFRecs_t*        sfr_ecs_instance();
 SAFIRE_API void             sfr_ecs_free();
 SAFIRE_API void             sfr_ecs_clear_stack();                                        // frees all entities & components from the stack
 
+SAFIRE_API void             sfr_ecs_remove_erased_entities();
+
 SAFIRE_API void             sfr_ecs_update(float delta_time);                             // calls all the components update loops that have it
 SAFIRE_API void             sfr_ecs_late_update(float late_delta_time);                   // calls al the components late update loops that have it
+SAFIRE_API void             sfr_ecs_render_update();                                      // calls all the graphics components loops that have it
 
 SAFIRE_API void             sfr_ecs_erase_entity(uint32_t index);                         // removes the target entity from the stack
 SAFIRE_API void             sfr_ecs_erase_component(uint32_t index);                      // removes the target component from the stack

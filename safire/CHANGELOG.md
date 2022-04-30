@@ -1,6 +1,12 @@
 # Safire Change logs
 
-## VERSION 0.0.7 (26/4/2022)
+## VERSION 0.0.8 (30/4/2022)
+
+* implemented component update, late_update, and render loops (ECS) *(VERSION 0.0.7.1)*
+* implementation of shaders *(VERSION 0.0.7.2)*
+* implementation of textures  
+
+## VERSION 0.0.7 (26/4/2022 - 30/4/2022)
 
 * made code more cleaner *(VERSION 0.0.6.1)*
   * spacing and tabbing for functions and type defines in the header files

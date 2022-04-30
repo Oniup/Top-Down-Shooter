@@ -15,14 +15,12 @@ struct SFRecs {
   uint32_t                  entities_count;
   uint32_t                  components_count;  
 
-  _SFRcomponent_indices_t*   component_indices;
+  _SFRcomponent_indices_t*  component_indices;
 
-  SFRentity_t**             adding_entities;
-  SFRcomponent_t**          adding_components;
-  uint32_t                  adding_entities_count;
-  uint32_t                  adding_components_count;  
+  uint32_t*                 removing_entities;
+  uint32_t                  removing_entities_count;
 
-  _SFRecs_names_used_t*      names_used;
+  _SFRecs_names_used_t*     names_used;
   uint32_t                  names_used_count;
 };
 
@@ -47,6 +45,7 @@ static SFRecs_t* _ecs = NULL;
 
 
 void                      _sfr_ecs_move_component(uint32_t target, uint32_t dest);
+void                      _sfr_ecs_erase_entity(uint32_t index);
 
 
 void sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count) {
@@ -69,10 +68,8 @@ void sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count) {
   _ecs->component_indices->physics_start_index = 0;
   _ecs->component_indices->graphics_start_index = 0;
 
-  _ecs->adding_entities = NULL;
-  _ecs->adding_components = NULL;
-  _ecs->adding_entities_count = 0;
-  _ecs->adding_components_count = 0;
+  _ecs->removing_entities = NULL;
+  _ecs->removing_entities_count = 0;
 
   _ecs->names_used = NULL;
   _ecs->names_used_count = 0;
@@ -82,8 +79,6 @@ void sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count) {
   for (uint32_t i = 0; i < _ecs->scenes_count; i++) {
     printf("scene name: %s\n", scenes[i]->name);
   }
-
-  // TODO: create scene instance
 }
 
 SFRecs_t* sfr_ecs_instance() {
@@ -127,39 +122,108 @@ void sfr_ecs_clear_stack() {
   _ecs->component_indices->graphics_start_index = 0;
 }
 
+void sfr_ecs_remove_erased_entities() {
+  if (_ecs->removing_entities != NULL) {
+    // sorting the buffer as it will be easier to remove entities from the stack
+    // and not the expensive as most of the time in this buffer, there will only be
+    // a couple of indices
+    sfr_qsort_uint32(_ecs->removing_entities, _ecs->removing_entities_count);
+
+    // removing the entities from the stack from the largest to smallest
+    for (int i = (int)_ecs->removing_entities_count - 1; i > -1; i--) {
+      _sfr_ecs_erase_entity(_ecs->removing_entities[i]);
+    }
+
+    // resetting the buffer
+    free(_ecs->removing_entities);
+    _ecs->removing_entities = NULL;
+    _ecs->removing_entities_count = 0;
+  }
+}
+
+void _sfr_ecs_erase_entity(uint32_t index) {
+  _ecs->entities_count--;
+  uint32_t temp1_size = index;
+  uint32_t temp2_size = _ecs->entities_count - index;
+  SFRentity_t** temp1 = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * temp1_size);
+  SFRentity_t** temp2 = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * temp2_size);
+  memcpy(temp1, _ecs->entities, sizeof(SFRentity_t*) * temp1_size);
+  memcpy(temp2, _ecs->entities + (index + 1), sizeof(SFRentity_t*) * temp2_size);
+
+  sfr_ecs_entity_free(_ecs->entities[index]);
+    
+  free(_ecs->entities);
+  _ecs->entities = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * _ecs->entities_count);
+  memcpy(_ecs->entities, temp1, sizeof(SFRentity_t*) * temp1_size);
+  memcpy(_ecs->entities + temp1_size, temp2, sizeof(SFRentity_t*) * _ecs->entities_count);
+
+  free(temp1);
+  free(temp2); 
+}
+
 void sfr_ecs_update(float delta_time) {
-  // TODO:: entities update loop implementation ...
+  static uint32_t start_index = 0;
+  static uint32_t end_index = 0;
+
+  start_index = _ecs->component_indices->functional_start_index;
+  end_index = _ecs->component_indices->graphics_start_index;
+
+  for (uint32_t i = start_index; i < end_index; i++) {
+    if (_ecs->components[i]->update != NULL) {
+      _ecs->components[i]->update(_ecs->components[i], delta_time);
+    }
+  }  
+
   if (SFR_CURRENT_SCENE->update != NULL) {
     SFR_CURRENT_SCENE->update(SFR_CURRENT_SCENE, delta_time);
   }
 }
 
 void sfr_ecs_late_update(float late_delta_time) {
-  // TODO:: entities late update loop implementation ...
+  static uint32_t start_index = 0;
+  static uint32_t end_index = 0;
+
+  start_index = _ecs->component_indices->functional_start_index;
+  end_index = _ecs->component_indices->graphics_start_index;
+
+  for (uint32_t i = start_index; i < end_index; i++) {
+    if (_ecs->components[i]->late_update != NULL) {
+      _ecs->components[i]->late_update(_ecs->components[i], late_delta_time);
+    }
+  }  
+
   if (SFR_CURRENT_SCENE->late_update != NULL) {
     SFR_CURRENT_SCENE->late_update(SFR_CURRENT_SCENE, late_delta_time);
   }
 }
 
+void sfr_ecs_render_update() {
+  static uint32_t start_index = 0;
+  static uint32_t end_index = 0;
+
+  start_index = _ecs->component_indices->graphics_start_index;
+  end_index = _ecs->components_count;
+
+  for (uint32_t i = start_index; i < end_index; i++) {
+    if (_ecs->components[i]->update != NULL) {
+      _ecs->components[i]->update(_ecs->components[i], 0.0f);
+    }
+  }  
+}
+
 void sfr_ecs_erase_entity(uint32_t index) {
   if (index < _ecs->entities_count) {
-    _ecs->entities_count--;
-    uint32_t temp1_size = index;
-    uint32_t temp2_size = _ecs->entities_count - index;
-    SFRentity_t** temp1 = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * temp1_size);
-    SFRentity_t** temp2 = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * temp2_size);
-    memcpy(temp1, _ecs->entities, sizeof(SFRentity_t*) * temp1_size);
-    memcpy(temp2, _ecs->entities + (index + 1), sizeof(SFRentity_t*) * temp2_size);
+    _ecs->removing_entities_count++;
 
-    sfr_ecs_entity_free(_ecs->entities[index]);
-    
-    free(_ecs->entities);
-    _ecs->entities = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * _ecs->entities_count);
-    memcpy(_ecs->entities, temp1, sizeof(SFRentity_t*) * temp1_size);
-    memcpy(_ecs->entities + temp1_size, temp2, sizeof(SFRentity_t*) * _ecs->entities_count);
+    if (_ecs->removing_entities != NULL) {
+      _ecs->removing_entities = (uint32_t*)realloc(_ecs->removing_entities, sizeof(uint32_t) * _ecs->removing_entities_count);
+      SAFIRE_ASSERT(_ecs->removing_entities, "[SAFIRE::ERASE_ENTITY] failed to resize the buffer");
+    } else {
+      _ecs->removing_entities = (uint32_t*)malloc(sizeof(uint32_t) * _ecs->removing_entities_count);
+      SAFIRE_ASSERT(_ecs->removing_entities, "[SAFIRE::ERASE_ENTITY] failed to assgin memory to buffer");
+    }
 
-    free(temp1);
-    free(temp2);
+    _ecs->removing_entities[_ecs->removing_entities_count - 1] = index;
   } else {
     printf("[SAFIRE_WARNING::ERASE_ENTITY] cannot erase entity when the index is larger than the entity buffer");
   }
@@ -168,6 +232,27 @@ void sfr_ecs_erase_entity(uint32_t index) {
 void sfr_ecs_erase_component(uint32_t index) {
   if (index < _ecs->components_count) {
     sfr_ecs_component_free(_ecs->components[index]);
+
+    switch (_ecs->components[index]->type) {
+      case SFR_COMPONENT_TYPE_NON_FUNCTIONAL:
+        _ecs->component_indices->functional_start_index--;
+        _ecs->component_indices->physics_start_index--;
+        _ecs->component_indices->graphics_start_index--;
+        break;
+
+      case SFR_COMPONENT_TYPE_FUNCTIONAL:
+      _ecs->component_indices->physics_start_index--;
+      _ecs->component_indices->graphics_start_index--;
+        break;
+
+      case SFR_COMPONENT_TYPE_PHYSICS:
+        _ecs->component_indices->graphics_start_index--;
+        break;
+      
+      case SFR_COMPONENT_TYPE_GRAPHICS:
+        break;
+
+    }
 
     if (index - 1 == _ecs->components_count) {
       // erasing the last component in the stack
@@ -656,5 +741,6 @@ void sfr_ecs_debug_print_components() {
 }
 
 void _sfr_ecs_move_component(uint32_t target, uint32_t dest) {
-  // TODO: ...
+  // TODO: move the target entity to the correct location and a move everything down/up in both directions
+  // for this project it is out of scope
 }

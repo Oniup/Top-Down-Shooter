@@ -5,7 +5,6 @@
 
 float calculate_delta_time();
 
-// void safire(const char* window_title, uint32_t window_width, uint32_t window_height, bool fullscreen, SFRentity_t* game_manager) {
 void safire(const char* window_title, int window_width, int window_height, bool fullscreen, SFRscene_t** scenes, uint32_t scenes_count) {  
   sfr_pipeline_init(window_title, window_width, window_height, fullscreen);
   sfr_input_init();
@@ -22,10 +21,14 @@ void sfr_free() {
 
 void sfr_run() {
   while (!sfr_pipeline_window_closing()) {
+    sfr_ecs_remove_erased_entities();
+
     float delta_time = calculate_delta_time();
     sfr_ecs_update(delta_time);
     delta_time = calculate_delta_time();
     sfr_ecs_late_update(delta_time);
+
+    sfr_ecs_render_update();
 
     sfr_pipeline_render();
     glfwPollEvents();

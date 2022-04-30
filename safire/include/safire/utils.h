@@ -51,6 +51,7 @@ SAFIRE_API bool             sfr_timer_finished(SFRtimer_t* timer);
 
 
 SAFIRE_API void             sfr_clear_terminal();
+SAFIRE_API void             sfr_qsort_uint32(uint32_t* arr, uint32_t size);
 
 
 /* ==================== the following is from safire-utils.h =================== */

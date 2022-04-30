@@ -5,6 +5,16 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+
+
+
+void                        _sfr_qsort_uint32_swap(uint32_t* a, uint32_t* b);
+uint32_t                    _sfr_qsort_uint32_partition(uint32_t* arr, uint32_t lower, uint32_t higher);
+void                        _sfr_qsort_uint32(uint32_t* arr, uint32_t lower, uint32_t higher);
+
+
+
+
 SFRtimer_t sfr_timer_start(float duration) {
   SFRtimer_t timer = (float)glfwGetTime() + duration;
   return timer;
@@ -29,6 +39,39 @@ void sfr_clear_terminal() {
 #else
   system("clr");
 #endif
+}
+
+void _sfr_qsort_uint32_swap(uint32_t* a, uint32_t* b) {
+  uint32_t temp = *a;
+  *a = *b;
+  *b = temp;
+}
+
+uint32_t _sfr_qsort_uint32_partition(uint32_t* arr, uint32_t lower, uint32_t higher) {
+  uint32_t pivot = arr[higher];
+  uint32_t i = (lower - 1);
+ 
+  for (int j = lower; j <= higher - 1; j++) {
+    if (arr[j] < pivot) {
+      i++;
+      _sfr_qsort_uint32_swap(&arr[i], &arr[j]);
+    }
+  }
+  _sfr_qsort_uint32_swap(&arr[i + 1], &arr[higher]);
+  return (i + 1);
+}
+
+void _sfr_qsort_uint32(uint32_t* arr, uint32_t lower, uint32_t higher) {
+  if (lower < higher) {
+    uint32_t pi = _sfr_qsort_uint32_partition(arr, lower, higher);
+
+    _sfr_qsort_uint32(arr, lower, pi - 1);
+    _sfr_qsort_uint32(arr, pi + 1, higher);
+  }
+}
+
+void sfr_qsort_uint32(uint32_t* arr, uint32_t size) {
+  _sfr_qsort_uint32(arr, 0, size - 1);
 }
 
 int sfr_rand_int32() {
