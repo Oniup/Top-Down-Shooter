@@ -19,7 +19,15 @@ typedef struct SFRpipeline              SFRpipeline_t;
 typedef struct SFRwindow                SFRwindow_t;
 typedef struct SFRshader                SFRshader_t;
 typedef struct SFRtexture               SFRtexture_t;
+typedef struct SFRrenderer              SFRrenderer_t;
 typedef struct SFRvertex                SFRvertex_t;
+
+struct SFRvertex {
+  vec3                      vertex;
+  vec2                      uv;
+  vec4                      overlay_colour;
+  float                     texture_id;
+};
 
 
 
@@ -37,14 +45,19 @@ SAFIRE_API SFRshader_t**    sfr_pipeline_get_shaders();
 SAFIRE_API SFRtexture_t**   sfr_pipeline_get_textures();
 SAFIRE_API SFRwindow_t*     sfr_pipeline_get_window();
 
+SAFIRE_API SFRshader_t*     sfr_pipeline_get_target_shader(const char* name);
+SAFIRE_API SFRtexture_t*    sfr_pipeline_get_target_texture(const char* texture);
+
 SAFIRE_API void             sfr_pipeline_push_shader(SFRshader_t* shader);
 SAFIRE_API void             sfr_pipeline_push_texture(SFRtexture_t* texture);
 SAFIRE_API void             sfr_pipeline_clear_assets_stack();
 
+SAFIRE_API void             sfr_pipeline_push_vertices(SFRvertex_t* vertices, uint32_t count, SFRshader_t* shader);
 
 
 
-typedef struct GLFWwindow               GLFWwindow;
+
+typedef struct GLFWwindow GLFWwindow;
 
 struct SFRwindow {
   char*                     title;
@@ -57,7 +70,7 @@ struct SFRwindow {
   ivec3                     glsl_version;
 };
 
-SAFIRE_API SFRwindow_t*     sfr_window_create(const char* window_title, int window_width, int window_height, bool fullscreen, bool transparent);
+SAFIRE_API SFRwindow_t*     sfr_window(const char* window_title, int window_width, int window_height, bool fullscreen, bool transparent);
 SAFIRE_API void             sfr_window_free(SFRwindow_t* window);
 
 SAFIRE_API void             sfr_window_set_clear(SFRwindow_t* window, vec4 clear_colour);
@@ -98,16 +111,6 @@ SAFIRE_API void             sfr_texture_bind(SFRshader_t* shader, SFRtexture_t* 
 SAFIRE_API void             sfr_texture_unbind(uint32_t id);
 SAFIRE_API void             sfr_texture_free(SFRtexture_t* texture);
 
-
-
-
-struct SFRvertex {
-  vec3                      vertex;
-  vec2                      uv;
-  uint32_t                  texture_id;
-};
-
-SAFIRE_API void             sfr_draw_quad(SFRvertex_t vertices[], SFRshader_t* shader, vec4 overlay_colour);
 
 
 

@@ -409,7 +409,7 @@ SFRcomponent_t* sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* comp
         t_index = _ecs->component_indices->graphics_start_index;
         uint32_t old_size = _ecs->components_count - 1;
         for (uint32_t i = _ecs->component_indices->graphics_start_index; i < old_size; i++) {
-          if (entity->layer <= _ecs->components[i]->owner->layer) {
+          if (entity->layer >= _ecs->components[i]->owner->layer) {
             t_index++;
             break;
           }
@@ -522,14 +522,6 @@ void sfr_ecs_component_free(SFRcomponent_t* component) {
 
     free(component);
   }
-}
-
-void sfr_ecs_entity_target_free(uint32_t id) {
-  // TODO: ...
-}
-
-void sfr_ecs_component_target_free(uint32_t id) {
-  // TODO: ...
 }
 
 void sfr_ecs_entity_set_layer(SFRentity_t* entity, uint32_t layer) {
@@ -729,7 +721,7 @@ void sfr_ecs_debug_print_components() {
     }
 
     printf(
-      ")\nstart indices:\n* non functional: %d\n* functional: %d\n* physics: %d\n* graphics: %d\n\n",
+      "\nstart indices:\n* non functional: %d\n* functional: %d\n* physics: %d\n* graphics: %d\n\n",
       _ecs->component_indices->non_function_start_index,
       _ecs->component_indices->functional_start_index,
       _ecs->component_indices->physics_start_index,

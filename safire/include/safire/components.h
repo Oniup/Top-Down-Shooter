@@ -9,6 +9,7 @@ extern "C" {
 
 typedef struct SFRentity                SFRentity_t;
 typedef struct SFRcomponent             SFRcomponent_t;
+typedef struct SFRvertex                SFRvertex_t;
 
 // don't change these especially the transform and sprite renderer names as that will break the ecs 
 #define SFR_TRANSFORM                   "SFRtransform"
@@ -55,6 +56,7 @@ struct SFRsprite_renderer {
   uint32_t                  shader;
   vec4                      over_lay_colour;
   SFRsprite_animator_t*     sprite_animator;
+  SFRvertex_t*              vertices;
 };
 
 SAFIRE_API SFRcomponent_t*  sfr_sprite_renderer(); // TODO: implement rendering sprites 

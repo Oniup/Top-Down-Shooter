@@ -35,5 +35,5 @@ void tds_player_controller_update(SFRcomponent_t* component, float delta_time) {
     direction[Y] = 1;
   } 
 
-  printf("movement [%f, %f]\n", direction[X], direction[Y]);
+  // printf("movement [%f, %f]\n", direction[X], direction[Y]);
 }

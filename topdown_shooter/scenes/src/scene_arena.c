@@ -19,40 +19,39 @@ void scene_arena_function_pointer(SFRscene_t* scene) {
   scene->free = &scene_arena_free;
 }
 
-// TODO: make it so that the scene can have its own custom data added to it
-// typedef struct TDSarena_scene {
-  
-// } TDSarena_scene_t;
-
 void scene_arena_start(SFRscene_t* scene) {
   scene->data = (TDSarena_t*)malloc(sizeof(TDSarena_t));
   TDSarena_t* data = ((TDSarena_t*)scene->data);
   data->can_print_debug = true;
 
+  sfr_window_set_clear(sfr_pipeline_get_window(), (vec4){ 0.14f, 0.19f, 0.17f, 1.0f });
+
   for (uint32_t i = 0; i < 2; i++) {
-    SFRentity_t* player = NULL;
+    SFRentity_t* entity = NULL;
     if (i == 0) {
-      player = sfr_ecs_push_entity("Player1", "player");
+      entity = sfr_ecs_push_entity("Player1", "player");
+      entity->layer = 20;
+      sfr_ecs_push_component(entity, tds_player_controller());
     } else {
-      player = sfr_ecs_push_entity("Player2", "player");
+      entity = sfr_ecs_push_entity("enemy1", "enemy");
+      entity->layer = 10;
     }
-    sfr_ecs_push_component(player, tds_player_controller());
-    sfr_ecs_push_component(player, sfr_sprite_renderer());
-    sfr_ecs_push_component(player, sfr_sprite_animator(player));
+    sfr_ecs_push_component(entity, sfr_sprite_renderer());
+    sfr_ecs_push_component(entity, sfr_sprite_animator(entity));
   }
 
   /**
    * TODO: scene setup
    * spawn entity into the scene
-    * player
+    * entity
     * enemy spawners 
     * scoring system
-    * player health system
+    * entity health system
   */
 }
 
 void scene_arena_update(SFRscene_t* scene, float delta_time) {
-  // TODO: manage player health and score ...
+  // TODO: manage entity health and score ...
   TDSarena_t* arena = ((TDSarena_t*)scene->data);
 
   if (arena->can_print_debug) {

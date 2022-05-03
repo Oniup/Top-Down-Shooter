@@ -11,19 +11,25 @@ void safire(const char* window_title, int window_width, int window_height, bool 
   sfr_ecs_init(scenes, scenes_count);
   sfr_run();
   sfr_free();
+
 }
 
 void sfr_free() {
-  // sfr_ecs_free();
+  sfr_ecs_free();
   sfr_pipeline_free();
 }
 
 void sfr_run() {
 
+ while (!sfr_pipeline_window_closing()) {
+    sfr_ecs_remove_erased_entities();
 
+    float delta_time = calculate_delta_time();
+    sfr_ecs_update(delta_time);
+    delta_time = calculate_delta_time();
+    sfr_ecs_late_update(delta_time);
 
-  while (!sfr_pipeline_window_closing()) {
-
+    sfr_ecs_render_update();
 
     glfwPollEvents();
     sfr_pipeline_render();

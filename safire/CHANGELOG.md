@@ -1,6 +1,13 @@
 # Safire Change logs
 
-## VERSION 0.0.8 (30/4/2022)
+## VERSION 0.0.9 (2/5/2022)
+
+* implementation of the batch renderer
+  * designed the framework *(VERSION 0.0.8.1)*
+  * create vertex buffers
+  * vertex data stack
+
+## VERSION 0.0.8 (2/5/2022)
 
 * implemented component update, late_update, and render loops (ECS) *(VERSION 0.0.7.1)*
 * implementation of shaders *(VERSION 0.0.7.2)*
