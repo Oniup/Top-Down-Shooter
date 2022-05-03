@@ -14,25 +14,21 @@ void safire(const char* window_title, int window_width, int window_height, bool 
 }
 
 void sfr_free() {
-  printf("free safire ...\n");
-  sfr_ecs_free();
+  // sfr_ecs_free();
   sfr_pipeline_free();
 }
 
 void sfr_run() {
+
+
+
   while (!sfr_pipeline_window_closing()) {
-    sfr_ecs_remove_erased_entities();
 
-    float delta_time = calculate_delta_time();
-    sfr_ecs_update(delta_time);
-    delta_time = calculate_delta_time();
-    sfr_ecs_late_update(delta_time);
 
-    sfr_ecs_render_update();
-
-    sfr_pipeline_render();
     glfwPollEvents();
+    sfr_pipeline_render();
   }
+
 }
 
 float sfr_elapsed_time() {
