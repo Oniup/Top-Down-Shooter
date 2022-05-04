@@ -20,9 +20,12 @@ SFRcomponent_t*  sfr_sprite_renderer() {
   SAFIRE_ASSERT(component->data, "[SAFIRE::COMPONENT_SPRITE_RENDERER] failed to assign memory to component for some reason");
 
   SFRsprite_renderer_t* renderer = ((SFRsprite_renderer_t*)component->data);
-  glm_vec4_copy((vec4){ 1.0f, 1.0f, 1.0f, 0.0f }, renderer->over_lay_colour);
-  renderer->shader = 0;
-  renderer->texture = 0;
+  
+  SFRshader_t* target_shader = sfr_pipeline_get_target_shader("SAFIRE::default");
+  SFRtexture_t* target_texture = sfr_pipeline_get_target_texture("SAFIRE::default");
+
+  renderer->shader = target_shader->id;
+  renderer->texture = target_texture->id;
   renderer->sprite_animator = NULL;
 
   renderer->vertices = (SFRvertex_t*)malloc(sizeof(SFRvertex_t) * 2);
@@ -31,11 +34,13 @@ SFRcomponent_t*  sfr_sprite_renderer() {
   glm_vec3_copy((vec3){ 0.0f, 0.0f , 0.0f }, renderer->vertices[0].vertex);
   renderer->vertices[0].texture_id = 0;
   glm_vec2_copy((vec2){ 0.0f, 0.0f }, renderer->vertices[0].uv);
+  glm_vec4_copy((vec4){ 1.0f, 1.0f, 1.0f, 0.0f }, renderer->vertices[0].overlay_colour);
 
   // top right
   glm_vec3_copy((vec3){ 1.0f, 1.0f , 0.0f }, renderer->vertices[1].vertex);
   renderer->vertices[1].texture_id = 0;
   glm_vec2_copy((vec2){ 1.0f, 1.0f }, renderer->vertices[1].uv);
+  glm_vec4_copy((vec4){ 1.0f, 1.0f, 1.0f, 0.0f }, renderer->vertices[1].overlay_colour);
 
   return component;
 }
@@ -75,6 +80,8 @@ SFRcomponent_t*  sfr_sprite_animator(SFRentity_t* entity) {
 void _sfr_sprite_renderer_update(SFRcomponent_t* component, float delta_time) {
   SFRsprite_renderer_t* renderer = ((SFRsprite_renderer_t*)component->data);
   SAFIRE_ASSERT(renderer, "[SAFIRE::COMPONENT_SPRITE_UPDATE] for some reason the component data cannot be converted to sprite renderer");
+
+  sfr_pipeline_push_vertices(renderer->vertices, 2, renderer->shader);
 }
 
 void _sfr_sprite_renderer_free(SFRcomponent_t* component) {

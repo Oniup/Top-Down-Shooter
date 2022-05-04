@@ -12,6 +12,7 @@ extern "C" {
 #define SFR_PIPELINE_PROJECTION_PERSPECTIVE     0 
 #define SFR_PIPELINE_PROJECTION_ORTHOGRAPHIC    1
 
+#define SFR_VERTEX_SIZE                         10
 
 
 
@@ -41,12 +42,12 @@ SAFIRE_API void             sfr_pipeline_free();
 SAFIRE_API void             sfr_pipeline_set_projection_matrix(int mode);
 SAFIRE_API void             sfr_pipeline_get_projection_matrix(mat4 projection);
 
-SAFIRE_API SFRshader_t**    sfr_pipeline_get_shaders();
-SAFIRE_API SFRtexture_t**   sfr_pipeline_get_textures();
+SAFIRE_API SFRshader_t**    sfr_pipeline_get_shaders(uint32_t* shaders_count);
+SAFIRE_API SFRtexture_t**   sfr_pipeline_get_textures(uint32_t* textures_count);
 SAFIRE_API SFRwindow_t*     sfr_pipeline_get_window();
 
 SAFIRE_API SFRshader_t*     sfr_pipeline_get_target_shader(const char* name);
-SAFIRE_API SFRtexture_t*    sfr_pipeline_get_target_texture(const char* texture);
+SAFIRE_API SFRtexture_t*    sfr_pipeline_get_target_texture(const char* name);
 
 SAFIRE_API void             sfr_pipeline_push_shader(SFRshader_t* shader);
 SAFIRE_API void             sfr_pipeline_push_texture(SFRtexture_t* texture);

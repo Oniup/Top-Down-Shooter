@@ -54,7 +54,6 @@ SAFIRE_API SFRcomponent_t*  sfr_collider2d(); // TODO: implement circle collisio
 struct SFRsprite_renderer {
   uint32_t                  texture;
   uint32_t                  shader;
-  vec4                      over_lay_colour;
   SFRsprite_animator_t*     sprite_animator;
   SFRvertex_t*              vertices;
 };

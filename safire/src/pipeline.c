@@ -49,10 +49,15 @@ static SFRrenderer_t*       _renderer = NULL;                     // reference t
 void                        _sfr_renderer_init();
 void                        _sfr_renderer_flush();
 
+void                        _sfr_renderer_increase_indices_buffer(uint32_t quad_count);
+void                        _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad_count);
+
 void                        _sfr_renderer_push_data();
 void                        _sfr_renderer_clear_buffers();
 
 void                        _sfr_renderer_free();
+
+void                        _sfr_renderer_print_vertices_debug();
 
 
 
@@ -139,12 +144,14 @@ void sfr_pipeline_get_projection_matrix(mat4 projection) {
 
 }
 
-SFRshader_t** sfr_pipeline_get_shaders() {
-  return NULL;
+SFRshader_t** sfr_pipeline_get_shaders(uint32_t* shader_count) {
+  *shader_count = _pipeline->shaders_count;
+  return _pipeline->shaders;
 }
 
-SFRtexture_t** sfr_pipeline_get_textures() {
-  return NULL;
+SFRtexture_t** sfr_pipeline_get_textures(uint32_t* texture_count) {
+  *texture_count = _pipeline->textures_count;
+  return _pipeline->textures;
 }
 
 SFRwindow_t* sfr_pipeline_get_window() {
@@ -152,10 +159,34 @@ SFRwindow_t* sfr_pipeline_get_window() {
 }
 
 SFRshader_t* sfr_pipeline_get_target_shader(const char* name) {
+  if (name != NULL) {
+    uint32_t length = sfr_str_length(name);
+    if (length > 0) {
+      for (uint32_t i = 0; i < _pipeline->shaders_count; i++) {
+        if (sfr_str_cmp_length(name, _pipeline->shaders[i]->name, length)) {
+          return _pipeline->shaders[i];
+        }
+      }
+    }
+  }
+
+  printf("[SAFIRE::FIND_TARGET_SHADER] failed to find shader with the name '%s' as it doesn't exist\n", name); 
   return NULL;
 }
 
-SFRtexture_t* sfr_pipeline_get_target_texture(const char* texture) {
+SFRtexture_t* sfr_pipeline_get_target_texture(const char* name) {
+  if (name != NULL) {
+    uint32_t length = sfr_str_length(name);
+    if (length > 0) {
+      for (uint32_t i = 0; i < _pipeline->textures_count; i++) {
+        if (sfr_str_cmp_length(name, _pipeline->textures[i]->name, length)) {
+          return _pipeline->textures[i];
+        }
+      }
+    }
+  }
+  
+  printf("[SAFIRE::FIND_TARGET_TEXTURE] failed to find texture with the name '%s' as it doesn't exist\n", name);
   return NULL;
 }
 
@@ -256,27 +287,110 @@ void _sfr_renderer_init() {
 
 void _sfr_renderer_flush() {
   if (_renderer->vertices != NULL) {
-    // shader and texture binding
-    sfr_shader_bind(_pipeline->shaders[0]);
-    sfr_texture_bind(_pipeline->shaders[0], _pipeline->textures[0], 0);
+    // draw calls
 
-    uint32_t u_transform = glGetUniformLocation(_pipeline->shaders[0]->id, "u_transform");
-    uint32_t u_projection = glGetUniformLocation(_pipeline->shaders[0]->id, "u_projection");
+    _sfr_renderer_clear_buffers();
+  }
 
-    glUniformMatrix4fv(u_projection, 1, GL_FALSE, &_pipeline->projection[0][0]);
-    glUniformMatrix4fv(u_transform, 1, GL_FALSE, &_pipeline->transform2D[0][0]);
+  // // shader and texture binding
+  // sfr_shader_bind(_pipeline->shaders[0]);
+  // sfr_texture_bind(_pipeline->shaders[0], _pipeline->textures[0], 0);
 
-    // calling draw call
-    glBindVertexArray(_renderer->vao);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (const void*)0);
+  // uint32_t u_transform = glGetUniformLocation(_pipeline->shaders[0]->id, "u_transform");
+  // uint32_t u_projection = glGetUniformLocation(_pipeline->shaders[0]->id, "u_projection");
 
-    sfr_shader_unbind();
-    sfr_texture_unbind(0);
+  // glUniformMatrix4fv(u_projection, 1, GL_FALSE, &_pipeline->projection[0][0]);
+  // glUniformMatrix4fv(u_transform, 1, GL_FALSE, &_pipeline->transform2D[0][0]);
+
+  // // calling draw call
+  // glBindVertexArray(_renderer->vao);
+  // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (const void*)0);
+
+  // sfr_shader_unbind();
+  // sfr_texture_unbind(0);
+  
+}
+
+void _sfr_renderer_increase_indices_buffer(uint32_t quad_count) {
+  SAFIRE_ASSERT(quad_count != 0, "[SAFIRE::RENDERER_INCREASE_INDICES_BUFFER] failed to increase buffer as the quad count is set to 0");
+  // allocating space in the buffer
+  if (_renderer->indices != NULL) {
+    _renderer->indices = (uint32_t*)realloc(
+      _renderer->indices,
+      sizeof(uint32_t) * (_renderer->indices_count + (quad_count * 6))
+    );
+    SAFIRE_ASSERT(_renderer->indices, "[SAFIRE::RENDERER_INCREASE_INDICES_BUFFER] failed to resize buffer for some reason ...");
+  } else {
+    _renderer->indices = (uint32_t*)malloc(sizeof(uint32_t) * (_renderer->indices_count + (quad_count * 6)));
+    SAFIRE_ASSERT(_renderer->indices, "[SAFIRE::RENDERER_INCREASE_INDICES_BUFFER] failed to assign memory to the buffer for some reason ...");
+  }
+
+  // setting the new indices in the buffer
+  for (uint32_t i = 0; i < quad_count; i++) { 
+    // creates the indices for this quad
+    uint32_t start_value = _renderer->indices_count * 0.2; // dividing it by 6
+    start_value = _renderer->indices_count - (start_value * 2);
+
+    uint32_t indices_start = _renderer->indices_count;
+    uint32_t indices[] = {
+      start_value + 0, start_value + 1, start_value + 3,
+      start_value + 1, start_value + 2, start_value + 3
+    };
+
+    _renderer->indices_count += 6;
+
+    uint32_t k = 0;
+    for (uint32_t j = indices_start; j < _renderer->indices_count; j++) {
+      _renderer->indices[j] = indices[k];
+      k++;
+    }
   }
 }
 
-void _sfr_renderer_push_data(SFRvertex_t* vertices, uint32_t count, SFRshader_t* shader) {
-  /* 
+void _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad_count) {
+  SAFIRE_ASSERT(vertices, "[SAFIRE::RENDERER_INCREASE_VERTICES] failed to push vertices as the vertices doesn't have any memory assigned to it");
+
+  // increase buffer size
+  if (_renderer->vertices != NULL) {
+    _renderer->vertices = (float*)realloc(
+      _renderer->vertices, 
+      sizeof(float) * (_renderer->vertices_count + (quad_count * SFR_VERTEX_SIZE * 4))
+    );
+    SAFIRE_ASSERT(_renderer->vertices, "[SAFIRE::RENDERER_INCREASE_VERTICES] failed to resize buffer for some reason ...");
+  } else {
+    _renderer->vertices = (float*)malloc(
+      sizeof(float) * (_renderer->vertices_count + (quad_count * SFR_VERTEX_SIZE * 4))
+    );
+    SAFIRE_ASSERT(_renderer->vertices, "[SAFIRE::RENDERER_INCREASE_VERTICES] failed to assign memory to the buffer for some reason ...");
+  }
+
+  // setting the data
+  uint32_t l = 0;
+  SFRvertex_t* v = vertices;
+  for (uint32_t i = 0; i < quad_count; i++) {
+    // converting the vertex data
+    uint32_t r = l + 1;
+    float quad[] = {
+      v[r].vertex[X], v[r].vertex[Y], 0.0f, v[r].uv[X], v[r].uv[X], v[r].overlay_colour[R], v[r].overlay_colour[G], v[r].overlay_colour[B], v[r].overlay_colour[A], v[l].texture_id,
+      v[r].vertex[X], v[l].vertex[Y], 0.0f, v[r].uv[X], v[r].uv[X], v[r].overlay_colour[R], v[r].overlay_colour[G], v[r].overlay_colour[B], v[r].overlay_colour[A], v[l].texture_id,
+      v[l].vertex[X], v[l].vertex[Y], 0.0f, v[l].uv[X], v[l].uv[X], v[l].overlay_colour[R], v[l].overlay_colour[G], v[l].overlay_colour[B], v[l].overlay_colour[A], v[l].texture_id,
+      v[l].vertex[X], v[r].vertex[Y], 0.0f, v[l].uv[X], v[l].uv[X], v[l].overlay_colour[R], v[l].overlay_colour[G], v[l].overlay_colour[B], v[l].overlay_colour[A], v[l].texture_id 
+    };
+
+    // pushing the quad vertex data to the vertices batch renderer buffer
+    // TODO: probs will be better to change the for loop into memcpy 
+    _renderer->vertices_count += 40;
+    uint32_t k = 0;
+    for (uint32_t j = _renderer->vertices_count - 40; j < _renderer->vertices_count; j++) {
+      _renderer->vertices[j] = quad[k];
+      k++;
+    }
+
+    l += 2;
+  }
+}
+
+/* 
   example vertex data in float buffer: 
      float vertices[] = {
         (vertex)              (uv)           (overlay colour)        (texture id)
@@ -292,6 +406,12 @@ void _sfr_renderer_push_data(SFRvertex_t* vertices, uint32_t count, SFRshader_t*
       1, 2, 3               (second triangle)
     };
   */
+void _sfr_renderer_push_data(SFRvertex_t* vertices, uint32_t count, SFRshader_t* shader) {
+  SAFIRE_ASSERT(count != 0, "[SAFIRE::PIPELINE_RENDERER_PUSH_DATA] failed to push data to the buffer as the vertices count is set to 0");
+
+  uint32_t quad_count = count * 0.5;
+  _sfr_renderer_increase_indices_buffer(quad_count);
+  _sfr_renderer_increase_vertices_buffer(vertices, quad_count);
 }
 
 void _sfr_renderer_clear_buffers() {
@@ -316,6 +436,37 @@ void _sfr_renderer_free() {
 
   free(_renderer);
   _renderer = NULL;
+}
+
+void _sfr_renderer_print_vertices_debug() {
+  if (_renderer->vertices != NULL) {
+    printf("renderer batch buffer debug:\n");
+
+    uint32_t k = 0;
+    printf("indices: (%u)", _renderer->indices_count);
+    for (uint32_t i = 0; i < _renderer->indices_count; i++) {
+      int br = i % 6;
+      if (br == 0) {
+        k++;
+        printf("\nquad: %d\n", k);
+      }
+      printf("%d ", _renderer->indices[i]);
+    }
+
+    printf("\nvertices: (%u)\n(vertices:vec3)(uv:vec2)(overlay_colour:vec4)(texture_id:float)\n", _renderer->vertices_count);
+    k = 0;
+    for (uint32_t i = 0; i < _renderer->vertices_count; i++) {
+      if (i % 40 == 0) {
+        k++;
+        printf("quad %d\n", k);
+      }
+      printf("%f ", _renderer->vertices[i]);
+      int br = (i + 1) % 10;
+      if (br == 0) {
+        printf("\n");
+      }
+    }
+  }
 }
 
 SFRwindow_t* sfr_window(const char* window_title, int window_width, int window_height, bool fullscreen, bool transparent) {
