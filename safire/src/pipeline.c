@@ -6,6 +6,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
+// just to be safe, idk how to check how many textures the hardware will allow, 8 will work for everyone in the modern times
+#define SFR_MAX_TEXTURES_COUNT 8 
+
 
 
 
@@ -39,6 +42,9 @@ struct SFRrenderer {
 
   uint32_t                  active_shader;
 
+  uint32_t                  active_textures[SFR_MAX_TEXTURES_COUNT];
+  uint32_t                  active_textures_count;
+
   uint32_t                  vao;
   uint32_t                  vbo;
   uint32_t                  ebo;
@@ -50,9 +56,9 @@ void                        _sfr_renderer_init();
 void                        _sfr_renderer_flush();
 
 void                        _sfr_renderer_increase_indices_buffer(uint32_t quad_count);
-void                        _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad_count);
+uint32_t                    _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad_count);
 
-void                        _sfr_renderer_push_data();
+void                        _sfr_renderer_push_data(SFRvertex_t* vertices, uint32_t count, uint32_t shader);
 void                        _sfr_renderer_clear_buffers();
 
 void                        _sfr_renderer_free();
@@ -246,8 +252,15 @@ void sfr_pipeline_clear_assets_stack() {
   }
 }
 
-void sfr_pipeline_push_vertices(SFRvertex_t* vertices, uint32_t count, SFRshader_t* shader) {
+void sfr_pipeline_push_vertices(SFRvertex_t* vertices, uint32_t count, uint32_t shader) {
   _sfr_renderer_push_data(vertices, count, shader);
+}
+
+void sfr_vertex_copy(SFRvertex_t* dest, SFRvertex_t* source) {
+  glm_vec3_copy(source->vertex, dest->vertex);
+  glm_vec2_copy(source->uv, dest->uv);
+  glm_vec4_copy(source->overlay_colour, dest->overlay_colour);
+  dest->texture_id = source->texture_id;
 }
 
 void _sfr_renderer_init() {
@@ -260,6 +273,9 @@ void _sfr_renderer_init() {
   _renderer->indices_count = 0;
 
   _renderer->active_shader = 0; // the index to the shader in the pipeline
+
+  memset(_renderer->active_textures, 0, sizeof(uint32_t) * SFR_MAX_TEXTURES_COUNT);
+  _renderer->active_textures_count = 0;
 
   glGenVertexArrays(1, &_renderer->vao);
   glBindVertexArray(_renderer->vao);
@@ -280,7 +296,7 @@ void _sfr_renderer_init() {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (const void*)0);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (const void*)(sizeof(float) * 3));
   glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (const void*)(sizeof(float) * 5));
-  glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (const void*)(sizeof(float) * 9));
+  glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (const void*)(sizeof(float) * 9));
 
   glBindVertexArray(0);
 }
@@ -288,6 +304,45 @@ void _sfr_renderer_init() {
 void _sfr_renderer_flush() {
   if (_renderer->vertices != NULL) {
     // draw calls
+
+    uint32_t shader = _renderer->active_shader;    
+
+    /** TODO: improve this code 
+     * only update the vertex and indices buffer size when
+       * there are more/less vertices being pushed
+     * use glBufferSubData for just replaceing the vertex data
+    */
+    // pushing all the vertrex and index data to the GPU
+    glBindVertexArray(_renderer->vao);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _renderer->ebo);
+    glBufferData(
+      GL_ELEMENT_ARRAY_BUFFER, 
+      sizeof(float) * _renderer->indices_count, _renderer->indices, 
+      GL_DYNAMIC_DRAW
+    );
+
+    glBindBuffer(GL_ARRAY_BUFFER, _renderer->vbo);
+    glBufferData(
+      GL_ARRAY_BUFFER, 
+      sizeof(float) * _renderer->vertices_count, _renderer->vertices, 
+      GL_DYNAMIC_DRAW
+    );
+
+    // _sfr_renderer_print_vertices_debug();
+
+    // TODO: add the view matrix
+    uint32_t u_texture_count  = glGetUniformLocation(shader, "u_textures_count");
+    uint32_t u_projection     = glGetUniformLocation(shader, "u_projection");
+    uint32_t u_transform      = glGetUniformLocation(shader, "u_transform");
+
+    glUniform1i(u_texture_count, _renderer->active_textures_count);
+    glUniformMatrix4fv(u_projection, 1, GL_FALSE, &_pipeline->projection[0][0]);
+    glUniformMatrix4fv(u_transform,  1, GL_FALSE, &_pipeline->transform2D[0][0]);
+
+    // calling draw call
+    glBindVertexArray(_renderer->vao);
+    glDrawElements(GL_TRIANGLES, _renderer->indices_count, GL_UNSIGNED_INT, (const void*)0);
 
     _sfr_renderer_clear_buffers();
   }
@@ -347,9 +402,11 @@ void _sfr_renderer_increase_indices_buffer(uint32_t quad_count) {
   }
 }
 
-void _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad_count) {
+uint32_t _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad_count) {
   SAFIRE_ASSERT(vertices, "[SAFIRE::RENDERER_INCREASE_VERTICES] failed to push vertices as the vertices doesn't have any memory assigned to it");
 
+  uint32_t offset = 0;
+  
   // increase buffer size
   if (_renderer->vertices != NULL) {
     _renderer->vertices = (float*)realloc(
@@ -368,15 +425,69 @@ void _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad
   uint32_t l = 0;
   SFRvertex_t* v = vertices;
   for (uint32_t i = 0; i < quad_count; i++) {
+    uint32_t texture = 0; // defines the index of the texture in the texture sampler2D array in the shader
+    // seeing what texture is being used
+    bool found = false;
+    for (uint32_t j = 0; j < _renderer->active_textures_count; j++) {
+      if (v[l].texture_id == _renderer->active_textures[j]) {
+        found = true;
+        texture = j;
+        break;
+      }
+    }
+
+    if (!found) {
+      // flush because we can't fit anymore textures in the buffer
+      if (_renderer->active_textures_count == SFR_MAX_TEXTURES_COUNT) {
+        // setting the indices for the quads vertices that have been pushed
+        _sfr_renderer_increase_indices_buffer(i);
+        // offset increase for the next lot of indices that need to be pushed as now the buffer is smaller than before
+        offset = i; 
+
+        // flush and clear the buffers
+        _sfr_renderer_flush();
+        _sfr_renderer_clear_buffers();
+
+        // create new buffer and continue adding the new stuff to that buffer now
+        _renderer->vertices = (float*)malloc(
+          sizeof(SFRvertex_t) * ((quad_count - i) * SFR_VERTEX_SIZE * 4)
+        );
+        SAFIRE_ASSERT(_renderer->vertices, "[SAFIRE::RENDERER_INCREASE_VERTICES] failed to assign memory to the buffer for some reason ...");
+
+        // still want to push the texture id
+        found = false;
+      }
+
+      _renderer->active_textures[_renderer->active_textures_count] = v[l].texture_id;
+
+      // should never be larger than 14 characters, largets: u_textures[10]
+      char variable[14];
+      sprintf(variable, "u_textures[%u]", _renderer->active_textures_count);
+      uint32_t location = glGetUniformLocation(_renderer->active_shader, variable);
+      glUniform1i(location, _renderer->active_textures_count);
+
+      glActiveTexture(GL_TEXTURE0 + _renderer->active_textures_count);
+      glBindTexture(GL_TEXTURE_2D, v[l].texture_id);
+
+      _renderer->active_textures_count++;
+    }
+
     // converting the vertex data
     uint32_t r = l + 1;
     float quad[] = {
-      v[r].vertex[X], v[r].vertex[Y], 0.0f, v[r].uv[X], v[r].uv[X], v[r].overlay_colour[R], v[r].overlay_colour[G], v[r].overlay_colour[B], v[r].overlay_colour[A], v[l].texture_id,
-      v[r].vertex[X], v[l].vertex[Y], 0.0f, v[r].uv[X], v[r].uv[X], v[r].overlay_colour[R], v[r].overlay_colour[G], v[r].overlay_colour[B], v[r].overlay_colour[A], v[l].texture_id,
-      v[l].vertex[X], v[l].vertex[Y], 0.0f, v[l].uv[X], v[l].uv[X], v[l].overlay_colour[R], v[l].overlay_colour[G], v[l].overlay_colour[B], v[l].overlay_colour[A], v[l].texture_id,
-      v[l].vertex[X], v[r].vertex[Y], 0.0f, v[l].uv[X], v[l].uv[X], v[l].overlay_colour[R], v[l].overlay_colour[G], v[l].overlay_colour[B], v[l].overlay_colour[A], v[l].texture_id 
+      v[r].vertex[X], v[r].vertex[Y], 0.0f, v[r].uv[X], v[r].uv[X], v[r].overlay_colour[R], v[r].overlay_colour[G], v[r].overlay_colour[B], v[r].overlay_colour[A], texture,
+      v[r].vertex[X], v[l].vertex[Y], 0.0f, v[r].uv[X], v[r].uv[X], v[r].overlay_colour[R], v[r].overlay_colour[G], v[r].overlay_colour[B], v[r].overlay_colour[A], texture,
+      v[l].vertex[X], v[l].vertex[Y], 0.0f, v[l].uv[X], v[l].uv[X], v[l].overlay_colour[R], v[l].overlay_colour[G], v[l].overlay_colour[B], v[l].overlay_colour[A], texture,
+      v[l].vertex[X], v[r].vertex[Y], 0.0f, v[l].uv[X], v[l].uv[X], v[l].overlay_colour[R], v[l].overlay_colour[G], v[l].overlay_colour[B], v[l].overlay_colour[A], texture
     };
 
+    // float quad[] = {
+    //   1.0f,  1.0f, 0.0f,    1.0f, 1.0f,     1.0f,  1.0f, 0.0f, 0.0f,     0.0f, 
+    //   1.0f, -1.0f, 0.0f,    1.0f, 0.0f,     1.0f, -1.0f, 0.0f, 0.0f,     0.0f, 
+    //   -1.0f, -1.0f, 0.0f,    0.0f, 0.0f,    -1.0f, -1.0f, 0.0f, 0.0f,     0.0f,
+    //   -1.0f,  1.0f, 0.0f,    0.0f, 1.0f,    -1.0f,  1.0f, 0.0f, 0.0f,     0.0f 
+    // };
+    
     // pushing the quad vertex data to the vertices batch renderer buffer
     // TODO: probs will be better to change the for loop into memcpy 
     _renderer->vertices_count += 40;
@@ -388,6 +499,8 @@ void _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad
 
     l += 2;
   }
+
+  return offset;
 }
 
 /* 
@@ -406,12 +519,25 @@ void _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad
       1, 2, 3               (second triangle)
     };
   */
-void _sfr_renderer_push_data(SFRvertex_t* vertices, uint32_t count, SFRshader_t* shader) {
+void _sfr_renderer_push_data(SFRvertex_t* vertices, uint32_t count, uint32_t shader) {
   SAFIRE_ASSERT(count != 0, "[SAFIRE::PIPELINE_RENDERER_PUSH_DATA] failed to push data to the buffer as the vertices count is set to 0");
 
+  // everything in the buffer must be using the same shader
+  if (shader != _renderer->active_shader) {
+    if (_renderer->vertices != NULL) {
+      _sfr_renderer_flush();
+      _sfr_renderer_clear_buffers();
+    }
+    
+    glUseProgram(shader);
+
+    _renderer->active_shader = shader;
+  }
+
+  // increase and push the data to the batch renderer's buffers
   uint32_t quad_count = count * 0.5;
-  _sfr_renderer_increase_indices_buffer(quad_count);
-  _sfr_renderer_increase_vertices_buffer(vertices, quad_count);
+  uint32_t offset = _sfr_renderer_increase_vertices_buffer(vertices, quad_count);
+  _sfr_renderer_increase_indices_buffer(quad_count - offset);
 }
 
 void _sfr_renderer_clear_buffers() {
@@ -424,6 +550,11 @@ void _sfr_renderer_clear_buffers() {
     
     _renderer->vertices_count = 0;
     _renderer->indices_count = 0;
+    
+    _renderer->active_textures_count = 0;
+    _renderer->active_shader = 0;
+    
+    glUseProgram(0);
   }
 }
 
@@ -439,8 +570,8 @@ void _sfr_renderer_free() {
 }
 
 void _sfr_renderer_print_vertices_debug() {
+  printf("renderer batch buffer debug:\n");
   if (_renderer->vertices != NULL) {
-    printf("renderer batch buffer debug:\n");
 
     uint32_t k = 0;
     printf("indices: (%u)", _renderer->indices_count);
@@ -466,6 +597,15 @@ void _sfr_renderer_print_vertices_debug() {
         printf("\n");
       }
     }
+
+    printf("active_shader id: %u\n", _renderer->active_shader);
+    printf("active_textures: (%u/10)\n", _renderer->active_textures_count);
+    for (uint32_t i = 0; i < _renderer->active_textures_count; i++) {
+      printf("* [%u]: %u\n", i, _renderer->active_textures[i]);
+    }
+
+  } else {
+    printf("buffers are currently empty\n");
   }
 }
 
@@ -588,6 +728,7 @@ SFRshader_t* sfr_shader(const char* name, const char* vertex_path, const char* f
     fseek(file, 0, SEEK_SET);
 
     char* source = (char*)malloc(sizeof(char*) * length);
+    source[length] = '\0';
     fread(source, length, 1, file);
     fclose(file);
 

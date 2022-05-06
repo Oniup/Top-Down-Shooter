@@ -4,8 +4,11 @@
 
 * implementation of the batch renderer
   * designed the framework *(VERSION 0.0.8.1)*
-  * create vertex buffers
-  * vertex data stack
+  * create vertex buffers *(VERSION 0.0.8.2)*
+    * batch renderer *(VERSION 0.0.9)*
+    * vertex data stack
+    * indices data stack
+    * clear when flushing
 
 ## VERSION 0.0.8 (2/5/2022)
 

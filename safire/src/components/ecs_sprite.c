@@ -31,7 +31,7 @@ SFRcomponent_t*  sfr_sprite_renderer() {
   renderer->vertices = (SFRvertex_t*)malloc(sizeof(SFRvertex_t) * 2);
 
   // bottom left
-  glm_vec3_copy((vec3){ 0.0f, 0.0f , 0.0f }, renderer->vertices[0].vertex);
+  glm_vec3_copy((vec3){ -1.0f, -1.0f , 0.0f }, renderer->vertices[0].vertex);
   renderer->vertices[0].texture_id = 0;
   glm_vec2_copy((vec2){ 0.0f, 0.0f }, renderer->vertices[0].uv);
   glm_vec4_copy((vec4){ 1.0f, 1.0f, 1.0f, 0.0f }, renderer->vertices[0].overlay_colour);
@@ -81,7 +81,22 @@ void _sfr_sprite_renderer_update(SFRcomponent_t* component, float delta_time) {
   SFRsprite_renderer_t* renderer = ((SFRsprite_renderer_t*)component->data);
   SAFIRE_ASSERT(renderer, "[SAFIRE::COMPONENT_SPRITE_UPDATE] for some reason the component data cannot be converted to sprite renderer");
 
-  sfr_pipeline_push_vertices(renderer->vertices, 2, renderer->shader);
+  // the first component in an entity static will always be the transform, unless you change it which you shouldn't do
+  SFRtransform_t* transform = ((SFRtransform_t*)component->owner->components[0]->data);
+  SFRvertex_t vertices[2];
+  for (uint32_t i = 0; i < 2; i++) {
+    sfr_vertex_copy(&vertices[i], &renderer->vertices[i]);
+
+    // so the centre of the quad is corrected to be the entities world coordinates
+    glm_vec3_scale(vertices[i].vertex, 0.5f, vertices[i].vertex); 
+    glm_vec3_add(transform->position, vertices[i].vertex, vertices[i].vertex);
+
+    // printf("vertex %d: [%f, %f]\n", i + 1, vertices[i].vertex[X], vertices[i].vertex[Y]);
+
+    // TODO: other transform related calculations (scaling and rotating) ...
+  }
+
+  sfr_pipeline_push_vertices(vertices, 2, renderer->shader);
 }
 
 void _sfr_sprite_renderer_free(SFRcomponent_t* component) {

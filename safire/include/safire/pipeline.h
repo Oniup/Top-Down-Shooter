@@ -23,13 +23,6 @@ typedef struct SFRtexture               SFRtexture_t;
 typedef struct SFRrenderer              SFRrenderer_t;
 typedef struct SFRvertex                SFRvertex_t;
 
-struct SFRvertex {
-  vec3                      vertex;
-  vec2                      uv;
-  vec4                      overlay_colour;
-  float                     texture_id;
-};
-
 
 
 
@@ -53,7 +46,19 @@ SAFIRE_API void             sfr_pipeline_push_shader(SFRshader_t* shader);
 SAFIRE_API void             sfr_pipeline_push_texture(SFRtexture_t* texture);
 SAFIRE_API void             sfr_pipeline_clear_assets_stack();
 
-SAFIRE_API void             sfr_pipeline_push_vertices(SFRvertex_t* vertices, uint32_t count, SFRshader_t* shader);
+SAFIRE_API void             sfr_pipeline_push_vertices(SFRvertex_t* vertices, uint32_t count, uint32_t shader);
+
+
+
+
+struct SFRvertex {
+  vec3                      vertex;
+  vec2                      uv;
+  vec4                      overlay_colour;
+  float                     texture_id;
+};
+
+SAFIRE_API void             sfr_vertex_copy(SFRvertex_t* dest, SFRvertex_t* source);
 
 
 
