@@ -4,6 +4,9 @@
 
 #include <GLFW/glfw3.h>
 
+
+
+
 struct SFRinput {
   SFRkeybinding_t*          press_once_key;
   SFRmouse_binding_t*       press_once_mouse;
@@ -20,7 +23,11 @@ struct SFRinput {
   SFRwindow_t*              window;
 };
 
+
 static struct SFRinput sinput;
+
+
+
 
 void sfr_input_init() {
   sinput.press_once_key = NULL;

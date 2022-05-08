@@ -17,7 +17,7 @@ SFRcomponent_t* sfr_transform() {
   SFRtransform_t* transform = ((SFRtransform_t*)component->data);
   glm_vec3_copy((vec3){ 0.0f, 0.0f, 0.0f }, transform->position);
   glm_vec3_copy((vec3){ 1.0f, 1.0f, 1.0f }, transform->scale);
-  glm_vec3_copy((vec4){ 0.0f, 0.0f, 1.0f, 0.0f }, transform->rotation);
+  glm_vec4_copy((vec4){ 0.0f, 0.0f, 1.0f, 0.0f }, transform->rotation);
 
   return component;
 }
@@ -27,4 +27,3 @@ void _sfr_transform_free(SFRcomponent_t* component) {
   free(transform);
   component->data = NULL;
 }
-

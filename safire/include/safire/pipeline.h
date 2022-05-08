@@ -47,6 +47,7 @@ SAFIRE_API void             sfr_pipeline_push_texture(SFRtexture_t* texture);
 SAFIRE_API void             sfr_pipeline_clear_assets_stack();
 
 SAFIRE_API void             sfr_pipeline_push_vertices(SFRvertex_t* vertices, uint32_t count, uint32_t shader);
+SAFIRE_API void             sfr_pipeline_print_vertices_debug();
 
 
 

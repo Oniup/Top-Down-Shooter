@@ -11,7 +11,6 @@ void safire(const char* window_title, int window_width, int window_height, bool 
   sfr_ecs_init(scenes, scenes_count);
   sfr_run();
   sfr_free();
-
 }
 
 void sfr_free() {

@@ -21,9 +21,7 @@ uniform int u_textures_count;
 
 void main() {
   vec4 colour = vec4(1.0, 0.0, 1.0, 1.0);
-  for (int i = 0; i < u_textures_count; i++) {
-    colour = texture(u_textures[i], _uv.xy);
-  }
+  colour = texture(u_textures[int(_texture_id)], _uv.xy);
 
   // checking if there is any opasity 
   if (colour.a < 0.05) {

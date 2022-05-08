@@ -37,7 +37,7 @@ void sfr_clear_terminal() {
 #ifndef WIN32
   system("clear");
 #else
-  system("clr");
+  system("cls");
 #endif
 }
 

@@ -25,7 +25,18 @@ typedef struct SFRsprite_animation      SFRsprite_animation_t;
 
 typedef enum   SFRcollider2d_type       SFRcollider2d_type_t;
 
+typedef struct SFRtexture               SFRtexture_t;
+typedef struct SFRshader                SFRshader_t;
 
+
+
+
+#define sfr_component_convert(Ty, component) ({\
+  SAFIRE_ASSERT(component != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component given doesn't exist");\
+  Ty* result = ((Ty*)component->data);\
+  SAFIRE_ASSERT(result != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component's custom data isn't the target type");\
+  result;\
+})\
 
 
 SAFIRE_API void sfr_attach_default_comps(SFRentity_t* entity);
@@ -52,13 +63,16 @@ struct SFRcollider2d {
 SAFIRE_API SFRcomponent_t*  sfr_collider2d(); // TODO: implement circle collision detection
 
 struct SFRsprite_renderer {
-  uint32_t                  texture;
   uint32_t                  shader;
   SFRsprite_animator_t*     sprite_animator;
   SFRvertex_t*              vertices;
 };
 
 SAFIRE_API SFRcomponent_t*  sfr_sprite_renderer(); // TODO: implement rendering sprites 
+SAFIRE_API void             sfr_sprite_renderer_set_texture(SFRcomponent_t* component, const char* name);
+SAFIRE_API void             sfr_sprite_renderer_set_shader(SFRcomponent_t* component, const char* name);
+SAFIRE_API SFRtexture_t*    sfr_sprite_renderer_get_texture(SFRcomponent_t* component);
+SAFIRE_API SFRshader_t*     sfr_sprite_renderer_get_shader(SFRcomponent_t* component);
 
 struct SFRsprite_animation {
   uint32_t* frames;

@@ -411,6 +411,7 @@ SFRcomponent_t* sfr_ecs_push_component(SFRentity_t* entity, SFRcomponent_t* comp
         for (uint32_t i = _ecs->component_indices->graphics_start_index; i < old_size; i++) {
           if (entity->layer >= _ecs->components[i]->owner->layer) {
             t_index++;
+          } else {
             break;
           }
         }
@@ -490,7 +491,6 @@ void sfr_ecs_entity_free(SFRentity_t* entity) {
       uint32_t target = 0;
       for (uint32_t i = 0; i < entity->components_count; i++) {
         target = sfr_ecs_component_find_index_uuid(0, entity->components[i]->uuid);
-        printf("%d\n", target);
         SAFIRE_ASSERT(target != UINT32_MAX, "[SAFIRE::ECS_ENTITY_FREE] failed to find target");
         sfr_ecs_erase_component(target);
       }
