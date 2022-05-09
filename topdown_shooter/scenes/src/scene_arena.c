@@ -41,11 +41,17 @@ void scene_arena_start(SFRscene_t* scene) {
 
   player->layer = 20;
 
-  SFRcomponent_t* controller = sfr_ecs_push_component(player, tds_player_controller());
-  SFRcomponent_t* renderer = sfr_ecs_push_component(player, sfr_sprite_renderer());
-  sfr_sprite_renderer_set_texture(renderer, "popcat");
+  SFRcomponent_t* player_controller = sfr_ecs_push_component(player, tds_player_controller());
+  SFRcomponent_t* player_renderer = sfr_ecs_push_component(player, sfr_sprite_renderer());
+  // sfr_sprite_renderer_set_texture(player_renderer, "popcat");
 
-  SFRcomponent_t* animator = sfr_ecs_push_component(player, sfr_sprite_animator(player));
+  SFRcomponent_t* player_collider = sfr_ecs_push_component(player, sfr_collider2d());  
+  {
+    SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, player_collider);
+    collider->trigger = true;
+  }
+
+
   for (uint32_t i = 0; i < 5; i++) {
     SFRentity_t* entity = sfr_ecs_push_entity("enemy1", "enemy");
 
@@ -58,10 +64,11 @@ void scene_arena_start(SFRscene_t* scene) {
 
     SFRcomponent_t* controller = sfr_ecs_push_component(entity, tds_enemy_controller());
     SFRcomponent_t* renderer = sfr_ecs_push_component(entity, sfr_sprite_renderer());
+    SFRcomponent_t* collider = sfr_ecs_push_component(entity, sfr_collider2d());
 
-    sfr_sprite_renderer_set_texture(renderer, "sadge");
+    SFRcollider2d_t* c = sfr_component_convert(SFRcollider2d_t, collider);
 
-    SFRcomponent_t* animator = sfr_ecs_push_component(entity, sfr_sprite_animator(entity));
+    // sfr_sprite_renderer_set_texture(renderer, "sadge");
   }
 
 

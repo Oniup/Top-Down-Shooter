@@ -1,10 +1,15 @@
 #include <topdown_shooter/player_controller.h>
 
-void tds_player_controller_update(SFRcomponent_t* component, float delta_time);
+void _tds_player_controller_update(SFRcomponent_t* component, float delta_time);
+
+void _tds_trigger_check(SFRcomponent_t* component);
+
+
+
 
 SFRcomponent_t* tds_player_controller() {
   SFRcomponent_t* component = sfr_ecs_component(
-    TDS_PLAYER_CONTROLLER, tds_player_controller_update, NULL, NULL
+    TDS_PLAYER_CONTROLLER, _tds_player_controller_update, NULL, NULL
   );
 
   component->data = (TDSplayer_controller_t*)malloc(sizeof(TDSplayer_controller_t));
@@ -20,7 +25,7 @@ void tds_player_damage(SFRcomponent_t* player_controller_comp, uint32_t damage) 
 
 }
 
-void tds_player_controller_update(SFRcomponent_t* component, float delta_time) {
+void _tds_player_controller_update(SFRcomponent_t* component, float delta_time) {
   vec3 direction = { 0, 0, 0 };
   if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A)) {
     direction[X] = -1;
@@ -68,6 +73,14 @@ void tds_player_controller_update(SFRcomponent_t* component, float delta_time) {
 
   }
 
+  _tds_trigger_check(component);
+}
 
-  // printf("movement [%f, %f]\n", direction[X], direction[Y]);
+void _tds_trigger_check(SFRcomponent_t* component) {
+  bool result = sfr_collider2d_trigger_enter_tag(component, "enemy");
+  if (result) {
+    static uint32_t count = 0;
+    count++;
+    printf("[%u] is in trigger collider\n", count);
+  }
 }

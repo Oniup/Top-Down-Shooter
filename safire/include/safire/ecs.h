@@ -30,8 +30,13 @@ SAFIRE_API void             sfr_ecs_render_update();                            
 SAFIRE_API void             sfr_ecs_erase_entity(uint32_t index);                         // removes the target entity from the stack
 SAFIRE_API void             sfr_ecs_erase_component(uint32_t index);                      // removes the target component from the stack
 
+SAFIRE_API SFRentity_t*     sfr_ecs_get_target_entity(uint32_t index);
+SAFIRE_API SFRcomponent_t*  sfr_ecs_get_target_component(uint32_t index);
+
 SAFIRE_API uint32_t         sfr_ecs_get_entities_count();
 SAFIRE_API uint32_t         sfr_ecs_get_component_count();
+
+SAFIRE_API uint32_t         sfr_ecs_get_starting_index(SFRcomponent_type_t type);
 
 SAFIRE_API void             sfr_ecs_load_scene(uint32_t id);
 

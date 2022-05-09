@@ -27,6 +27,7 @@ typedef enum   SFRcollider2d_type       SFRcollider2d_type_t;
 
 typedef struct SFRtexture               SFRtexture_t;
 typedef struct SFRshader                SFRshader_t;
+typedef uint64_t                        SFRuuid_t;
 
 
 
@@ -39,7 +40,10 @@ typedef struct SFRshader                SFRshader_t;
 })\
 
 
-SAFIRE_API void sfr_attach_default_comps(SFRentity_t* entity);
+SAFIRE_API void             sfr_attach_default_comps(SFRentity_t* entity);
+
+
+
 
 struct SFRtransform {
   vec3                      position;
@@ -49,18 +53,34 @@ struct SFRtransform {
 
 SAFIRE_API SFRcomponent_t*  sfr_transform();
 
+
+
+
 enum SFRcollider2d_type {
-  COLLIDER2D_TYPE_CIRCLE              = 0, 
-  COLLIDER2D_TYPE_SQUARE                 , // TODO: out of scope for this project
-  COLLIDER2D_TYPE_CUSTOM                   // TODO: out of scope for this project
+  SFR_COLLIDER2D_TYPE_CIRCLE              = 0, 
+  SFR_COLLIDER2D_TYPE_SQUARE                 , // TODO: out of scope for this project (maybe)
+  SFR_COLLIDER2D_TYPE_CUSTOM                   // TODO: out of scope for this project
 };
 
 struct SFRcollider2d {
   SFRcollider2d_type_t type;
+  bool trigger;
   vec2 size;
+  vec2 offset;
+  float weight;
 };
 
 SAFIRE_API SFRcomponent_t*  sfr_collider2d(); // TODO: implement circle collision detection
+
+SAFIRE_API bool sfr_collider2d_trigger_enter_tag(SFRcomponent_t* component, const char* target_tag);
+SAFIRE_API bool sfr_collider2d_trigger_enter_name(SFRcomponent_t* component, const char* name);
+SAFIRE_API bool sfr_collider2d_trigger_enter_uuid(SFRcomponent_t* component, SFRuuid_t target_uuid);
+SAFIRE_API bool sfr_collider2d_trigger_exit_tag(SFRcomponent_t* component, const char* target_tag);
+SAFIRE_API bool sfr_collider2d_trigger_exit_name(SFRcomponent_t* component, const char* name);
+SAFIRE_API bool sfr_collider2d_trigger_exit_uuid(SFRcomponent_t* component, SFRuuid_t target_uuid);
+
+
+
 
 struct SFRsprite_renderer {
   uint32_t                  shader;
@@ -73,6 +93,9 @@ SAFIRE_API void             sfr_sprite_renderer_set_texture(SFRcomponent_t* comp
 SAFIRE_API void             sfr_sprite_renderer_set_shader(SFRcomponent_t* component, const char* name);
 SAFIRE_API SFRtexture_t*    sfr_sprite_renderer_get_texture(SFRcomponent_t* component);
 SAFIRE_API SFRshader_t*     sfr_sprite_renderer_get_shader(SFRcomponent_t* component);
+
+
+
 
 struct SFRsprite_animation {
   uint32_t* frames;
@@ -87,6 +110,9 @@ struct SFRsprite_animator {
 };
 
 SAFIRE_API SFRcomponent_t*  sfr_sprite_animator(SFRentity_t* entity); // TODO: implement rendering sprite animations
+
+
+
 
 #ifdef __cplusplus
 }

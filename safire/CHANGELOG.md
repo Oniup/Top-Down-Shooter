@@ -1,5 +1,12 @@
 # Safire Change logs
 
+## VERSION 0.0.11 (9/5/2022)
+
+* components
+  * collider component
+    * trigger
+    * collide
+
 ## VERSION 0.0.10 (8/5/2022)
 
 * component converter, so you don't have to write ((Ty*)component->data) every time you want to access the custom data
@@ -8,7 +15,7 @@
   * scaling and rotating
 * fixed indices bug when there were more than 5 quads been draw
 
-## VERSION 0.0.9 (2/5/2022 - 6/5/2022)
+## VERSION 0.0.9 (6/5/2022)
 
 * implementation of the batch renderer
   * designed the framework *(VERSION 0.0.8.1)*
@@ -24,7 +31,7 @@
 * implementation of shaders *(VERSION 0.0.7.2)*
 * implementation of textures  
 
-## VERSION 0.0.7 (26/4/2022 - 30/4/2022)
+## VERSION 0.0.7 (30/4/2022)
 
 * made code more cleaner *(VERSION 0.0.6.1)*
   * spacing and tabbing for functions and type defines in the header files

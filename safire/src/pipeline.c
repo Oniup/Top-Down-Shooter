@@ -597,6 +597,8 @@ SFRwindow_t* sfr_window(const char* window_title, int window_width, int window_h
     );
   }
 
+  glfwSetWindowAspectRatio(window->window, 16, 9);
+
   glfwMakeContextCurrent(window->window);
   SAFIRE_ASSERT(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "[SAFIRE::PIPELINE_WINDOW] something when wrong when initialising glad ...");
   glfwSwapInterval(0); // by setting it to 0, it should disable vsync, this might cause screen tearing, but most likely it won't

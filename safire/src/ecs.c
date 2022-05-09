@@ -292,12 +292,52 @@ void sfr_ecs_erase_component(uint32_t index) {
   }
 }
 
+SFRentity_t* sfr_ecs_get_target_entity(uint32_t index) {
+#ifndef NDEBUG
+  if (index > _ecs->entities_count || index < 0) {
+    return NULL;
+  }
+#endif
+
+  return _ecs->entities[index];
+}
+
+SFRcomponent_t* sfr_ecs_get_target_component(uint32_t index) {
+  #ifndef NDEBUG
+  if (index > _ecs->components_count || index < 0) {
+    return NULL;
+  }
+#endif
+
+  return _ecs->components[index];
+}
+
 uint32_t sfr_ecs_get_entities_count() {
   return _ecs->entities_count;
 }
 
 uint32_t sfr_ecs_get_component_count() {
   return _ecs->components_count;
+}
+
+uint32_t sfr_ecs_get_starting_index(SFRcomponent_type_t type) {
+  switch (type) {
+  case SFR_COMPONENT_TYPE_NON_FUNCTIONAL:
+    return _ecs->component_indices->non_function_start_index;
+    break;
+    
+  case SFR_COMPONENT_TYPE_FUNCTIONAL:
+    return _ecs->component_indices->functional_start_index;
+    break;
+
+  case SFR_COMPONENT_TYPE_PHYSICS:
+    return _ecs->component_indices  ->physics_start_index;
+    break;
+
+  case SFR_COMPONENT_TYPE_GRAPHICS:
+    return _ecs->component_indices->graphics_start_index;
+    break;
+  }
 }
 
 void sfr_ecs_load_scene(uint32_t id) {
