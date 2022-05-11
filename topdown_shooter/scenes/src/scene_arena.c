@@ -3,6 +3,7 @@
 // entities
 #include <topdown_shooter/player_controller.h>
 #include <topdown_shooter/enemy_controller.h>
+#include <topdown_shooter/camera_controller.h>
 
 typedef struct TDSarena {
   bool can_print_debug;
@@ -43,13 +44,9 @@ void scene_arena_start(SFRscene_t* scene) {
 
   SFRcomponent_t* player_controller = sfr_ecs_push_component(player, tds_player_controller());
   SFRcomponent_t* player_renderer = sfr_ecs_push_component(player, sfr_sprite_renderer());
-  // sfr_sprite_renderer_set_texture(player_renderer, "popcat");
+  sfr_sprite_renderer_set_texture(player_renderer, "popcat");
 
   SFRcomponent_t* player_collider = sfr_ecs_push_component(player, sfr_collider2d());  
-  {
-    SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, player_collider);
-    collider->trigger = true;
-  }
 
 
   for (uint32_t i = 0; i < 5; i++) {
@@ -68,9 +65,12 @@ void scene_arena_start(SFRscene_t* scene) {
 
     SFRcollider2d_t* c = sfr_component_convert(SFRcollider2d_t, collider);
 
-    // sfr_sprite_renderer_set_texture(renderer, "sadge");
+    sfr_sprite_renderer_set_texture(renderer, "sadge");
   }
 
+
+  SFRentity_t* camera = sfr_ecs_push_entity("camera", "camera");
+  sfr_ecs_push_component(camera, tds_camera_controller());
 
   /**
    * TODO: scene setup

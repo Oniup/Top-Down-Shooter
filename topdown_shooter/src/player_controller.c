@@ -73,7 +73,7 @@ void _tds_player_controller_update(SFRcomponent_t* component, float delta_time) 
 
   }
 
-  _tds_trigger_check(component);
+  // _tds_trigger_check(component);
 }
 
 void _tds_trigger_check(SFRcomponent_t* component) {

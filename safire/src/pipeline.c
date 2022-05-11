@@ -109,11 +109,8 @@ void sfr_pipeline_init(const char* window_title, int window_width, int window_he
   _sfr_renderer_init();
 
   // creating the global transform matrix for 2D games
-  glm_mat4_identity(_pipeline->transform2D);
-  glm_translate(_pipeline->transform2D, (vec3){ 0.0f, 0.0f, 0.0f });
-  glm_scale(_pipeline->transform2D, (vec3){ 1.0f, 1.0f, 1.0f });
-  glm_rotate(_pipeline->transform2D, 0.0f, (vec3){ 0.0f, 0.0f, 1.0f });
-
+  sfr_pipeline_set_transform_matrix((vec3){ 0.0f, 0.0f, 0.0f }, (vec3){ 1.0f, 1.0f, 1.0f }, (vec4){ 0.0f, 0.0f, 1.0f, 0.0f });
+  
   // creating the default projection matrix
   sfr_pipeline_set_projection_matrix(SFR_PIPELINE_PROJECTION_ORTHOGRAPHIC);
 }
@@ -162,6 +159,13 @@ void sfr_pipeline_set_projection_matrix(int mode) {
 
 void sfr_pipeline_get_projection_matrix(mat4 projection) {
 
+}
+
+void sfr_pipeline_set_transform_matrix(vec3 position, vec3 scale, vec4 rotation) {
+  glm_mat4_identity(_pipeline->transform2D);
+  glm_translate(_pipeline->transform2D, position);
+  glm_scale(_pipeline->transform2D, scale);
+  glm_rotate(_pipeline->transform2D, rotation[W], rotation);
 }
 
 SFRshader_t** sfr_pipeline_get_shaders(uint32_t* shader_count) {

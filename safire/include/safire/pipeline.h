@@ -34,6 +34,7 @@ SAFIRE_API void             sfr_pipeline_free();
 
 SAFIRE_API void             sfr_pipeline_set_projection_matrix(int mode);
 SAFIRE_API void             sfr_pipeline_get_projection_matrix(mat4 projection);
+SAFIRE_API void             sfr_pipeline_set_transform_matrix(vec3 position, vec3 scale, vec4 rotation);
 
 SAFIRE_API SFRshader_t**    sfr_pipeline_get_shaders(uint32_t* shaders_count);
 SAFIRE_API SFRtexture_t**   sfr_pipeline_get_textures(uint32_t* textures_count);
