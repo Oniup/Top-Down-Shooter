@@ -7,13 +7,34 @@ void _tds_trigger_check(SFRcomponent_t* component);
 
 
 
+TDSplayer_controller_t* tds_player_controller_create_instance() {
+  SFRentity_t* player = sfr_ecs_push_entity("Player1", "player");
+
+  player->layer = 20;
+
+  SFRcomponent_t* player_controller = sfr_ecs_push_component(player, tds_player_controller());
+  SFRcomponent_t* player_renderer = sfr_ecs_push_component(player, sfr_sprite_renderer());
+  sfr_sprite_renderer_set_texture(player_renderer, "player");
+
+  SFRcomponent_t* player_collider = sfr_ecs_push_component(player, sfr_collider2d());  
+
+  TDSplayer_controller_t* controller = SFR_COMPONENT_CONVERT(TDSplayer_controller_t, player_controller);
+  return controller;
+}
+
+void tds_player_controller_load_assets() {
+  sfr_pipeline_push_texture(sfr_texture(
+    "player", "./art/popcat.png", true, 4, false
+  ));
+}
+
 SFRcomponent_t* tds_player_controller() {
   SFRcomponent_t* component = sfr_ecs_component(
     TDS_PLAYER_CONTROLLER, _tds_player_controller_update, NULL, NULL
   );
 
   component->data = (TDSplayer_controller_t*)malloc(sizeof(TDSplayer_controller_t));
-  TDSplayer_controller_t* player_controller = sfr_component_convert(TDSplayer_controller_t, component);
+  TDSplayer_controller_t* player_controller = SFR_COMPONENT_CONVERT(TDSplayer_controller_t, component);
 
   player_controller->damage = 1;
   player_controller->move_speed = 5.0f;
@@ -41,7 +62,7 @@ void _tds_player_controller_update(SFRcomponent_t* component, float delta_time) 
   } 
 
 
-  SFRtransform_t* transform = sfr_component_convert(SFRtransform_t, component->owner->components[0]);
+  SFRtransform_t* transform = SFR_COMPONENT_CONVERT(SFRtransform_t, component->owner->components[0]);
   if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_UP)) {
     transform->scale[Y] *= 0.9999f;
   } else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_DOWN)) {
@@ -57,8 +78,6 @@ void _tds_player_controller_update(SFRcomponent_t* component, float delta_time) 
     TDSplayer_controller_t* controller = ((TDSplayer_controller_t*)component->data);
 
     static bool flipped_x = false;
-    // printf("direction: %f, %f   :   %d", direction[X], direction[Y], (int)flipped_x);
-    // printf("   :   transform: %f, %f\n", transform->scale[X], transform->scale[Y]);
 
     if (direction[X] < -0.0f && !flipped_x) {
       transform->scale[X] = -transform->scale[X];

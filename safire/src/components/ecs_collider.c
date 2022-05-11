@@ -20,6 +20,8 @@ bool                        _sfr_collider2d_calc_trigger_circle(SFRcomponent_t* 
 bool                        _sfr_collider2d_calc_trigger_square(SFRcomponent_t* component, SFRcomponent_t* target);
 bool                        _sfr_collider2d_calc_trigger_custom(SFRcomponent_t* component, SFRcomponent_t* target);
 
+SFRcomponent_t**            _sfr_collider2d_trigger_check(SFRcomponent_t* component, uint32_t* target_count);
+
 
 
 
@@ -33,7 +35,7 @@ SFRcomponent_t* sfr_collider2d() {
   component->data = (SFRcollider2d_t*)malloc(sizeof(SFRcollider2d_t));
   SAFIRE_ASSERT(component->data, "[SAFIRE::COMPONENT_COLLIDER_2D]: failed to assign memory SFRcollider2d to custom data for some reason ...");
 
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
+  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
   collider->type = SFR_COLLIDER2D_TYPE_CIRCLE;
   collider->trigger = false;
   glm_vec2_copy((vec2){ 1.0f, 1.0f }, collider->size);
@@ -45,26 +47,19 @@ SFRcomponent_t* sfr_collider2d() {
 
 bool sfr_collider2d_trigger_enter_tag(SFRcomponent_t* component, const char* target_tag) {
   component = _sfr_collider2d_get_correct_trigger(component);
+  
+  uint32_t target_count = 0;
+  SFRcomponent_t** targets  = _sfr_collider2d_trigger_check(component, &target_count);
 
-  if (component != NULL) {
-    SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
+  if (targets != NULL) {
+    // checking the triggers
+    uint32_t length = sfr_str_length(target_tag);
+    for (uint32_t i = 0; i < target_count; i++) {
+      if (sfr_str_cmp_length(target_tag, targets[i]->owner->tag, length)) {
+        bool result = _sfr_collider2d_trigger(component, targets[i]);
 
-    if (collider->trigger) {
-      uint32_t target_count = 0;
-      SFRcomponent_t** targets = _sfr_colliders_get(component, &target_count);
-
-      if (targets == NULL) {
-        return NULL;
-      }
-
-      // checking the triggerss
-      uint32_t length = sfr_str_length(target_tag);
-      for (uint32_t i = 0; i < target_count; i++) {
-        if (sfr_str_cmp_length(target_tag, targets[i]->owner->tag, length)) {
-          bool result = _sfr_collider2d_trigger(component, targets[i]);
-          if (result) {
-            return true;
-          }
+        if (result) {
+          return true;
         }
       }
     }
@@ -74,27 +69,62 @@ bool sfr_collider2d_trigger_enter_tag(SFRcomponent_t* component, const char* tar
 }
 
 bool sfr_collider2d_trigger_enter_name(SFRcomponent_t* component, const char* name) {
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
+  component = _sfr_collider2d_get_correct_trigger(component);
+  
+  uint32_t target_count = 0;
+  SFRcomponent_t** targets  = _sfr_collider2d_trigger_check(component, &target_count);
+
+  if (targets != NULL) {
+    // checking the triggerss
+    uint32_t length = sfr_str_length(name);
+    for (uint32_t i = 0; i < target_count; i++) {
+      if (sfr_str_cmp_length(name, targets[i]->owner->name, length)) {
+        bool result = _sfr_collider2d_trigger(component, targets[i]);
+
+        if (result) {
+          return true;
+        }
+      }
+    }
+  }
+
   return false;
 }
 
 bool sfr_collider2d_trigger_enter_uuid(SFRcomponent_t* component, SFRuuid_t target_uuid) {
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
+  component = _sfr_collider2d_get_correct_trigger(component);
+  
+  uint32_t target_count = 0;
+  SFRcomponent_t** targets  = _sfr_collider2d_trigger_check(component, &target_count);
+
+  if (targets != NULL) {
+    // checking the triggerss
+    for (uint32_t i = 0; i < target_count; i++) {
+      if ((unsigned long long)target_uuid == (unsigned long long)targets[i]->owner->uuid) {
+        bool result = _sfr_collider2d_trigger(component, targets[i]);
+
+        if (result) {
+          return true;
+        }
+      }
+    }
+  }
+
   return false;
 }
 
 bool sfr_collider2d_trigger_exit_tag(SFRcomponent_t* component, const char* target_tag) {
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
+  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
   return false;
 }
 
 bool sfr_collider2d_trigger_exit_name(SFRcomponent_t* component, const char* name) {
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
+  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
   return false;
 }
 
 bool sfr_collider2d_trigger_exit_uuid(SFRcomponent_t* component, SFRuuid_t target_uuid) {
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
+  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
   return false;
 }
 
@@ -102,7 +132,7 @@ bool sfr_collider2d_trigger_exit_uuid(SFRcomponent_t* component, SFRuuid_t targe
 
 
 void _sfr_collider2d_late_update(SFRcomponent_t* component, float delta_time) {
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
+  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
 
   // make sure that the collider is not a trigger collider  
   if (!collider->trigger) {
@@ -114,7 +144,7 @@ void _sfr_collider2d_late_update(SFRcomponent_t* component, float delta_time) {
     }
 
     for (uint32_t i = 0; i < target_count; i++) {
-      SFRcollider2d_t* target_collider = sfr_component_convert(SFRcollider2d_t, target[i]);
+      SFRcollider2d_t* target_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target[i]);
       if (!target_collider->trigger) {
         _sfr_collider2d_collide(component, target[i]);
       }
@@ -170,7 +200,7 @@ SFRcomponent_t* _sfr_collider2d_get_correct_trigger(SFRcomponent_t* component) {
     SFRcomponent_t* target = component->owner->components[i];
 
     if (sfr_str_cmp_length(SFR_COLLIDER2D, target->name, length)) {
-      SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, target);
+      SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
 
       if (collider->trigger) {
         return target;
@@ -183,8 +213,8 @@ SFRcomponent_t* _sfr_collider2d_get_correct_trigger(SFRcomponent_t* component) {
 }
 
 void _sfr_collider2d_collide(SFRcomponent_t* component, SFRcomponent_t* target) {
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, component);
-  SFRcollider2d_t* target_collider = sfr_component_convert(SFRcollider2d_t, target);
+  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+  SFRcollider2d_t* target_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
 
   bool same_weight = false;
   if (collider->weight < target_collider->weight) {
@@ -192,8 +222,8 @@ void _sfr_collider2d_collide(SFRcomponent_t* component, SFRcomponent_t* target) 
     component = target;
     target = temp;
 
-    collider = sfr_component_convert(SFRcollider2d_t, component);
-    target_collider = sfr_component_convert(SFRcollider2d_t, target);
+    collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+    target_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
   } else if (collider->weight == target_collider->weight) {
     same_weight = true;
   }
@@ -214,10 +244,10 @@ void _sfr_collider2d_collide(SFRcomponent_t* component, SFRcomponent_t* target) 
 }
 
 void _sfr_collider2d_calc_circle(SFRcomponent_t* component, SFRcomponent_t* target, bool same_weight) {
-  SFRtransform_t* comp_transform = sfr_component_convert(SFRtransform_t, component->owner->components[0]);
-  SFRtransform_t* targ_transform = sfr_component_convert(SFRtransform_t, target->owner->components[0]);
-  SFRcollider2d_t* comp_collider = sfr_component_convert(SFRcollider2d_t, component);
-  SFRcollider2d_t* targ_collider = sfr_component_convert(SFRcollider2d_t, target);
+  SFRtransform_t* comp_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, component->owner->components[0]);
+  SFRtransform_t* targ_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, target->owner->components[0]);
+  SFRcollider2d_t* comp_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+  SFRcollider2d_t* targ_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
 
   // calculating the distance between the two colliders
   vec3 direction;
@@ -265,7 +295,7 @@ void _sfr_collider2d_calc_custom(SFRcomponent_t* component, SFRcomponent_t* targ
 
 
 bool _sfr_collider2d_trigger(SFRcomponent_t* component, SFRcomponent_t* target) {
-  SFRcollider2d_t* collider = sfr_component_convert(SFRcollider2d_t, target);
+  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
 
   bool is_colliding = false;
   switch (collider->type) {
@@ -285,11 +315,29 @@ bool _sfr_collider2d_trigger(SFRcomponent_t* component, SFRcomponent_t* target) 
   return false;
 }
 
+SFRcomponent_t** _sfr_collider2d_trigger_check(SFRcomponent_t* component, uint32_t* target_count) {
+  if (component != NULL) {
+    SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t,component);
+
+    if (collider->trigger) {
+      SFRcomponent_t** targets = _sfr_colliders_get(component, target_count);
+
+      if (targets == NULL) {
+        return NULL;
+      }
+
+      return targets;
+    }
+  }
+
+  return NULL;
+}
+
 bool _sfr_collider2d_calc_trigger_circle(SFRcomponent_t* component, SFRcomponent_t* target) {
-  SFRtransform_t* comp_transform = sfr_component_convert(SFRtransform_t, component->owner->components[0]);
-  SFRtransform_t* targ_transform = sfr_component_convert(SFRtransform_t, target->owner->components[0]);
-  SFRcollider2d_t* comp_collider = sfr_component_convert(SFRcollider2d_t, component);
-  SFRcollider2d_t* targ_collider = sfr_component_convert(SFRcollider2d_t, target);
+  SFRtransform_t* comp_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, component->owner->components[0]);
+  SFRtransform_t* targ_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, target->owner->components[0]);
+  SFRcollider2d_t* comp_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+  SFRcollider2d_t* targ_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
 
   // calculating the distance between the two colliders
   vec3 direction;

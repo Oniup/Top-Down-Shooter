@@ -9,8 +9,8 @@
 
 
 void                        _sfr_qsort_uint32_swap(uint32_t* a, uint32_t* b);
-uint32_t                    _sfr_qsort_uint32_partition(uint32_t* arr, uint32_t lower, uint32_t higher);
-void                        _sfr_qsort_uint32(uint32_t* arr, uint32_t lower, uint32_t higher);
+int                         _sfr_qsort_uint32_partition(uint32_t* arr, int lower, int higher);
+void                        _sfr_qsort_uint32(uint32_t* arr, int lower, int higher);
 
 
 
@@ -47,12 +47,11 @@ void _sfr_qsort_uint32_swap(uint32_t* a, uint32_t* b) {
   *b = temp;
 }
 
-uint32_t _sfr_qsort_uint32_partition(uint32_t* arr, uint32_t lower, uint32_t higher) {
+int _sfr_qsort_uint32_partition(uint32_t* arr, int lower, int higher) {
   uint32_t pivot = arr[higher];
-  uint32_t i = (lower - 1);
- 
-  for (int j = lower; j <= higher - 1; j++) {
-    if (arr[j] < pivot) {
+  int i = (lower - 1);
+  for (int j = lower; j < higher; j++) {
+    if (arr[j] <= pivot) {
       i++;
       _sfr_qsort_uint32_swap(&arr[i], &arr[j]);
     }
@@ -61,17 +60,18 @@ uint32_t _sfr_qsort_uint32_partition(uint32_t* arr, uint32_t lower, uint32_t hig
   return (i + 1);
 }
 
-void _sfr_qsort_uint32(uint32_t* arr, uint32_t lower, uint32_t higher) {
+void _sfr_qsort_uint32(uint32_t* arr, int lower, int higher) {
   if (lower < higher) {
-    uint32_t pi = _sfr_qsort_uint32_partition(arr, lower, higher);
+    int pi  =_sfr_qsort_uint32_partition(arr, lower, higher);
 
+    // recursive call on the left of the array
     _sfr_qsort_uint32(arr, lower, pi - 1);
     _sfr_qsort_uint32(arr, pi + 1, higher);
   }
 }
 
 void sfr_qsort_uint32(uint32_t* arr, uint32_t size) {
-  _sfr_qsort_uint32(arr, 0, size - 1);
+  _sfr_qsort_uint32(arr, 0, (int)size - 1);
 }
 
 int sfr_rand_int32() {

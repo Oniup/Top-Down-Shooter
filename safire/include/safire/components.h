@@ -32,12 +32,23 @@ typedef uint64_t                        SFRuuid_t;
 
 
 
-#define sfr_component_convert(Ty, component) ({\
+#if !defined(NDEBUG) || defined(__MINGW32__) || !defined(__WIN32)
+
+// for some reason MSVC doesn't like this syntax
+#define SFR_COMPONENT_CONVERT(Ty, component) ({\
   SAFIRE_ASSERT(component != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component given doesn't exist");\
   Ty* result = ((Ty*)component->data);\
   SAFIRE_ASSERT(result != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component's custom data isn't the target type");\
   result;\
 })\
+
+#else
+
+#define SFR_COMPONENT_CONVERT(Ty, component) ((Ty*)component->data);
+
+#endif
+
+
 
 
 SAFIRE_API void             sfr_attach_default_comps(SFRentity_t* entity);

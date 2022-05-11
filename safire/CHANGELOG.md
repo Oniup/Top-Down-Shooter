@@ -1,5 +1,17 @@
 # Safire Change logs
 
+## VERSION 0.0.12 (11/5/2022)
+
+* many bug fixes
+  * fixed (windows) the compiler errors for SFR_COMPONENT_CONVERT (also change it from sfr_component_convert because of proper conventions with macros)
+  * fixed the bug when the deleting multiple entities in one frame, it would crash (the lower and higher in sfr_qsort_uint32 was an uint32_t when they should be int)
+  * fixed rendering more than 2 textures, it was because the uniform location wasn't using the dynamic location but was using a test string "u_textures[1]"  
+* quality of life
+  * implemented the other collider2d trigger functions (for uuid and name)
+  * added error logs when failing to find an entity or component (these functions: sfr_ecs_entity_find_index_uuid)
+
+*note: development on the engine should be slower because working on the game part now...*
+
 ## VERSION 0.0.11 (9/5/2022)
 
 * components

@@ -15,8 +15,11 @@ struct TDSplayer_controller {
   int damage;
 };
 
-SAFIRE_API SFRcomponent_t*  tds_player_controller();
-SAFIRE_API void             tds_player_damage(SFRcomponent_t* player_controller_comp, uint32_t damage);
+SAFIRE_API TDSplayer_controller_t*  tds_player_controller_create_instance();
+SAFIRE_API void                     tds_player_controller_load_assets();
+
+SAFIRE_API SFRcomponent_t*          tds_player_controller();
+SAFIRE_API void                     tds_player_damage(SFRcomponent_t* player_controller_comp, uint32_t damage);
 
 
 

@@ -214,6 +214,38 @@ SFRtexture_t* sfr_pipeline_get_target_texture(const char* name) {
   return NULL;
 }
 
+uint32_t sfr_pipeline_get_target_shader_index(const char* name) {
+  if (name != NULL) {
+    uint32_t length = sfr_str_length(name);
+    if (length > 0) {
+      for (uint32_t i = 0; i < _pipeline->shaders_count; i++) {
+        if (sfr_str_cmp_length(name, _pipeline->shaders[i]->name, length)) {
+          return i;
+        }
+      }
+    }
+  }
+
+  printf("[SAFIRE::FIND_TARGET_SHADER_INDEX] failed to find shader with the name '%s' as it doesn't exist\n", name); 
+  return UINT32_MAX;
+}
+
+uint32_t sfr_pipeline_get_target_texture_index(const char* name) {
+  if (name != NULL) {
+    uint32_t length = sfr_str_length(name);
+    if (length > 0) {
+      for (uint32_t i = 0; i < _pipeline->textures_count; i++) {
+        if (sfr_str_cmp_length(name, _pipeline->textures[i]->name, length)) {
+          return i;
+        }
+      }
+    }
+  }
+  
+  printf("[SAFIRE::FIND_TARGET_TEXTURE_INDEX] failed to find texture with the name '%s' as it doesn't exist\n", name);
+  return UINT32_MAX;
+}
+
 void sfr_pipeline_push_shader(SFRshader_t* shader) {
   if (shader != NULL) {
     _pipeline->shaders_count++;
@@ -459,7 +491,7 @@ void _sfr_renderer_increase_vertices_buffer(SFRvertex_t* vertices, uint32_t quad
       glBindTexture(GL_TEXTURE_2D, (uint32_t)v[tr].texture_id);
       texture = _renderer->active_textures_count;
 
-      uint32_t location = glGetUniformLocation(_renderer->active_shader, "u_textures[1]");
+      uint32_t location = glGetUniformLocation(_renderer->active_shader, variable);
       glUniform1i(location, _renderer->active_textures_count);
 
       _renderer->active_textures_count++;

@@ -30,7 +30,7 @@ SFRcomponent_t*  sfr_sprite_renderer() {
   component->data = (SFRsprite_renderer_t*)malloc(sizeof(SFRsprite_renderer_t));
   SAFIRE_ASSERT(component->data, "[SAFIRE::COMPONENT_SPRITE_RENDERER] failed to assign memory to component for some reason");
 
-  SFRsprite_renderer_t* renderer = sfr_component_convert(SFRsprite_renderer_t, component);
+  SFRsprite_renderer_t* renderer = SFR_COMPONENT_CONVERT(SFRsprite_renderer_t, component);
 
   SFRshader_t* target_shader = sfr_pipeline_get_target_shader("SAFIRE::default");
   SFRtexture_t* target_texture = sfr_pipeline_get_target_texture("SAFIRE::default");
@@ -62,7 +62,7 @@ SFRcomponent_t*  sfr_sprite_renderer() {
 }
 
 void _sfr_sprite_renderer_update(SFRcomponent_t* component, float delta_time) {
-  SFRsprite_renderer_t* renderer = sfr_component_convert(SFRsprite_renderer_t, component);
+  SFRsprite_renderer_t* renderer = SFR_COMPONENT_CONVERT(SFRsprite_renderer_t, component);
 
   SFRvertex_t vertices[4] = { {}, {} };
   _sfr_sprite_renderer_translation(component, vertices);
@@ -75,7 +75,7 @@ void _sfr_sprite_renderer_update(SFRcomponent_t* component, float delta_time) {
 void sfr_sprite_renderer_set_texture(SFRcomponent_t* component, const char* name) {
   SFRtexture_t* target = sfr_pipeline_get_target_texture(name);
   if (target != NULL) {
-    SFRsprite_renderer_t* renderer = sfr_component_convert(SFRsprite_renderer_t, component);
+    SFRsprite_renderer_t* renderer = SFR_COMPONENT_CONVERT(SFRsprite_renderer_t, component);
     for (uint32_t i = 0; i < 4; i++) {
       renderer->vertices[i].texture_id = (float)target->id;
     }
@@ -85,13 +85,13 @@ void sfr_sprite_renderer_set_texture(SFRcomponent_t* component, const char* name
 void sfr_sprite_renderer_set_shader(SFRcomponent_t* component, const char* name) {
   SFRshader_t* target = sfr_pipeline_get_target_shader(name);
   if (target != NULL) {
-    SFRsprite_renderer_t* renderer = sfr_component_convert(SFRsprite_renderer_t, component);
+    SFRsprite_renderer_t* renderer = SFR_COMPONENT_CONVERT(SFRsprite_renderer_t, component);
     renderer->shader = target->id;
   }
 }
 
 SFRtexture_t* sfr_sprite_renderer_get_texture(SFRcomponent_t* component) {
-  SFRsprite_renderer_t* renderer = sfr_component_convert(SFRsprite_renderer_t, component);
+  SFRsprite_renderer_t* renderer = SFR_COMPONENT_CONVERT(SFRsprite_renderer_t, component);
   // TODO: ...
   return NULL;
 }
@@ -105,7 +105,7 @@ SFRshader_t* sfr_sprite_renderer_get_shader(SFRcomponent_t* component) {
 
 
 void _sfr_sprite_renderer_free(SFRcomponent_t* component) {
-  SFRsprite_renderer_t* renderer = sfr_component_convert(SFRsprite_renderer_t, component);
+  SFRsprite_renderer_t* renderer = SFR_COMPONENT_CONVERT(SFRsprite_renderer_t, component);
   SAFIRE_ASSERT(renderer, "[SAFIRE::COMPONENT_SPRITE_FREE] for some reason the component data cannot be converted to sprite renderer");
 
   free(renderer->vertices);
@@ -113,8 +113,8 @@ void _sfr_sprite_renderer_free(SFRcomponent_t* component) {
 
 void _sfr_sprite_renderer_translation(SFRcomponent_t* component, SFRvertex_t* vertices) {
   // getting the components
-  SFRsprite_renderer_t* renderer = sfr_component_convert(SFRsprite_renderer_t, component);
-  SFRtransform_t* transform = sfr_component_convert(SFRtransform_t, component->owner->components[0]);
+  SFRsprite_renderer_t* renderer = SFR_COMPONENT_CONVERT(SFRsprite_renderer_t, component);
+  SFRtransform_t* transform = SFR_COMPONENT_CONVERT(SFRtransform_t, component->owner->components[0]);
 
   // setting the correct vertex data
   float angle = transform->rotation[W] - 0.78633229259f; // subtracting 45 degrees because every vertex needs to rotate that much to the left
@@ -164,7 +164,7 @@ SFRcomponent_t*  sfr_sprite_animator(SFRentity_t* entity) {
 
     // sprite animator creation
     component->data = (SFRsprite_animator_t*)malloc(sizeof(SFRsprite_animator_t));
-    SFRsprite_animator_t* animator = sfr_component_convert(SFRsprite_animator_t, component);
+    SFRsprite_animator_t* animator = SFR_COMPONENT_CONVERT(SFRsprite_animator_t, component);
     animator->sprite_renderer = renderer;
     animator->animations = NULL;
     animator->animation_count = 0;

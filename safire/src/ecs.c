@@ -76,9 +76,9 @@ void sfr_ecs_init(SFRscene_t** scenes, uint32_t scenes_count) {
 
   SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
 
-  for (uint32_t i = 0; i < _ecs->scenes_count; i++) {
-    printf("scene name: %s\n", scenes[i]->name);
-  }
+  // for (uint32_t i = 0; i < _ecs->scenes_count; i++) {
+  //   printf("scene name: %s\n", scenes[i]->name);
+  // }
 }
 
 SFRecs_t* sfr_ecs_instance() {
@@ -127,8 +127,8 @@ void sfr_ecs_remove_erased_entities() {
     // sorting the buffer as it will be easier to remove entities from the stack
     // and not the expensive as most of the time in this buffer, there will only be
     // a couple of indices
-    sfr_qsort_uint32(_ecs->removing_entities, _ecs->removing_entities_count);
-
+    sfr_qsort_uint32(_ecs->removing_entities, _ecs->removing_entities_count);    
+    
     // removing the entities from the stack from the largest to smallest
     for (int i = (int)_ecs->removing_entities_count - 1; i > -1; i--) {
       _sfr_ecs_erase_entity(_ecs->removing_entities[i]);
@@ -143,30 +143,29 @@ void sfr_ecs_remove_erased_entities() {
 
 void _sfr_ecs_erase_entity(uint32_t index) {
   _ecs->entities_count--;
+
   uint32_t temp1_size = index;
   uint32_t temp2_size = _ecs->entities_count - index;
+
   SFRentity_t** temp1 = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * temp1_size);
   SFRentity_t** temp2 = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * temp2_size);
   memcpy(temp1, _ecs->entities, sizeof(SFRentity_t*) * temp1_size);
   memcpy(temp2, _ecs->entities + (index + 1), sizeof(SFRentity_t*) * temp2_size);
 
   sfr_ecs_entity_free(_ecs->entities[index]);
-    
   free(_ecs->entities);
+
   _ecs->entities = (SFRentity_t**)malloc(sizeof(SFRentity_t*) * _ecs->entities_count);
   memcpy(_ecs->entities, temp1, sizeof(SFRentity_t*) * temp1_size);
-  memcpy(_ecs->entities + temp1_size, temp2, sizeof(SFRentity_t*) * _ecs->entities_count);
+  memcpy(_ecs->entities + temp1_size, temp2, sizeof(SFRentity_t*) * temp2_size);
 
   free(temp1);
-  free(temp2); 
+  free(temp2);
 }
 
 void sfr_ecs_update(float delta_time) {
-  static uint32_t start_index = 0;
-  static uint32_t end_index = 0;
-
-  start_index = _ecs->component_indices->functional_start_index;
-  end_index = _ecs->component_indices->graphics_start_index;
+  uint32_t start_index = _ecs->component_indices->functional_start_index;
+  uint32_t end_index = _ecs->component_indices->graphics_start_index;
 
   for (uint32_t i = start_index; i < end_index; i++) {
     if (_ecs->components[i]->update != NULL) {
@@ -180,11 +179,8 @@ void sfr_ecs_update(float delta_time) {
 }
 
 void sfr_ecs_late_update(float late_delta_time) {
-  static uint32_t start_index = 0;
-  static uint32_t end_index = 0;
-
-  start_index = _ecs->component_indices->functional_start_index;
-  end_index = _ecs->component_indices->graphics_start_index;
+  uint32_t start_index = _ecs->component_indices->functional_start_index;
+  uint32_t end_index = _ecs->component_indices->graphics_start_index;
 
   for (uint32_t i = start_index; i < end_index; i++) {
     if (_ecs->components[i]->late_update != NULL) {
@@ -198,11 +194,8 @@ void sfr_ecs_late_update(float late_delta_time) {
 }
 
 void sfr_ecs_render_update() {
-  static uint32_t start_index = 0;
-  static uint32_t end_index = 0;
-
-  start_index = _ecs->component_indices->graphics_start_index;
-  end_index = _ecs->components_count;
+  uint32_t start_index = _ecs->component_indices->graphics_start_index;
+  uint32_t end_index = _ecs->components_count;
 
   for (uint32_t i = start_index; i < end_index; i++) {
     if (_ecs->components[i]->update != NULL) {
@@ -225,7 +218,7 @@ void sfr_ecs_erase_entity(uint32_t index) {
 
     _ecs->removing_entities[_ecs->removing_entities_count - 1] = index;
   } else {
-    printf("[SAFIRE_WARNING::ERASE_ENTITY] cannot erase entity when the index is larger than the entity buffer");
+    printf("[SAFIRE_WARNING::ERASE_ENTITY] cannot erase entity when the index is larger than the entity buffer\n");
   }
 }
 
@@ -296,7 +289,7 @@ SFRentity_t* sfr_ecs_get_target_entity(uint32_t index) {
 #ifndef NDEBUG
   if (index > _ecs->entities_count || index < 0) {
     return NULL;
-  }
+  } 
 #endif
 
   return _ecs->entities[index];
@@ -346,6 +339,10 @@ void sfr_ecs_load_scene(uint32_t id) {
   if (SFR_CURRENT_SCENE->free != NULL) {
     SFR_CURRENT_SCENE->free(SFR_CURRENT_SCENE);
   }
+  if (SFR_CURRENT_SCENE->data != NULL) {
+    free(SFR_CURRENT_SCENE->data);
+  }
+  SFR_CURRENT_SCENE->data = NULL;
 
   _ecs->current_scene = id;
   SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
@@ -568,7 +565,7 @@ void sfr_ecs_entity_set_layer(SFRentity_t* entity, uint32_t layer) {
   entity->layer = layer;
   for (uint32_t i = 0; i < entity->components_count; i++) {
     if (sfr_str_cmp(entity->components[i]->name, SFR_SPRITE_RENDERER)) {
-
+      // TODO: ...
     }
   }
 }
@@ -693,17 +690,19 @@ uint32_t sfr_ecs_entity_find_index_name(uint32_t offset, const char* name) {
     }
   }
 
+  printf("[SAFIRE::ECS_FIND_ENTITY_INDEX_WITH_NAME] failed to find entity as there isn't any with the name %s\n", name);
   return UINT32_MAX;
 }
 
 uint32_t sfr_ecs_entity_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
   // I don't really know how to implement this with uuid other than a linear search, so slow code here too I guess
   for (uint32_t i = offset; i < _ecs->entities_count; i++) {
-    if (uuid == _ecs->entities[i]->uuid) {
+    if ((unsigned long long)uuid == (unsigned long long)_ecs->entities[i]->uuid) {
       return i;
     }
   }
 
+  printf("[SAFIRE::ECS_FIND_ENTITY_INDEX_WITH_UUID] failed to find entity as there isn't any with the uuid %llu\n", (unsigned long long)uuid);
   return UINT32_MAX;
 }
 
@@ -714,7 +713,8 @@ uint32_t sfr_ecs_component_find_index_uuid(uint32_t offset, SFRuuid_t uuid) {
       return i;
     }
   }
-
+  
+  printf("[SAFIRE::ECS_FIND_COMPONENT_INDEX_WITH_UUID] failed to find entity as there isn't any with the uuid %llu\n", (unsigned long long)uuid);
   return UINT32_MAX;
 }
 

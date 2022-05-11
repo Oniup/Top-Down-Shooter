@@ -42,6 +42,8 @@ SAFIRE_API SFRwindow_t*     sfr_pipeline_get_window();
 
 SAFIRE_API SFRshader_t*     sfr_pipeline_get_target_shader(const char* name);
 SAFIRE_API SFRtexture_t*    sfr_pipeline_get_target_texture(const char* name);
+SAFIRE_API uint32_t         sfr_pipeline_get_target_shader_index(const char* name);
+SAFIRE_API uint32_t         sfr_pipeline_get_target_texture_index(const char* name);
 
 SAFIRE_API void             sfr_pipeline_push_shader(SFRshader_t* shader);
 SAFIRE_API void             sfr_pipeline_push_texture(SFRtexture_t* texture);
