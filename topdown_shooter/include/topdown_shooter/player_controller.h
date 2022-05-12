@@ -11,14 +11,15 @@ typedef struct TDSplayer_controller TDSplayer_controller_t;
 
 
 struct TDSplayer_controller {
-  float move_speed;
-  int damage;
+  float                             move_speed;
+  int                               damage;
+  SFRentity_t*                      gun;
 };
 
 SAFIRE_API TDSplayer_controller_t*  tds_player_controller_create_instance();
 SAFIRE_API void                     tds_player_controller_load_assets();
 
-SAFIRE_API SFRcomponent_t*          tds_player_controller();
+SAFIRE_API SFRcomponent_t*          tds_player_controller(SFRentity_t* player_gun);
 SAFIRE_API void                     tds_player_damage(SFRcomponent_t* player_controller_comp, uint32_t damage);
 
 

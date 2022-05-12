@@ -40,6 +40,8 @@ SAFIRE_API uint32_t         sfr_ecs_get_starting_index(SFRcomponent_type_t type)
 
 SAFIRE_API void             sfr_ecs_load_scene(uint32_t id);
 
+SAFIRE_API void             sfr_ecs_attach_default_comps(SFRentity_t* entity);
+
 
 
 

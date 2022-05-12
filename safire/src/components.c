@@ -2,10 +2,26 @@
 
 #include "../include/safire/ecs.h"
 
-/*
-  add more components that will be added to every entity when it is created
-*/
-void sfr_attach_default_comps(SFRentity_t* entity) {
-  // list of default components
-  sfr_ecs_push_component(entity, sfr_transform()); // really shouldn't remove this component 
+
+
+
+SFRcomponent_t*  sfr_get_component(SFRcomponent_t* component, const char* name) {
+  SAFIRE_ASSERT(component, "[SAFIRE::GET_CORRECT_COMPONENT] failed to find the correct type as the component passed doesn't have any memory assigned to it...");
+  SAFIRE_ASSERT(name, "[SAFIRE::GET_CORRECT_COMPONENT] failed to find the correct type as the name passed doesn't have any memory assigned to it...");
+
+  uint32_t length = sfr_str_length(name);
+  if (length > 0) {
+    for (uint32_t i = 0; i < component->owner->components_count; i++) {
+      SFRcomponent_t* target = component->owner->components[i];
+
+      if (sfr_str_cmp_length(name, target->name, length)) {
+        return target;
+      }
+      
+    }
+  } else {
+    printf("[SAFIRE::GET_CORRECT_COMPONENT] failed to find the correct type as the name's length is 0 ...\n");
+  }
+
+  return NULL;
 }

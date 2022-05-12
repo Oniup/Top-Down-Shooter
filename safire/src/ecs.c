@@ -392,7 +392,7 @@ SFRentity_t* sfr_ecs_push_entity(const char* name, const char* tag) {
       _ecs->entities[c]->components = NULL;
       _ecs->entities[c]->components_count = 0;
       
-      sfr_attach_default_comps(_ecs->entities[c]);
+      sfr_ecs_attach_default_comps(_ecs->entities[c]);
       
 
       return _ecs->entities[c];
@@ -550,10 +550,10 @@ void sfr_ecs_component_free(SFRcomponent_t* component) {
 
     if (component->free != NULL) {
       component->free(component);
-      if (component->data != NULL) {
-        free(component->data);
-      }
-    } else if(component->data != NULL) {
+     
+    } 
+
+    if (component->data != NULL) {
       free(component->data);
     }
 

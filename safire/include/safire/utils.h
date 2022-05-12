@@ -41,6 +41,28 @@ extern "C" {
 #define B 2
 #define A 3
 
+
+
+
+#if !defined(NDEBUG) || defined(__MINGW32__) || !defined(__WIN32)
+
+// for some reason MSVC doesn't like this syntax
+#define SFR_COMPONENT_CONVERT(Ty, component) ({\
+  SAFIRE_ASSERT(component != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component given doesn't exist");\
+  Ty* result = ((Ty*)component->data);\
+  SAFIRE_ASSERT(result != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component's custom data isn't the target type");\
+  result;\
+})\
+
+#else
+
+#define SFR_COMPONENT_CONVERT(Ty, component) ((Ty*)component->data);
+
+#endif
+
+
+
+
 typedef float                           SFRtimer_t;
 
 SAFIRE_API SFRtimer_t       sfr_timer_start(float duration);
@@ -54,8 +76,13 @@ SAFIRE_API void             sfr_clear_terminal();
 SAFIRE_API void             sfr_qsort_uint32(uint32_t* arr, uint32_t size);
 
 
+
+
 /* ==================== the following is from safire-utils.h =================== */
 /* ================= https://github.com/Oniup/Safire-Utils.git ================= */
+
+
+
 
 #ifndef NDEBUG
 # include <assert.h>
@@ -69,6 +96,9 @@ SAFIRE_API void             sfr_qsort_uint32(uint32_t* arr, uint32_t size);
 # define SAFIRE_ASSERT3(x, y, z, message)
 # define SAFIRE_ASSERT4(x, y, z, w, message)
 #endif // NDEBUG
+
+
+
 
 SAFIRE_API int              sfr_rand_int32();
 SAFIRE_API uint32_t         sfr_rand_uint32();

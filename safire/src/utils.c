@@ -41,6 +41,9 @@ void sfr_clear_terminal() {
 #endif
 }
 
+
+
+
 void _sfr_qsort_uint32_swap(uint32_t* a, uint32_t* b) {
   uint32_t temp = *a;
   *a = *b;
@@ -73,6 +76,9 @@ void _sfr_qsort_uint32(uint32_t* arr, int lower, int higher) {
 void sfr_qsort_uint32(uint32_t* arr, uint32_t size) {
   _sfr_qsort_uint32(arr, 0, (int)size - 1);
 }
+
+
+
 
 int sfr_rand_int32() {
   time_t t1; 

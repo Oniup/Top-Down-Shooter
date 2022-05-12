@@ -32,26 +32,7 @@ typedef uint64_t                        SFRuuid_t;
 
 
 
-#if !defined(NDEBUG) || defined(__MINGW32__) || !defined(__WIN32)
-
-// for some reason MSVC doesn't like this syntax
-#define SFR_COMPONENT_CONVERT(Ty, component) ({\
-  SAFIRE_ASSERT(component != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component given doesn't exist");\
-  Ty* result = ((Ty*)component->data);\
-  SAFIRE_ASSERT(result != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component's custom data isn't the target type");\
-  result;\
-})\
-
-#else
-
-#define SFR_COMPONENT_CONVERT(Ty, component) ((Ty*)component->data);
-
-#endif
-
-
-
-
-SAFIRE_API void             sfr_attach_default_comps(SFRentity_t* entity);
+SAFIRE_API SFRcomponent_t*  sfr_get_component(SFRcomponent_t* component, const char* name);
 
 
 
@@ -81,7 +62,7 @@ struct SFRcollider2d {
   float weight;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_collider2d(); // TODO: implement circle collision detection
+SAFIRE_API SFRcomponent_t*  sfr_collider2d(); 
 
 SAFIRE_API bool sfr_collider2d_trigger_enter_tag(SFRcomponent_t* component, const char* target_tag);
 SAFIRE_API bool sfr_collider2d_trigger_enter_name(SFRcomponent_t* component, const char* name);
@@ -99,28 +80,50 @@ struct SFRsprite_renderer {
   SFRvertex_t*              vertices;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_sprite_renderer(); // TODO: implement rendering sprites 
+SAFIRE_API SFRcomponent_t*  sfr_sprite_renderer(); 
+
+SAFIRE_API void             sfr_sprite_renderer_set_uv(SFRcomponent_t* component, vec2 uv_bottom_left, vec2 uv_top_right);
+
+SAFIRE_API SFRvertex_t*     sfr_sprite_renderer_get_vertices(SFRcomponent_t* component, uint32_t* count);
+
 SAFIRE_API void             sfr_sprite_renderer_set_texture(SFRcomponent_t* component, const char* name);
-SAFIRE_API void             sfr_sprite_renderer_set_shader(SFRcomponent_t* component, const char* name);
 SAFIRE_API SFRtexture_t*    sfr_sprite_renderer_get_texture(SFRcomponent_t* component);
+
+SAFIRE_API void             sfr_sprite_renderer_set_shader(SFRcomponent_t* component, const char* name);
 SAFIRE_API SFRshader_t*     sfr_sprite_renderer_get_shader(SFRcomponent_t* component);
 
 
 
 
 struct SFRsprite_animation {
-  uint32_t* frames;
-  float* time_between_frames;
+  char* name;
+  ivec2* frames;
+  uint32_t frame_count;
+  float* time_btw_frames;
 };
 
 struct SFRsprite_animator {
-  SFRsprite_renderer_t* sprite_renderer;
-  ivec2 frame_size;
+  SFRcomponent_t* sprite_renderer;
+
+  ivec2 slices_size;
+  ivec2 slices_count;
+
+  uint32_t active_animation;
+  uint32_t current_active_frame;
+  SFRtimer_t frame_timer;
+
   SFRsprite_animation_t* animations;
-  uint32_t animation_count;
+  uint32_t animations_count;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_sprite_animator(SFRentity_t* entity); // TODO: implement rendering sprite animations
+SAFIRE_API SFRcomponent_t*        sfr_sprite_animator(SFRentity_t* entity); 
+
+SAFIRE_API void                   sfr_sprite_animator_load_animation(SFRcomponent_t* component, const char* name, ivec2 frames[], float* time_btw_frames, uint32_t frame_count);
+
+SAFIRE_API void                   sfr_sprite_animator_start_animation(SFRcomponent_t* component, const char* name);
+SAFIRE_API void                   sfr_sprite_animator_start_animation_index(SFRcomponent_t* component, uint32_t anim_index);
+
+SAFIRE_API void                   sfr_sprite_animator_slice(SFRcomponent_t* component, ivec2 slice_size);
 
 
 

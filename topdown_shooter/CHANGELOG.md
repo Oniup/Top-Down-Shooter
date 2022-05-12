@@ -1,5 +1,11 @@
 # Top-Down Shooter Game Change logs
 
+## VERSION 0.0.2 (13/5/2022)
+
+* added some custom assets
+* added the gun asset
+* camera lerp to correct position
+
 ## VERSION 0.0.1 (11/5/2022)
 
 * added player controller

@@ -5,10 +5,12 @@
 
 
 
-
-#define TDS_ARENA_TILES_X            40 // non walkable space but still visable at the edge of the world
-#define TDS_ARENA_TILES_Y            40 
-
+// world size
+#define TDS_ARENA_TILES_X            40
+#define TDS_ARENA_TILES_Y            40
+// non walkable space in world
+#define TDS_ARENA_TILES_WALLS_X      5  // non walkable space but still visable at the edge of the world
+#define TDS_ARENA_TILES_WALLS_Y      5 
 
 
 

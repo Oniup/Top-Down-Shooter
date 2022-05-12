@@ -71,28 +71,58 @@ void _scene_arena_create_background(SFRscene_t* scene) {
   vec2 centre = { TDS_ARENA_TILES_X, TDS_ARENA_TILES_Y };
   glm_vec2_scale(centre, 0.5f, centre);
 
+  vec2 uv_size = {
+    8.0f / 64.0f,
+    1.0f
+  };
+
   for (uint32_t y = 0; y < TDS_ARENA_TILES_Y; y++) {
     for (uint32_t x = 0; x < TDS_ARENA_TILES_X; x++) {
       char name[10];
       sprintf(name, "tile:%u:%u", x, y);
       name[9] = '\0';
 
-      SFRentity_t* tile = sfr_ecs_push_entity(name, "tile:walkbale");
+      SFRentity_t* tile = sfr_ecs_push_entity(name, "tile");
 
       SFRtransform_t* transform = SFR_COMPONENT_CONVERT(SFRtransform_t, tile->components[0]);
       vec3 offset = { x - centre[X], y - centre[Y], 0.0f };
-      glm_vec3_scale(offset, 2.0f, offset);
       glm_vec3_add(transform->position, offset, transform->position);
+      glm_vec3_copy((vec3) { 0.5f, 0.5f, 0.5f }, transform->scale);
       
       SFRcomponent_t* sprite_renderer = sfr_ecs_push_component(tile, sfr_sprite_renderer());
-      if (x > 5 && x < TDS_ARENA_TILES_X - 5) {
-        if (y > 5 && y < TDS_ARENA_TILES_Y - 5) {
-          sfr_sprite_renderer_set_texture(sprite_renderer, "tile:floor");
+      sfr_sprite_renderer_set_texture(sprite_renderer, "tile");
+
+      // walkable tile texture
+      if (x > TDS_ARENA_TILES_WALLS_X && x < TDS_ARENA_TILES_X - TDS_ARENA_TILES_WALLS_X) {
+        if (y > TDS_ARENA_TILES_WALLS_X && y < TDS_ARENA_TILES_Y - TDS_ARENA_TILES_WALLS_X) {
+          sfr_sprite_renderer_set_uv(
+            sprite_renderer, 
+            (vec2) {
+              uv_size[X] * 1.0f,
+              uv_size[Y] * 1.0f,
+            },
+            (vec2) {
+              uv_size[X] * 2.0f,
+              uv_size[Y] * 2.0f,
+            }
+          );
+
           continue;
         }
       }
-            
-      sfr_sprite_renderer_set_texture(sprite_renderer, "tile:wall");
+
+      // non walkable tile texture
+      sfr_sprite_renderer_set_uv(
+        sprite_renderer, 
+        (vec2) {
+          uv_size[X] * 0.0f,
+          uv_size[Y] * 0.0f,
+        },
+        (vec2) {
+          uv_size[X] * 1.0f,
+          uv_size[Y] * 1.0f,
+        }
+      );
     }
   }
 }
@@ -110,10 +140,7 @@ void _scene_arena_world_inits(SFRscene_t* scene) {
 void _scene_arena_load_assets(SFRscene_t* scene) {
   // loading the tile assest
   sfr_pipeline_push_texture(sfr_texture(
-    "tile:floor", "./art/sand.png", false, 4, false
-  ));
-  sfr_pipeline_push_texture(sfr_texture(
-    "tile:wall", "./art/wall.png", false, 4, false
+    "tile", "./art/tile-sprite-sheet.png", false, 4, false
   ));
 
   tds_player_controller_load_assets();

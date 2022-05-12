@@ -1,5 +1,12 @@
 # Safire Change logs
 
+## VERSION 0.1.0 (13/5/2022)
+
+* implemented sprite animator
+* more quality of life features
+  * getting a component name by passing a single component
+  * moved the default components into another file (config.c)
+
 ## VERSION 0.0.12 (11/5/2022)
 
 * many bug fixes
