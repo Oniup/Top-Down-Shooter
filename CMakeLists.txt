@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(shooter_game VERSION 0.0.1 LANGUAGES C)
+project(shooter_game VERSION 0.0.3 LANGUAGES C)
 
 add_subdirectory(safire)
 

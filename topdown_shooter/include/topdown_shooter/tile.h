@@ -3,14 +3,14 @@
 
 #include <safire/safire.h>
 
-#define TDS_TILE "tile"
+#define TDS_TILE                        "tile"
 
-typedef struct TDStile      TDStile_t;
-
-
+typedef struct TDS_Tile                 TDS_Tile;
 
 
-SAFIRE_API SFRcomponent_t*  tds_tile(vec2 location);
+
+
+SAFIRE_API SFR_Component*               tds_tile(vec2 location);
 
 
 

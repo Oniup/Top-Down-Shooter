@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(safire VERSION 0.1.0 LANGUAGES C)
+project(safire VERSION 0.1.1 LANGUAGES C)
 
 set(SAFIRE_NAME safire)
 

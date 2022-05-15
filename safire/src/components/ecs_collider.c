@@ -5,60 +5,71 @@
 
 
 
-void                        _sfr_collider2d_late_update(SFRcomponent_t* component, float late_delta_time);
+void                                    _sfr_collider2d_late_update(SFR_Component* component, float late_delta_time);
 
-SFRcomponent_t**            _sfr_colliders_get(SFRcomponent_t* component, uint32_t* target_count);
-SFRcomponent_t*             _sfr_collider2d_get_correct_trigger(SFRcomponent_t* component);
+SFR_Component**                         _sfr_colliders_get(SFR_Component* component, uint32_t* target_count);
+SFR_Component*                          _sfr_collider2d_get_correct_trigger(SFR_Component* component);
 
-void                        _sfr_collider2d_collide(SFRcomponent_t* component, SFRcomponent_t* target);
-void                        _sfr_collider2d_calc_circle(SFRcomponent_t* component, SFRcomponent_t* target, bool same_weight);
-void                        _sfr_collider2d_calc_square(SFRcomponent_t* component, SFRcomponent_t* target, bool same_weight);
-void                        _sfr_collider2d_calc_custom(SFRcomponent_t* component, SFRcomponent_t* target, bool same_weight);
+void                                    _sfr_collider2d_collide(SFR_Component* component, SFR_Component* target);
+void                                    _sfr_collider2d_calc_circle(SFR_Component* component, SFR_Component* target, bool same_weight);
+void                                    _sfr_collider2d_calc_square(SFR_Component* component, SFR_Component* target, bool same_weight);
+void                                    _sfr_collider2d_calc_custom(SFR_Component* component, SFR_Component* target, bool same_weight);
 
-bool                        _sfr_collider2d_trigger(SFRcomponent_t* component, SFRcomponent_t* target);
-bool                        _sfr_collider2d_calc_trigger_circle(SFRcomponent_t* component, SFRcomponent_t* target);
-bool                        _sfr_collider2d_calc_trigger_square(SFRcomponent_t* component, SFRcomponent_t* target);
-bool                        _sfr_collider2d_calc_trigger_custom(SFRcomponent_t* component, SFRcomponent_t* target);
+bool                                    _sfr_collider2d_trigger(SFR_Component* component, SFR_Component* target);
+bool                                    _sfr_collider2d_calc_trigger_circle(SFR_Component* component, SFR_Component* target);
+bool                                    _sfr_collider2d_calc_trigger_square(SFR_Component* component, SFR_Component* target);
+bool                                    _sfr_collider2d_calc_trigger_custom(SFR_Component* component, SFR_Component* target);
 
-SFRcomponent_t**            _sfr_collider2d_trigger_check(SFRcomponent_t* component, uint32_t* target_count);
-
-
+SFR_Component**                         _sfr_collider2d_trigger_check(SFR_Component* component, uint32_t* target_count);
 
 
-SFRcomponent_t* sfr_collider2d() {
-  SFRcomponent_t* component = sfr_ecs_component(
+
+
+SFR_Component* sfr_collider2d(SFR_Component* transform) 
+{
+  SFR_Component* component = sfr_ecs_component(
     SFR_COLLIDER2D, NULL, _sfr_collider2d_late_update, NULL
   );
 
   component->type = SFR_COMPONENT_TYPE_PHYSICS;
 
-  component->data = (SFRcollider2d_t*)malloc(sizeof(SFRcollider2d_t));
+  component->data = (SFR_Collider2D*)malloc(sizeof(SFR_Collider2D));
   SAFIRE_ASSERT(component->data, "[SAFIRE::COMPONENT_COLLIDER_2D]: failed to assign memory SFRcollider2d to custom data for some reason ...");
 
-  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+  SFR_Transform* trans = SFR_COMPONENT_CONVERT(SFR_Transform, transform);
+
+  SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
   collider->type = SFR_COLLIDER2D_TYPE_CIRCLE;
   collider->trigger = false;
-  glm_vec2_copy((vec2){ 1.0f, 1.0f }, collider->size);
+  glm_vec2_copy(trans->scale, collider->size);
   glm_vec2_copy((vec2){ 0.0f, 0.0f }, collider->offset);
+  glm_vec2_scale(collider->size, 0.5f, collider->size);
   collider->weight = 1.0f;
 
   return component;
 }
 
-bool sfr_collider2d_trigger_enter_tag(SFRcomponent_t* component, const char* target_tag) {
+bool sfr_collider2d_trigger_enter_tag(SFR_Component* component, const char* target_tag, SFR_Component** get) 
+{
   component = _sfr_collider2d_get_correct_trigger(component);
   
   uint32_t target_count = 0;
-  SFRcomponent_t** targets  = _sfr_collider2d_trigger_check(component, &target_count);
+  SFR_Component** targets  = _sfr_collider2d_trigger_check(component, &target_count);
 
   if (targets != NULL) {
     // checking the triggers
     uint32_t length = sfr_str_length(target_tag);
-    for (uint32_t i = 0; i < target_count; i++) {
-      if (sfr_str_cmp_length(target_tag, targets[i]->owner->tag, length)) {
+    for (uint32_t i = 0; i < target_count; i++) 
+    {
+      if (sfr_str_cmp_length(target_tag, targets[i]->owner->tag, length)) 
+      {
         bool result = _sfr_collider2d_trigger(component, targets[i]);
+        if (result) 
+        {
+          if (get != NULL)
+            *get = targets[i];
+          
 
-        if (result) {
           return true;
         }
       }
@@ -68,20 +79,27 @@ bool sfr_collider2d_trigger_enter_tag(SFRcomponent_t* component, const char* tar
   return false;
 }
 
-bool sfr_collider2d_trigger_enter_name(SFRcomponent_t* component, const char* name) {
+bool sfr_collider2d_trigger_enter_name(SFR_Component* component, const char* name, SFR_Component** get) 
+{
   component = _sfr_collider2d_get_correct_trigger(component);
   
   uint32_t target_count = 0;
-  SFRcomponent_t** targets  = _sfr_collider2d_trigger_check(component, &target_count);
+  SFR_Component** targets  = _sfr_collider2d_trigger_check(component, &target_count);
 
-  if (targets != NULL) {
+  if (targets != NULL) 
+  {
     // checking the triggerss
     uint32_t length = sfr_str_length(name);
-    for (uint32_t i = 0; i < target_count; i++) {
-      if (sfr_str_cmp_length(name, targets[i]->owner->name, length)) {
+    for (uint32_t i = 0; i < target_count; i++) 
+    {
+      if (sfr_str_cmp_length(name, targets[i]->owner->name, length)) 
+      {
         bool result = _sfr_collider2d_trigger(component, targets[i]);
+        if (result) 
+        {
+          if (get != NULL)
+            *get = targets[i];
 
-        if (result) {
           return true;
         }
       }
@@ -91,19 +109,26 @@ bool sfr_collider2d_trigger_enter_name(SFRcomponent_t* component, const char* na
   return false;
 }
 
-bool sfr_collider2d_trigger_enter_uuid(SFRcomponent_t* component, SFRuuid_t target_uuid) {
+bool sfr_collider2d_trigger_enter_uuid(SFR_Component* component, SFR_Uuid target_uuid, SFR_Component** get) 
+{
   component = _sfr_collider2d_get_correct_trigger(component);
   
   uint32_t target_count = 0;
-  SFRcomponent_t** targets  = _sfr_collider2d_trigger_check(component, &target_count);
+  SFR_Component** targets  = _sfr_collider2d_trigger_check(component, &target_count);
 
-  if (targets != NULL) {
+  if (targets != NULL) 
+  {
     // checking the triggerss
-    for (uint32_t i = 0; i < target_count; i++) {
-      if ((unsigned long long)target_uuid == (unsigned long long)targets[i]->owner->uuid) {
+    for (uint32_t i = 0; i < target_count; i++) 
+    {
+      if ((unsigned long long)target_uuid == (unsigned long long)targets[i]->owner->uuid) 
+      {
         bool result = _sfr_collider2d_trigger(component, targets[i]);
+        if (result) 
+        {
+          if (get != NULL)
+            *get = targets[i];
 
-        if (result) {
           return true;
         }
       }
@@ -113,39 +138,47 @@ bool sfr_collider2d_trigger_enter_uuid(SFRcomponent_t* component, SFRuuid_t targ
   return false;
 }
 
-bool sfr_collider2d_trigger_exit_tag(SFRcomponent_t* component, const char* target_tag) {
-  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+bool sfr_collider2d_trigger_exit_tag(SFR_Component* component, const char* target_tag, SFR_Component** get) 
+{
+  SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
   return false;
 }
 
-bool sfr_collider2d_trigger_exit_name(SFRcomponent_t* component, const char* name) {
-  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+bool sfr_collider2d_trigger_exit_name(SFR_Component* component, const char* name, SFR_Component** get) 
+{
+  SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
   return false;
 }
 
-bool sfr_collider2d_trigger_exit_uuid(SFRcomponent_t* component, SFRuuid_t target_uuid) {
-  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+bool sfr_collider2d_trigger_exit_uuid(SFR_Component* component, SFR_Uuid target_uuid, SFR_Component** get) 
+{
+  SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
   return false;
 }
 
 
 
 
-void _sfr_collider2d_late_update(SFRcomponent_t* component, float delta_time) {
-  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
+void _sfr_collider2d_late_update(SFR_Component* component, float delta_time) 
+{
+  SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
 
   // make sure that the collider is not a trigger collider  
-  if (!collider->trigger) {
+  if (!collider->trigger) 
+  {
     // get all the colliders that the current collider is colliding with
     uint32_t target_count = 0;
-    SFRcomponent_t** target = _sfr_colliders_get(component, &target_count);
-    if (target == NULL) {
+    SFR_Component** target = _sfr_colliders_get(component, &target_count);
+    if (target == NULL) 
+    {
       return;
     }
 
-    for (uint32_t i = 0; i < target_count; i++) {
-      SFRcollider2d_t* target_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target[i]);
-      if (!target_collider->trigger) {
+    for (uint32_t i = 0; i < target_count; i++) 
+    {
+      SFR_Collider2D* target_collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, target[i]);
+      if (!target_collider->trigger) 
+      {
         _sfr_collider2d_collide(component, target[i]);
       }
     }
@@ -154,7 +187,8 @@ void _sfr_collider2d_late_update(SFRcomponent_t* component, float delta_time) {
   }
 }
 
-SFRcomponent_t** _sfr_colliders_get(SFRcomponent_t* component, uint32_t* target_count) {
+SFR_Component** _sfr_colliders_get(SFR_Component* component, uint32_t* target_count) 
+{
   // identifying the physics components range, as that is where all the colliders are, therefore, we only have to search those
   uint32_t component_count = sfr_ecs_get_component_count();
   uint32_t start = sfr_ecs_get_starting_index(SFR_COMPONENT_TYPE_PHYSICS);
@@ -162,23 +196,29 @@ SFRcomponent_t** _sfr_colliders_get(SFRcomponent_t* component, uint32_t* target_
 
   uint32_t name_length = sfr_str_length(component->name);
 
-  SFRcomponent_t** list = NULL;
+  SFR_Component** list = NULL;
   uint32_t count = 0;
 
   for (uint32_t i = start; i < stop; i++) {
-    SFRcomponent_t* target = sfr_ecs_get_target_component(i);
+    SFR_Component* target = sfr_ecs_get_target_component(i);
     // skip itself
-    if (target->uuid != component->uuid) {
+    if (target->uuid != component->uuid) 
+    {
       // checking if it is a collider component
-      if (sfr_str_cmp_length(component->name, target->name, name_length)) {
+      if (sfr_str_cmp_length(component->name, target->name, name_length)) 
+      {
         count++;
-        if (list != NULL) {
-          list = (SFRcomponent_t**)realloc(list, sizeof(SFRcomponent_t*) * count);
+        if (list != NULL) 
+        {
+          list = (SFR_Component**)realloc(list, sizeof(SFR_Component*) * count);
           SAFIRE_ASSERT(list, "[SAFIRE::COLLIDER_IS_COLLIDING] failed to resize the buffer for some reason ...");
-        } else {
-          list = (SFRcomponent_t**)malloc(sizeof(SFRcomponent_t*) * count);
+        } 
+        else 
+        {
+          list = (SFR_Component**)malloc(sizeof(SFR_Component*) * count);
           SAFIRE_ASSERT(list, "[SAFIRE::COLLIDER_IS_COLLIDING] failed to assign memory to buffer for some reason ...");
         }
+
         list[count - 1] = target;
       }
     }
@@ -188,21 +228,24 @@ SFRcomponent_t** _sfr_colliders_get(SFRcomponent_t* component, uint32_t* target_
   return list;
 }
 
-SFRcomponent_t* _sfr_collider2d_get_correct_trigger(SFRcomponent_t* component) {
+SFR_Component* _sfr_collider2d_get_correct_trigger(SFR_Component* component) 
+{
   SAFIRE_ASSERT(component, "[SAFIRE::COLLIDER_GET_CORRECT_TRIGGER] failed to get the correct trigger collider as the component that was passed doesn't have any memory assigned to it");
 
   uint32_t length = sfr_str_length(SFR_COLLIDER2D);
-  if (sfr_str_cmp_length(component->name, SFR_COLLIDER2D, length)) {
+  if (sfr_str_cmp_length(component->name, SFR_COLLIDER2D, length)) 
+  {
     return component;
   }
 
-  for (uint32_t i = 0; i < component->owner->components_count; i++) {
-    SFRcomponent_t* target = component->owner->components[i];
-
-    if (sfr_str_cmp_length(SFR_COLLIDER2D, target->name, length)) {
-      SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
-
-      if (collider->trigger) {
+  for (uint32_t i = 0; i < component->owner->components_count; i++) 
+  {
+    SFR_Component* target = component->owner->components[i];
+    if (sfr_str_cmp_length(SFR_COLLIDER2D, target->name, length)) 
+    {
+      SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, target);
+      if (collider->trigger) 
+      {
         return target;
       }
     }
@@ -212,23 +255,28 @@ SFRcomponent_t* _sfr_collider2d_get_correct_trigger(SFRcomponent_t* component) {
   return NULL;
 }
 
-void _sfr_collider2d_collide(SFRcomponent_t* component, SFRcomponent_t* target) {
-  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
-  SFRcollider2d_t* target_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
+void _sfr_collider2d_collide(SFR_Component* component, SFR_Component* target) 
+{
+  SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
+  SFR_Collider2D* target_collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, target);
 
   bool same_weight = false;
-  if (collider->weight < target_collider->weight) {
-    SFRcomponent_t* temp = component;
+  if (collider->weight < target_collider->weight) 
+  {
+    SFR_Component* temp = component;
     component = target;
     target = temp;
 
-    collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
-    target_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
-  } else if (collider->weight == target_collider->weight) {
+    collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
+    target_collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, target);
+  } 
+  else if (collider->weight == target_collider->weight) 
+  {
     same_weight = true;
   }
 
-  switch (collider->type) {
+  switch (collider->type) 
+  {
   case SFR_COLLIDER2D_TYPE_CIRCLE:
     _sfr_collider2d_calc_circle(component, target, same_weight);
     break;
@@ -243,11 +291,12 @@ void _sfr_collider2d_collide(SFRcomponent_t* component, SFRcomponent_t* target) 
   }
 }
 
-void _sfr_collider2d_calc_circle(SFRcomponent_t* component, SFRcomponent_t* target, bool same_weight) {
-  SFRtransform_t* comp_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, component->owner->components[0]);
-  SFRtransform_t* targ_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, target->owner->components[0]);
-  SFRcollider2d_t* comp_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
-  SFRcollider2d_t* targ_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
+void _sfr_collider2d_calc_circle(SFR_Component* component, SFR_Component* target, bool same_weight) 
+{
+  SFR_Transform* comp_transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
+  SFR_Transform* targ_transform = SFR_COMPONENT_CONVERT(SFR_Transform, target->owner->components[0]);
+  SFR_Collider2D* comp_collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
+  SFR_Collider2D* targ_collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, target);
 
   // calculating the distance between the two colliders
   vec3 direction;
@@ -256,12 +305,14 @@ void _sfr_collider2d_calc_circle(SFRcomponent_t* component, SFRcomponent_t* targ
   float max_distance = comp_collider->size[X] + targ_collider->size[X];
 
   // if they are overlapping, else do nothing
-  if (length < comp_collider->size[X] + targ_collider->size[X]) {
+  if (length < comp_collider->size[X] + targ_collider->size[X]) 
+  {
     length = max_distance - length;
     glm_vec3_normalize(direction);
     glm_vec3_scale(direction, length, direction);
 
-    if (same_weight) {
+    if (same_weight) 
+    {
       // push both entities back to the edge of the collider
       glm_vec3_scale(direction, 0.5f, direction);
       vec3 comp_direction;
@@ -273,32 +324,42 @@ void _sfr_collider2d_calc_circle(SFRcomponent_t* component, SFRcomponent_t* targ
   }
 }
 
-void _sfr_collider2d_calc_square(SFRcomponent_t* component, SFRcomponent_t* target, bool same_weight) {
+void _sfr_collider2d_calc_square(SFR_Component* component, SFR_Component* target, bool same_weight) 
+{
   // TODO: ...
-  if (!same_weight) {
+  if (!same_weight) 
+  {
     // push the lighter weighted collider
 
-  } else {
+  } 
+  else 
+  {
     // push both entities back to the edge of the collider
   }
 }
 
-void _sfr_collider2d_calc_custom(SFRcomponent_t* component, SFRcomponent_t* target, bool same_weight) {
+void _sfr_collider2d_calc_custom(SFR_Component* component, SFR_Component* target, bool same_weight) 
+{
   // TODO: ...
-  if (!same_weight) {
+  if (!same_weight) 
+  {
     // push the lighter weighted collider
 
-  } else {
+  } 
+  else 
+  {
     // push both entities back to the edge of the collider
   }
 }
 
 
-bool _sfr_collider2d_trigger(SFRcomponent_t* component, SFRcomponent_t* target) {
-  SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
+bool _sfr_collider2d_trigger(SFR_Component* component, SFR_Component* target) 
+{
+  SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, target);
 
   bool is_colliding = false;
-  switch (collider->type) {
+  switch (collider->type) 
+  {
   case SFR_COLLIDER2D_TYPE_CIRCLE:
     return _sfr_collider2d_calc_trigger_circle(component, target);  
     break;
@@ -315,14 +376,16 @@ bool _sfr_collider2d_trigger(SFRcomponent_t* component, SFRcomponent_t* target) 
   return false;
 }
 
-SFRcomponent_t** _sfr_collider2d_trigger_check(SFRcomponent_t* component, uint32_t* target_count) {
-  if (component != NULL) {
-    SFRcollider2d_t* collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t,component);
-
-    if (collider->trigger) {
-      SFRcomponent_t** targets = _sfr_colliders_get(component, target_count);
-
-      if (targets == NULL) {
+SFR_Component** _sfr_collider2d_trigger_check(SFR_Component* component, uint32_t* target_count) 
+{
+  if (component != NULL) 
+  {
+    SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D,component);
+    if (collider->trigger) 
+    {
+      SFR_Component** targets = _sfr_colliders_get(component, target_count);
+      if (targets == NULL) 
+      {
         return NULL;
       }
 
@@ -333,11 +396,12 @@ SFRcomponent_t** _sfr_collider2d_trigger_check(SFRcomponent_t* component, uint32
   return NULL;
 }
 
-bool _sfr_collider2d_calc_trigger_circle(SFRcomponent_t* component, SFRcomponent_t* target) {
-  SFRtransform_t* comp_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, component->owner->components[0]);
-  SFRtransform_t* targ_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, target->owner->components[0]);
-  SFRcollider2d_t* comp_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, component);
-  SFRcollider2d_t* targ_collider = SFR_COMPONENT_CONVERT(SFRcollider2d_t, target);
+bool _sfr_collider2d_calc_trigger_circle(SFR_Component* component, SFR_Component* target) 
+{
+  SFR_Transform* comp_transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
+  SFR_Transform* targ_transform = SFR_COMPONENT_CONVERT(SFR_Transform, target->owner->components[0]);
+  SFR_Collider2D* comp_collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
+  SFR_Collider2D* targ_collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, target);
 
   // calculating the distance between the two colliders
   vec3 direction;
@@ -345,19 +409,22 @@ bool _sfr_collider2d_calc_trigger_circle(SFRcomponent_t* component, SFRcomponent
   float length = sqrtf(glm_vec3_dot(direction, direction));
   float max_distance = comp_collider->size[X] + targ_collider->size[X];
 
-  if (length < comp_collider->size[X] + targ_collider->size[X]) {
+  if (length < comp_collider->size[X] + targ_collider->size[X]) 
+  {
     return true;
   } 
   
   return false;
 }
 
-bool _sfr_collider2d_calc_trigger_square(SFRcomponent_t* component, SFRcomponent_t* target) {
+bool _sfr_collider2d_calc_trigger_square(SFR_Component* component, SFR_Component* target) 
+{
   // TODO: ...
   return false;
 }
 
-bool _sfr_collider2d_calc_trigger_custom(SFRcomponent_t* component, SFRcomponent_t* target) {
+bool _sfr_collider2d_calc_trigger_custom(SFR_Component* component, SFR_Component* target) 
+{
   // TODO: ...
   return false;
 }

@@ -6,9 +6,10 @@
  * This is where you define all the scenes in the game
  * all the scenes here will be pushed to safire
 */
-SFRscene_t** sfr_get_scenes(uint32_t* count) {
+SFR_Scene** sfr_get_scenes(uint32_t* count) 
+{
   *count = 1;
-  SFRscene_t** scenes = (SFRscene_t**)malloc(sizeof(SFRscene_t*));
+  SFR_Scene** scenes = (SFR_Scene**)malloc(sizeof(SFR_Scene*));
 
   scenes[0] = sfr_scene("Arena", scene_arena_function_pointer);
 

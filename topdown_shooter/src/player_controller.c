@@ -1,21 +1,27 @@
 #include <topdown_shooter/player_controller.h>
 
-void _tds_player_controller_update(SFRcomponent_t* component, float delta_time);
+#include <topdown_shooter/bullet.h>
 
 
 
 
-TDSplayer_controller_t* tds_player_controller_create_instance() {
-  SFRentity_t* player = sfr_ecs_push_entity("Player1", "player");
-  SFRentity_t* player_gun = sfr_ecs_push_entity("Player1 Gun", "player gun");
+void                                    _tds_player_controller_update(SFR_Component* component, float delta_time);
+
+void                                    _tds_player_controller_change_gun_sprite(SFR_Component* component, bool can_shoot);
+
+
+
+
+TDS_PlayerController* tds_player_controller_create_instance() 
+{
+  SFR_Entity* player = sfr_ecs_push_entity("Player", "player");
 
   player->layer = 20;
-  player_gun->layer = 21;
 
-  SFRcomponent_t* player_controller = sfr_ecs_push_component(player, tds_player_controller(player_gun));
+  SFR_Component* player_controller = sfr_ecs_push_component(player, tds_player_controller());
 
-  SFRcomponent_t* renderer = sfr_ecs_push_component(player, sfr_sprite_renderer());
-  SFRcomponent_t* animator = sfr_ecs_push_component(player, sfr_sprite_animator(player));
+  SFR_Component* renderer = sfr_ecs_push_component(player, sfr_sprite_renderer());
+  SFR_Component* animator = sfr_ecs_push_component(player, sfr_sprite_animator(player));
 
   sfr_sprite_renderer_set_texture(renderer, "player");
 
@@ -28,12 +34,17 @@ TDSplayer_controller_t* tds_player_controller_create_instance() {
   sfr_sprite_animator_load_animation(animator, "idle", idle_animation, idle_time, 2);
   sfr_sprite_animator_load_animation(animator, "run", run_animation, run_time, 3);
 
-  SFRcomponent_t* player_collider = sfr_ecs_push_component(player, sfr_collider2d());  
-  TDSplayer_controller_t* controller = SFR_COMPONENT_CONVERT(TDSplayer_controller_t, player_controller);
+  SFR_Component* player_collider = sfr_ecs_push_component(player, sfr_collider2d(player->components[0]));  
+  TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller);
 
+
+  
+  SFR_Entity* player_gun = sfr_ecs_push_entity("Player Gun", "gun");
+
+  player_gun->layer = 30;
 
   // setting up the gun
-  SFRcomponent_t* gun_sprite_renderer = sfr_ecs_push_component(player_gun, sfr_sprite_renderer());
+  SFR_Component* gun_sprite_renderer = sfr_ecs_push_component(player_gun, sfr_sprite_renderer());
 
   sfr_sprite_renderer_set_texture(gun_sprite_renderer, "player_gun");
   vec2 uv_size = { 0.5f, 1.0f };
@@ -49,102 +60,205 @@ TDSplayer_controller_t* tds_player_controller_create_instance() {
     }
   );
 
+  controller->gun = player_gun;
+
+  SFR_Transform* player_transform = SFR_COMPONENT_CONVERT(SFR_Transform, player->components[0]);
+  SFR_Transform* gun_transform = SFR_COMPONENT_CONVERT(SFR_Transform, player_gun->components[0]);
+  glm_vec2_copy((vec2) { 0.6f, 0.6f }, player_transform->scale);
+  glm_vec2_copy((vec2) { 0.6f, 0.6f }, gun_transform->scale);
+
   return controller;
 }
 
-void tds_player_controller_load_assets() {
+void tds_player_controller_load_assets() 
+{
   sfr_pipeline_push_texture(sfr_texture(
     "player", "./art/player-sprite-sheet.png", true, 4, false
   ));
-    sfr_pipeline_push_texture(sfr_texture(
+  
+  sfr_pipeline_push_texture(sfr_texture(
     "player_gun", "./art/gun-sprite-sheet.png", true, 4, false
+  ));
+  
+  sfr_pipeline_push_texture(sfr_texture(
+    "bullet001", "./art/bullet001-sprite-sheet.png", false, 4, false
   ));
 }
 
-SFRcomponent_t* tds_player_controller(SFRentity_t* player_gun) {
-  SFRcomponent_t* component = sfr_ecs_component(
+SFR_Component* tds_player_controller() 
+{
+  SFR_Component* component = sfr_ecs_component(
     TDS_PLAYER_CONTROLLER, _tds_player_controller_update, NULL, NULL
   );
 
-  component->data = (TDSplayer_controller_t*)malloc(sizeof(TDSplayer_controller_t));
-  TDSplayer_controller_t* player_controller = SFR_COMPONENT_CONVERT(TDSplayer_controller_t, component);
+  component->data = (TDS_PlayerController*)malloc(sizeof(TDS_PlayerController));
+  TDS_PlayerController* player_controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
 
   player_controller->damage = 1;
-  player_controller->move_speed = 5.0f;
-  player_controller->gun = player_gun;
+  player_controller->move_speed = 3.0f;
+  player_controller->gun = NULL;
 
   return component;
 }
 
-void tds_player_damage(SFRcomponent_t* player_controller_comp, uint32_t damage) {
+void tds_player_damage(SFR_Component* player_controller_comp, uint32_t damage) 
+{
 
 }
 
-void _tds_player_controller_update(SFRcomponent_t* component, float delta_time) {
+void _tds_player_controller_update(SFR_Component* component, float deltaTime) 
+{
   uint32_t animation = 0;
   static uint32_t last_animation = 0;
 
-  TDSplayer_controller_t* controller = ((TDSplayer_controller_t*)component->data);
+  TDS_PlayerController* controller = ((TDS_PlayerController*)component->data);
+
+  // movement controller
 
   vec3 direction = { 0, 0, 0 };
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A)) {
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A)) 
     direction[X] = -1;
-  } 
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_D)) {
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_D)) 
     direction[X] = 1;
-  } 
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_S)) {
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_S)) 
     direction[Y] = -1;
-  } 
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_W)) {
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_W)) 
     direction[Y] = 1;
-  } 
 
-
-  SFRtransform_t* transform = SFR_COMPONENT_CONVERT(SFRtransform_t, component->owner->components[0]);
+  SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
   static vec3 offset_gun = {
-    -0.3f, 0.5f, 0.0f
+    -0.3f, 0.4f, 0.0f
   };
 
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_UP)) {
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_UP)) 
     transform->scale[Y] *= 0.9999f;
-  } else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_DOWN)) {
+  else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_DOWN)) 
     transform->scale[Y] *= 1.0001f;
-  } else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_LEFT)) {
-    transform->rotation[W] += 1.0f * delta_time;
-  } else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_RIGHT)) {
-    transform->rotation[W] -= 1.0f * delta_time;
-  }
+  else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_LEFT)) 
+    transform->rotation[W] += 1.0f * deltaTime;
+  else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_RIGHT)) 
+    transform->rotation[W] -= 1.0f * deltaTime;
 
 
-  if (direction[X] != 0 || direction[Y] != 0) {
-
+  if (direction[X] != 0 || direction[Y] != 0) 
+  {
     static bool flipped_x = false;
-
-    if (direction[X] < -0.0f && !flipped_x) {
+    if (direction[X] < -0.0f && !flipped_x) 
+    {
       transform->scale[X] = -transform->scale[X];
       offset_gun[X] = -offset_gun[X];
       flipped_x = true;
-    } else if (direction[X] > 0.0f && flipped_x) {
+    } 
+    else if (direction[X] > 0.0f && flipped_x) 
+    {
       transform->scale[X] = -transform->scale[X];
       offset_gun[X] = -offset_gun[X];
       flipped_x = false;
     }
     
-    glm_vec3_scale(direction, controller->move_speed * delta_time, direction);
+    glm_vec3_scale(direction, controller->move_speed * deltaTime, direction);
     glm_vec3_add(direction, transform->position, transform->position);
 
     animation = 1;
   }
 
-  if (animation != last_animation) {
-    SFRcomponent_t* animator = sfr_get_component(component, SFR_SPRITE_ANIMATOR);
+  if (animation != last_animation) 
+  {
+    SFR_Component* animator = sfr_get_component(component, SFR_SPRITE_ANIMATOR);
 
     sfr_sprite_animator_start_animation_index(animator, animation);
     last_animation = animation;
   }
 
-  SFRtransform_t* gun_transform = SFR_COMPONENT_CONVERT(SFRtransform_t, controller->gun->components[0]);
+  // gun controller
+
+  vec2 mouse_pos;
+  sfr_input_get_mouse_position(mouse_pos, false);
+
+  SFR_Transform* gun_transform = SFR_COMPONENT_CONVERT(SFR_Transform, controller->gun->components[0]);
   glm_vec3_copy(transform->position, gun_transform->position);
-  glm_vec3_sub(gun_transform->position, offset_gun, gun_transform->position);
+  glm_vec3_sub(gun_transform->position, offset_gun, gun_transform->position);  
+
+  static bool flip = false;
+  gun_transform->rotation[W] = sfr_look_at_target_flip(gun_transform, mouse_pos, &flip);
+
+  // shooting the gun
+  static bool can_shoot = true;
+  if (can_shoot && sfr_input_mouse(SFR_INPUT_PRESS, SFR_MOUSE_BUTTON_LEFT)) 
+  {
+    vec2 direction;
+    glm_vec2_sub(mouse_pos, gun_transform->position, direction);
+    glm_vec2_normalize(direction);
+
+    SFR_Component* bullet = tds_bullet_create_instance(direction, "enemy", 10.0f, 1);
+    SFR_Transform* bullet_transform = SFR_COMPONENT_CONVERT(SFR_Transform, bullet->owner->components[0]);
+    glm_vec3_copy(gun_transform->position, bullet_transform->position);
+    
+    TDS_Bullet* bullet_controller = SFR_COMPONENT_CONVERT(TDS_Bullet, bullet);
+    bullet_controller->lifetime = sfr_timer_start(1.0f);
+    bullet_controller->move_speed = 20.0f;
+    bullet_controller->damage = controller->damage;
+    
+    can_shoot = false;
+  }
+
+  if (!can_shoot && sfr_input_mouse(SFR_INPUT_RELEASE, SFR_MOUSE_BUTTON_LEFT))
+    can_shoot = true;
+
+  _tds_player_controller_change_gun_sprite(component, can_shoot);
+}
+
+void _tds_player_controller_change_gun_sprite(SFR_Component* component, bool can_shoot)
+{
+  TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
+  
+  static bool last = true;  
+  static int count = 0;
+
+
+  if (can_shoot != last) 
+  {
+    SFR_Component* gun_renderer = controller->gun->components[1];
+
+    count++;
+    int play_animation = count % 2;
+    printf("play_anim: %d\n", play_animation);
+    last = can_shoot;
+    
+    if (play_animation != 0) 
+    {
+      vec2 uv_size = { 0.5f, 1.0f };
+      sfr_sprite_renderer_set_uv(
+        gun_renderer, 
+        (vec2) {
+          uv_size[X] * 1.0f,
+          uv_size[Y] * 0.0f,
+        },
+        (vec2) {
+          uv_size[X] * 2.0f,
+          uv_size[Y] * 1.0f,
+        }
+      );
+
+      controller->shooting_animation_time = sfr_timer_start(0.05f);
+    }
+  }
+
+  if (count % 2 != 0 && sfr_timer_finished(&controller->shooting_animation_time))
+  {
+    SFR_Component* gun_renderer = controller->gun->components[1];
+
+    vec2 uv_size = { 0.5f, 1.0f };
+    sfr_sprite_renderer_set_uv(
+      gun_renderer, 
+      (vec2) {
+        uv_size[X] * 0.0f,
+        uv_size[Y] * 0.0f,
+      },
+      (vec2) {
+        uv_size[X] * 1.0f,
+        uv_size[Y] * 1.0f,
+      }
+    );
+  }
 }

@@ -14,12 +14,13 @@ out float _texture_id;
 
 uniform mat4 u_projection;
 uniform mat4 u_transform;
+uniform mat4 u_view;
 
 
 
 
 void main() {
-  gl_Position = u_projection * u_transform * vec4(a_vertex_pos.xyz, 1.0);
+  gl_Position = u_projection * u_view * u_transform * vec4(a_vertex_pos.xyz, 1.0);
   // gl_Position = vec4(a_vertex_pos.xyz, 1.0);
   // TODO: implement camera into engine so we can have a view matrix
 

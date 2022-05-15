@@ -13,7 +13,13 @@ extern "C" {
 
 #include <safire/safire.h>
 
-SAFIRE_API SFRscene_t** sfr_get_scenes(uint32_t* count);
+
+
+
+SAFIRE_API SFR_Scene**                  sfr_get_scenes(uint32_t* count);
+
+
+
 
 #ifdef __cplusplus
 }

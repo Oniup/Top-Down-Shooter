@@ -3,18 +3,19 @@
 
 #include <safire/safire.h>
 
-#define TDS_CAMERA_CONTROLLER "camera controller"
+#define TDS_CAMERA_CONTROLLER           "camera controller"
 
-typedef struct TDScamera_controller TDScamera_controller_t;
-
-
+typedef struct TDS_CameraController     TDS_CameraController;
 
 
-struct TDScamera_controller {
-  SFRtransform_t* target;
+
+
+struct TDS_CameraController 
+{
+  SFR_Transform*                        target;
 };
 
-SAFIRE_API SFRcomponent_t*  tds_camera_controller();
+SAFIRE_API SFR_Component*               tds_camera_controller();
 
 
 

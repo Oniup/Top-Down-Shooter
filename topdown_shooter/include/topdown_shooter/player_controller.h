@@ -3,24 +3,26 @@
 
 #include <safire/safire.h>
 
-#define TDS_PLAYER_CONTROLLER "player controller"
+#define TDS_PLAYER_CONTROLLER           "player controller"
 
-typedef struct TDSplayer_controller TDSplayer_controller_t;
-
-
+typedef struct TDS_PlayerController     TDS_PlayerController;
 
 
-struct TDSplayer_controller {
-  float                             move_speed;
-  int                               damage;
-  SFRentity_t*                      gun;
+
+
+struct TDS_PlayerController 
+{
+  float                                 move_speed;
+  int                                   damage;
+  SFR_Timer                             shooting_animation_time;
+  SFR_Entity*                           gun;
 };
 
-SAFIRE_API TDSplayer_controller_t*  tds_player_controller_create_instance();
-SAFIRE_API void                     tds_player_controller_load_assets();
+SAFIRE_API TDS_PlayerController*        tds_player_controller_create_instance();
+SAFIRE_API void                         tds_player_controller_load_assets();
 
-SAFIRE_API SFRcomponent_t*          tds_player_controller(SFRentity_t* player_gun);
-SAFIRE_API void                     tds_player_damage(SFRcomponent_t* player_controller_comp, uint32_t damage);
+SAFIRE_API SFR_Component*               tds_player_controller();
+SAFIRE_API void                         tds_player_damage(SFR_Component* player_controller_comp, uint32_t damage);
 
 
 

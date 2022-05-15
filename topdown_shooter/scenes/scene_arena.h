@@ -6,14 +6,14 @@
 
 
 // world size
-#define TDS_ARENA_TILES_X            40
-#define TDS_ARENA_TILES_Y            40
+#define TDS_ARENA_TILES_X               40
+#define TDS_ARENA_TILES_Y               40
 // non walkable space in world
-#define TDS_ARENA_TILES_WALLS_X      5  // non walkable space but still visable at the edge of the world
-#define TDS_ARENA_TILES_WALLS_Y      5 
+#define TDS_ARENA_TILES_WALLS_X         5  // non walkable space but still visable at the edge of the world
+#define TDS_ARENA_TILES_WALLS_Y         5 
 
 
 
-SAFIRE_API void scene_arena_function_pointer(SFRscene_t* scene);
+SAFIRE_API void                         scene_arena_function_pointer(SFR_Scene* scene);
 
 #endif // __TDH_SCENE_ARENA_H__

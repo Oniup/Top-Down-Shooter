@@ -5,16 +5,17 @@
 extern "C" {
 #endif
 
-typedef enum SFRkeybinding              SFRkeybinding_t;
-typedef enum SFRkey_mod_binding         SFRkey_mod_binding_t;
-typedef enum SFRmouse_binding           SFRmouse_binding_t;
-typedef enum SFRgamepad_binding         SFRgamepad_binding_t; // TODO: for now, this is well out of scope
+typedef enum SFR_InputKeyBinding        SFR_InputKeyBinding;
+typedef enum SFR_InputKeyModBinding     SFR_InputKeyModBinding;
+typedef enum SFR_InputMouseBinding      SFR_InputMouseBinding;
+typedef enum SFR_InputGamepadBinding    SFR_InputGamepadBinding; // TODO: for now, this is well out of scope
 
 
 
 
 /* these keybindings came directly from glfw3.h*/
-enum SFRkeybinding {
+enum SFR_InputKeyBinding 
+{
   /* The unknown key */
   SFR_KEY_UNKNOWN                       = -1,
 
@@ -152,7 +153,8 @@ enum SFRkeybinding {
  *
  *  @ingroup input
  *  @{ */
-enum SFRkey_mod_binding {
+enum SFR_InputKeyModBinding 
+{
   /*! @brief If this bit is set one or more Shift keys were held down.
   *
   *  If this bit is set one or more Shift keys were held down.
@@ -187,7 +189,8 @@ enum SFRkey_mod_binding {
   SFR_MOD_NUM_LOCK                      = 0x0020
 };
 
-enum SFRmouse_binding {
+enum SFR_InputMouseBinding 
+{
   SFR_MOUSE_BUTTON_1                    = 0,
   SFR_MOUSE_BUTTON_2                    = 1,
   SFR_MOUSE_BUTTON_3                    = 2,
@@ -211,7 +214,8 @@ enum SFRmouse_binding {
  *  @ingroup input
  *  @{ */
 
-enum SFRgamepad_binding {
+enum SFR_InputGamepadBinding 
+{
   SFR_JOYSTICK_1                        = 0,
   SFR_JOYSTICK_2                        = 1,
   SFR_JOYSTICK_3                        = 2,
@@ -268,6 +272,9 @@ enum SFRgamepad_binding {
   SFR_GAMEPAD_AXIS_RIGHT_TRIGGER        = 5,
   SFR_GAMEPAD_AXIS_LAST                 = SFR_GAMEPAD_AXIS_RIGHT_TRIGGER
 };
+
+
+
 
 #ifdef __cplusplus 
 }

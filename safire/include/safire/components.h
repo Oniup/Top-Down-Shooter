@@ -7,9 +7,9 @@ extern "C" {
 
 #include "utils.h"
 
-typedef struct SFRentity                SFRentity_t;
-typedef struct SFRcomponent             SFRcomponent_t;
-typedef struct SFRvertex                SFRvertex_t;
+typedef struct SFR_Entity                SFR_Entity;
+typedef struct SFR_Component             SFR_Component;
+typedef struct SFR_Vertex                SFR_Vertex;
 
 // don't change these especially the transform and sprite renderer names as that will break the ecs 
 #define SFR_TRANSFORM                   "SFRtransform"
@@ -17,113 +17,115 @@ typedef struct SFRvertex                SFRvertex_t;
 #define SFR_SPRITE_RENDERER             "SFRsprite_renderer"
 #define SFR_SPRITE_ANIMATOR             "SFRsprite_animator"
 
-typedef struct SFRtransform             SFRtransform_t;
-typedef struct SFRcollider2d            SFRcollider2d_t;
-typedef struct SFRsprite_renderer       SFRsprite_renderer_t;
-typedef struct SFRsprite_animator       SFRsprite_animator_t;
-typedef struct SFRsprite_animation      SFRsprite_animation_t;
+typedef struct SFR_Transform            SFR_Transform;
+typedef struct SFR_Collider2D           SFR_Collider2D;
+typedef struct SFR_SpriteRenderer       SFR_SpriteRenderer;
+typedef struct SFR_SpriteAnimator       SFR_SpriteAnimator;
+typedef struct SFR_SpriteAnimation      SFR_SpriteAnimation;
 
-typedef enum   SFRcollider2d_type       SFRcollider2d_type_t;
+typedef enum   SFR_Collide2DType        SFR_Collide2DType;
 
-typedef struct SFRtexture               SFRtexture_t;
-typedef struct SFRshader                SFRshader_t;
-typedef uint64_t                        SFRuuid_t;
-
-
-
-
-SAFIRE_API SFRcomponent_t*  sfr_get_component(SFRcomponent_t* component, const char* name);
+typedef struct SFR_Texture              SFR_Texture;
+typedef struct SFR_Shader               SFR_Shader;
+typedef uint64_t                        SFR_Uuid;
 
 
 
 
-struct SFRtransform {
-  vec3                      position;
-  vec3                      scale;
-  vec4                      rotation;
+SAFIRE_API SFR_Component*                 sfr_get_component(SFR_Component* component, const char* name);
+
+
+
+
+struct SFR_Transform 
+{
+  vec3                                    position;
+  vec3                                    scale;
+  vec4                                    rotation;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_transform();
+SAFIRE_API SFR_Component*  sfr_transform();
 
 
 
 
-enum SFRcollider2d_type {
+enum SFR_Collide2DType 
+{
   SFR_COLLIDER2D_TYPE_CIRCLE              = 0, 
   SFR_COLLIDER2D_TYPE_SQUARE                 , // TODO: out of scope for this project (maybe)
   SFR_COLLIDER2D_TYPE_CUSTOM                   // TODO: out of scope for this project
 };
 
-struct SFRcollider2d {
-  SFRcollider2d_type_t type;
+struct SFR_Collider2D {
+  SFR_Collide2DType type;
   bool trigger;
   vec2 size;
   vec2 offset;
   float weight;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_collider2d(); 
+SAFIRE_API SFR_Component*                 sfr_collider2d(SFR_Component* transform); 
 
-SAFIRE_API bool sfr_collider2d_trigger_enter_tag(SFRcomponent_t* component, const char* target_tag);
-SAFIRE_API bool sfr_collider2d_trigger_enter_name(SFRcomponent_t* component, const char* name);
-SAFIRE_API bool sfr_collider2d_trigger_enter_uuid(SFRcomponent_t* component, SFRuuid_t target_uuid);
-SAFIRE_API bool sfr_collider2d_trigger_exit_tag(SFRcomponent_t* component, const char* target_tag);
-SAFIRE_API bool sfr_collider2d_trigger_exit_name(SFRcomponent_t* component, const char* name);
-SAFIRE_API bool sfr_collider2d_trigger_exit_uuid(SFRcomponent_t* component, SFRuuid_t target_uuid);
-
-
+SAFIRE_API bool                           sfr_collider2d_trigger_enter_tag(SFR_Component* component, const char* target_tag, SFR_Component** get);
+SAFIRE_API bool                           sfr_collider2d_trigger_enter_name(SFR_Component* component, const char* name, SFR_Component** get);
+SAFIRE_API bool                           sfr_collider2d_trigger_enter_uuid(SFR_Component* component, SFR_Uuid target_uuid, SFR_Component** get);
+SAFIRE_API bool                           sfr_collider2d_trigger_exit_tag(SFR_Component* component, const char* target_tag, SFR_Component** get);
+SAFIRE_API bool                           sfr_collider2d_trigger_exit_name(SFR_Component* component, const char* name, SFR_Component** get);
+SAFIRE_API bool                           sfr_collider2d_trigger_exit_uuid(SFR_Component* component, SFR_Uuid target_uuid, SFR_Component** get);
 
 
-struct SFRsprite_renderer {
-  uint32_t                  shader;
-  SFRsprite_animator_t*     sprite_animator;
-  SFRvertex_t*              vertices;
+
+
+struct SFR_SpriteRenderer {
+  uint32_t                                shader;
+  SFR_SpriteAnimator*                     sprite_animator;
+  SFR_Vertex*                             vertices;
 };
 
-SAFIRE_API SFRcomponent_t*  sfr_sprite_renderer(); 
-
-SAFIRE_API void             sfr_sprite_renderer_set_uv(SFRcomponent_t* component, vec2 uv_bottom_left, vec2 uv_top_right);
-
-SAFIRE_API SFRvertex_t*     sfr_sprite_renderer_get_vertices(SFRcomponent_t* component, uint32_t* count);
-
-SAFIRE_API void             sfr_sprite_renderer_set_texture(SFRcomponent_t* component, const char* name);
-SAFIRE_API SFRtexture_t*    sfr_sprite_renderer_get_texture(SFRcomponent_t* component);
-
-SAFIRE_API void             sfr_sprite_renderer_set_shader(SFRcomponent_t* component, const char* name);
-SAFIRE_API SFRshader_t*     sfr_sprite_renderer_get_shader(SFRcomponent_t* component);
-
-
+SAFIRE_API SFR_Component*                 sfr_sprite_renderer(); 
+            
+SAFIRE_API void                           sfr_sprite_renderer_set_uv(SFR_Component* component, vec2 uv_bottom_left, vec2 uv_top_right);
+            
+SAFIRE_API SFR_Vertex*                    sfr_sprite_renderer_get_vertices(SFR_Component* component, uint32_t* count);
+            
+SAFIRE_API void                           sfr_sprite_renderer_set_texture(SFR_Component* component, const char* name);
+SAFIRE_API SFR_Texture*                   sfr_sprite_renderer_get_texture(SFR_Component* component);
+            
+SAFIRE_API void                           sfr_sprite_renderer_set_shader(SFR_Component* component, const char* name);
+SAFIRE_API SFR_Shader*                    sfr_sprite_renderer_get_shader(SFR_Component* component);
 
 
-struct SFRsprite_animation {
-  char* name;
-  ivec2* frames;
-  uint32_t frame_count;
-  float* time_btw_frames;
+
+
+struct SFR_SpriteAnimation {
+  char*                                   name;
+  ivec2*                                  frames;
+  uint32_t                                frame_count;
+  float*                                  time_btw_frames;
 };
 
-struct SFRsprite_animator {
-  SFRcomponent_t* sprite_renderer;
+struct SFR_SpriteAnimator {
+  SFR_Component*                          sprite_renderer;
 
-  ivec2 slices_size;
-  ivec2 slices_count;
+  ivec2                                   slices_size;
+  ivec2                                   slices_count;
 
-  uint32_t active_animation;
-  uint32_t current_active_frame;
-  SFRtimer_t frame_timer;
+  uint32_t                                active_animation;
+  uint32_t                                current_active_frame;
+  SFR_Timer                              frame_timer;
 
-  SFRsprite_animation_t* animations;
-  uint32_t animations_count;
+  SFR_SpriteAnimation*                    animations;
+  uint32_t                                animations_count;
 };
 
-SAFIRE_API SFRcomponent_t*        sfr_sprite_animator(SFRentity_t* entity); 
+SAFIRE_API SFR_Component*                 sfr_sprite_animator(SFR_Entity* entity); 
 
-SAFIRE_API void                   sfr_sprite_animator_load_animation(SFRcomponent_t* component, const char* name, ivec2 frames[], float* time_btw_frames, uint32_t frame_count);
+SAFIRE_API void                           sfr_sprite_animator_load_animation(SFR_Component* component, const char* name, ivec2 frames[], float* time_btw_frames, uint32_t frame_count);
 
-SAFIRE_API void                   sfr_sprite_animator_start_animation(SFRcomponent_t* component, const char* name);
-SAFIRE_API void                   sfr_sprite_animator_start_animation_index(SFRcomponent_t* component, uint32_t anim_index);
+SAFIRE_API void                           sfr_sprite_animator_start_animation(SFR_Component* component, const char* name);
+SAFIRE_API void                           sfr_sprite_animator_start_animation_index(SFR_Component* component, uint32_t anim_index);
 
-SAFIRE_API void                   sfr_sprite_animator_slice(SFRcomponent_t* component, ivec2 slice_size);
+SAFIRE_API void                           sfr_sprite_animator_slice(SFR_Component* component, ivec2 slice_size);
 
 
 

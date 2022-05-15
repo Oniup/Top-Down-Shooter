@@ -11,24 +11,27 @@
 
 
 
-typedef struct TDSenemy_handler     TDSenemy_handler_t;
-typedef struct TDSenemy_spawner     TDSenemy_spawner_t;
+typedef struct TDS_EnemyHandler         TDS_EnemyHandler;
+typedef struct TDS_EnemySpawner         TDS_EnemySpawner;
 
 
 
 
-struct TDSenemy_handler {
-  uint32_t                          wave;
-  uint32_t                          spawn_rate;
-  float                             time_btw_waves;
+struct TDS_EnemyHandler 
+{
+  uint32_t                              wave;
+  uint32_t                              spawn_rate;
+  float                                 time_btw_waves;
 
-  SFRentity_t*                      player;
+  vec2*                                 spawn_locations;
+
+  SFR_Entity*                           player;
 };
 
-SAFIRE_API TDSenemy_handler_t*      tds_enemy_handler_create_instance(SFRentity_t* player);
-SAFIRE_API void                     tds_enemy_handler_load_assets();
+SAFIRE_API TDS_EnemyHandler*            tds_enemy_handler_create_instance(SFR_Entity* player);
+SAFIRE_API void                         tds_enemy_handler_load_assets();
 
-SAFIRE_API SFRcomponent_t*          tds_enemy_handler(SFRentity_t* player);
+SAFIRE_API SFR_Component*               tds_enemy_handler(SFR_Entity* player);
 
 
 

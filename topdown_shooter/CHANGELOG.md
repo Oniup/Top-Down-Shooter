@@ -1,5 +1,15 @@
 # Top-Down Shooter Game Change logs
 
+## VERSION 0.0.3 (14/5/2022)
+
+* fixed the bug where the enemy wouldn't be killed when touching the player
+* player shooting
+  * gun animation
+  * bullet animation
+  * destroys enemy when it hits the desired target
+* enemy handler
+  * started spawning system
+
 ## VERSION 0.0.2 (13/5/2022)
 
 * added some custom assets

@@ -3,31 +3,33 @@
 
 #include <safire/safire.h>
 
-#define TDS_ENEMY_CONTROLLER "enemy controller"
+#define TDS_ENEMY_CONTROLLER            "enemy controller"
 
-typedef struct TDSenemy_controller     TDSenemy_controller_t;
-typedef enum TDSenemy_type             TDSenemy_type_t;
-
-
+typedef struct TDS_EnemyController      TDS_EnemyController;
+typedef enum TDS_EnemyType              TDS_EnemyType;
 
 
-enum TDSenemy_type {
-  TDS_ENEMY_TYPE_BLOB                  = 0,
+
+
+enum TDS_EnemyType 
+{
+  TDS_ENEMY_TYPE_BLOB                   = 0,
 };
 
-struct TDSenemy_controller {
-  TDSenemy_type_t                   type;
+struct TDS_EnemyController 
+{
+  TDS_EnemyType                         type;
 
-  int                               health;
-  float                             damage;
-  float                             move_speed;
+  int                                   health;
+  float                                 damage;
+  float                                 move_speed;
 
-  SFRentity_t*                      player;
+  SFR_Entity*                           player;
 };
 
-SAFIRE_API SFRcomponent_t*          tds_enemy_controller(TDSenemy_type_t type, SFRentity_t* player);
+SAFIRE_API SFR_Component*               tds_enemy_controller(TDS_EnemyType type, SFR_Entity* player);
 
-SAFIRE_API SFRentity_t*             tds_instantiate_enemy(vec2 spawn_pos, TDSenemy_type_t type, SFRentity_t* player);
-SAFIRE_API void                     tds_enemy_damage(SFRcomponent_t* component, uint32_t damage);
+SAFIRE_API SFR_Entity*                  tds_instantiate_enemy(vec2 spawn_pos, TDS_EnemyType type, SFR_Entity* player);
+SAFIRE_API void                         tds_enemy_damage(SFR_Component* component, uint32_t damage);
 
 #endif // __TDS_ENEMY_CONTROLLER_H__
