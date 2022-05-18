@@ -1,5 +1,10 @@
 # Top-Down Shooter Game Change logs
 
+## VERSION 0.0.4 (18/5/2022)
+
+* enemy animation and different types setup
+* 
+
 ## VERSION 0.0.3 (14/5/2022)
 
 * fixed the bug where the enemy wouldn't be killed when touching the player

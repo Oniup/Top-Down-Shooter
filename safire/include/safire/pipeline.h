@@ -40,6 +40,10 @@ SAFIRE_API void                         sfr_pipeline_get_projection_matrix(mat4 
 SAFIRE_API void                         sfr_pipeline_get_transform_matrix(mat4 transform);
 SAFIRE_API void                         sfr_pipeline_get_view_matrix(mat4 view);
 
+SAFIRE_API bool                         sfr_pipeline_cull_vertices(SFR_Vertex* vertices, uint32_t count);
+SAFIRE_API void                         sfr_pipeline_set_culling_centre(vec3 position);
+SAFIRE_API void                         sfr_pipeline_set_culling_size(vec3 size);
+
 SAFIRE_API SFR_Shader**                 sfr_pipeline_get_shaders(uint32_t* shaders_count);
 SAFIRE_API SFR_Texture**                sfr_pipeline_get_textures(uint32_t* textures_count);
 SAFIRE_API SFR_Window*                  sfr_pipeline_get_window();

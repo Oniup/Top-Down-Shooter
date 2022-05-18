@@ -22,10 +22,19 @@ void sfr_free()
 
 void sfr_run() 
 {
-
   while (!sfr_pipeline_window_closing()) 
   {
     sfr_ecs_remove_erased_entities();
+
+    static SFR_Timer onesec = 0.0f;
+    static uint32_t frame_count = 0;
+    if (sfr_timer_finished(&onesec))
+    {
+      onesec = sfr_timer_start(1.0f);
+      printf("fps: %u\n", frame_count);
+      frame_count = 0;
+    }
+    frame_count++;
 
     float delta_time = calculate_delta_time();
     sfr_ecs_update(delta_time);
@@ -36,8 +45,8 @@ void sfr_run()
 
     glfwPollEvents();
     sfr_pipeline_render();
-  }
 
+  }
 }
 
 float sfr_elapsed_time() 

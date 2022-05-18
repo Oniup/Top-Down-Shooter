@@ -37,6 +37,7 @@ SFR_Component*  sfr_sprite_renderer()
   SFR_Texture* target_texture = sfr_pipeline_get_target_texture("SAFIRE::default");
   renderer->shader = target_shader->id;
   renderer->sprite_animator = NULL;
+  renderer->culled = false;
 
   // setting the vertices
   renderer->vertices = (SFR_Vertex*)malloc(sizeof(SFR_Vertex) * 4);
@@ -69,7 +70,8 @@ void _sfr_sprite_renderer_update(SFR_Component* component, float delta_time)
 
   SFR_Vertex vertices[4] = { {}, {} };
   _sfr_sprite_renderer_translation(component, vertices);
-  sfr_pipeline_push_vertices(vertices, 4, renderer->shader);
+  if (!renderer->culled)
+    sfr_pipeline_push_vertices(vertices, 4, renderer->shader);
 }
 
 
@@ -180,15 +182,19 @@ void _sfr_sprite_renderer_translation(SFR_Component* component, SFR_Vertex* vert
   SFR_SpriteRenderer* renderer = SFR_COMPONENT_CONVERT(SFR_SpriteRenderer, component);
   SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
 
+  
+
   // setting the correct vertex data
   float angle = transform->rotation[W] - 0.78633229259f; // subtracting 45 degrees because every vertex needs to rotate that much to the left
   for (uint32_t i = 0; i < 4; i++) 
   {
     sfr_vertex_copy(&vertices[i], &renderer->vertices[i]);
     
-    // rotaing
     float radius = sqrtf(glm_vec3_dot(vertices[i].vertex, vertices[i].vertex));
     angle += 1.5708f;
+
+    float c = cosf(angle);
+    float s = sinf(angle);
     glm_vec3_copy(
       (vec3) {
         cosf(angle) * radius,
@@ -203,9 +209,9 @@ void _sfr_sprite_renderer_translation(SFR_Component* component, SFR_Vertex* vert
     
     // translating
     glm_vec3_add(vertices[i].vertex, transform->position, vertices[i].vertex);
-
-    // TODO: other transform related calculations (scaling and rotating) ...
   }
+
+  renderer->culled = sfr_pipeline_cull_vertices(vertices, 4);
 }
 
 
@@ -351,38 +357,42 @@ void sfr_sprite_animator_start_animation_index(SFR_Component* component, uint32_
 void _sfr_sprite_animator_update(SFR_Component* component, float delta_time) 
 {
   SFR_SpriteAnimator* animator = SFR_COMPONENT_CONVERT(SFR_SpriteAnimator, component);
+  SFR_SpriteRenderer* renderer = SFR_COMPONENT_CONVERT(SFR_SpriteRenderer, animator->sprite_renderer);
 
-  if (sfr_timer_finished(&animator->frame_timer)) 
+  if (!renderer->culled)
   {
-    SFR_SpriteAnimation* animation = &animator->animations[animator->active_animation];
+    if (sfr_timer_finished(&animator->frame_timer)) 
+    {
+      SFR_SpriteAnimation* animation = &animator->animations[animator->active_animation];
 
-    // setting the timer
-    animator->frame_timer = sfr_timer_start(animation->time_btw_frames[animator->current_active_frame]);
+      // setting the timer
+      animator->frame_timer = sfr_timer_start(animation->time_btw_frames[animator->current_active_frame]);
 
-    ivec2 frame = {
-      animation->frames[animator->current_active_frame][X],
-      animation->frames[animator->current_active_frame][Y]
-    };
+      ivec2 frame = {
+        animation->frames[animator->current_active_frame][X],
+        animation->frames[animator->current_active_frame][Y]
+      };
 
-    // setting the uvs of the sprite renderer to be the correct one
-    vec2 uv_size = { 
-      1.0f / animator->slices_count[X], 
-      1.0f / animator->slices_count[Y]
-    };
-    vec2 bottom_left = {
-      uv_size[X] * frame[X],
-      uv_size[Y] * frame[Y]
-    };
-    vec2 top_right;
-    glm_vec2_copy(bottom_left, top_right);
-    glm_vec2_add(top_right, uv_size, top_right);
+      // setting the uvs of the sprite renderer to be the correct one
+      vec2 uv_size = { 
+        1.0f / animator->slices_count[X], 
+        1.0f / animator->slices_count[Y]
+      };
+      vec2 bottom_left = {
+        uv_size[X] * frame[X],
+        uv_size[Y] * frame[Y]
+      };
+      vec2 top_right;
+      glm_vec2_copy(bottom_left, top_right);
+      glm_vec2_add(top_right, uv_size, top_right);
 
-    sfr_sprite_renderer_set_uv(animator->sprite_renderer, bottom_left, top_right);
+      sfr_sprite_renderer_set_uv(animator->sprite_renderer, bottom_left, top_right);
 
-    // getting the frame index (doing this last so it can play the first frame first, not the second one)
-    animator->current_active_frame++;
-    if (animator->current_active_frame == animation->frame_count)
-      animator->current_active_frame = 0;
+      // getting the frame index (doing this last so it can play the first frame first, not the second one)
+      animator->current_active_frame++;
+      if (animator->current_active_frame == animation->frame_count)
+        animator->current_active_frame = 0;
+    }
   }
 }
 

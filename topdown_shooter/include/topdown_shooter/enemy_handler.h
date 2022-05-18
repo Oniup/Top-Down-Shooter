@@ -1,6 +1,10 @@
 #ifndef __TDS_ENEMY_HANDLER_H__
 #define __TDS_ENEMY_HANDLER_H__
 
+#ifdef __cplusplus 
+extern "C" {
+#endif
+
 #include <safire/safire.h>
 
 
@@ -35,5 +39,9 @@ SAFIRE_API SFR_Component*               tds_enemy_handler(SFR_Entity* player);
 
 
 
+
+#ifdef __cplusplus
+}
+#endif 
 
 #endif // __TDS_PLAYER_CONTROLLER_H__

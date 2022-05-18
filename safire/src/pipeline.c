@@ -47,6 +47,11 @@ struct SFR_Pipeline
   mat4                                  view;
 
   SFR_Renderer*                         renderer;
+
+  vec3                                  culling_position;
+  vec3                                  culling_size;
+  vec3                                  culling_left;
+  vec3                                  culling_right;
 };
 
 static SFR_Pipeline*                    _pipeline = NULL;
@@ -97,6 +102,7 @@ void sfr_pipeline_init(const char* window_title, int window_width, int window_he
   _pipeline->shaders_count = 0;
   _pipeline->textures_count = 0;
 
+
   sfr_pipeline_push_shader(
     sfr_shader(
       "SAFIRE::default", 
@@ -117,6 +123,10 @@ void sfr_pipeline_init(const char* window_title, int window_width, int window_he
   
   // creating the default projection matrix
   sfr_pipeline_set_projection_matrix(SFR_PIPELINE_PROJECTION_ORTHOGRAPHIC);
+  glm_mat4_identity(_pipeline->view);
+
+  sfr_pipeline_set_culling_centre((vec3){ 0.0f, 0.0f, 0.0f });
+  sfr_pipeline_set_culling_size((vec3){ 16.0f * 0.7f, 9.0f * 0.7f, 5.0f });
 }
 
 SFR_Pipeline* sfr_pipeline_instance() 
@@ -199,6 +209,18 @@ void sfr_pipeline_get_transform_matrix(mat4 transform)
 void sfr_pipeline_get_view_matrix(mat4 view) 
 {
   glm_mat4_copy(_pipeline->view, view);
+}
+
+void sfr_pipeline_set_culling_centre(vec3 position)
+{
+  glm_vec3_copy(position, _pipeline->culling_position);
+  glm_vec3_sub(_pipeline->culling_position, _pipeline->culling_size, _pipeline->culling_left);
+  glm_vec3_add(_pipeline->culling_position, _pipeline->culling_size, _pipeline->culling_right);  
+}
+
+void sfr_pipeline_set_culling_size(vec3 size)
+{
+  glm_vec3_copy(size, _pipeline->culling_size);
 }
 
 SFR_Shader** sfr_pipeline_get_shaders(uint32_t* shader_count) 
@@ -512,10 +534,29 @@ void _sfr_renderer_flush()
   }
 }
 
+bool sfr_pipeline_cull_vertices(SFR_Vertex* vertices, uint32_t count)
+{
+  for (uint32_t i = 0; i < count; i++)
+  {
+    vec3 position;
+    glm_vec3_copy(vertices[i].vertex, position);
+    if (position[X] < _pipeline->culling_left[X] || position[X] > _pipeline->culling_right[X])
+    {
+      return true;
+    }
+    if (position[Y] < _pipeline->culling_left[Y] || position[Y] > _pipeline->culling_right[Y])
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void _sfr_renderer_increase_vertices_buffer(SFR_Vertex* vertices, uint32_t quad_count) 
 {
   SAFIRE_ASSERT(vertices, "[SAFIRE::RENDERER_INCREASE_VERTICES] failed to push vertices as the vertices doesn't have any memory assigned to it");
-  
+
   // increase buffer size
   if (_renderer->vertices != NULL) 
   {
@@ -568,6 +609,8 @@ void _sfr_renderer_increase_vertices_buffer(SFR_Vertex* vertices, uint32_t quad_
 
         // still want to push the texture id
         found = false;
+
+        _renderer->active_textures_count = 0;
       }
 
       _renderer->active_textures[_renderer->active_textures_count] = (uint32_t)v[tr].texture_id;
@@ -923,7 +966,11 @@ SFR_Texture* sfr_texture(const char* name, const char* path, bool flip, uint32_t
         int width, height, channel;
         uint8_t* buffer = stbi_load(path, &width, &height, &channel, channels);
 
-        SAFIRE_ASSERT(buffer, "[SAFIRE::PIPELINE_TEXTURE] failed to load texture, probably because it doesn't exist");
+        if (buffer == NULL)
+        {
+          printf("[SAFIRE::PIPELINE_TEXTURE] failed to load texture at path '%s', probably because it doesn't exist", path);
+          exit(-1);
+        }
 
         uint32_t id = 0;
         glGenTextures(1, &id);

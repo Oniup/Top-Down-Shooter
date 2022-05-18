@@ -38,5 +38,7 @@ void _tds_camera_controller_late_update(SFR_Component* component, float late_del
   glm_vec3_lerp(position, controller->target->position, 0.02f, position);
   glm_vec3_copy(position, transform->position);
 
+  sfr_pipeline_set_culling_centre(transform->position);
+
   sfr_pipeline_set_view_matrix(position);
 }

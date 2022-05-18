@@ -80,6 +80,7 @@ struct SFR_SpriteRenderer {
   uint32_t                                shader;
   SFR_SpriteAnimator*                     sprite_animator;
   SFR_Vertex*                             vertices;
+  bool                                    culled;
 };
 
 SAFIRE_API SFR_Component*                 sfr_sprite_renderer(); 

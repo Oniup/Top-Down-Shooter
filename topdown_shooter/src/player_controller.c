@@ -95,7 +95,7 @@ SFR_Component* tds_player_controller()
   TDS_PlayerController* player_controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
 
   player_controller->damage = 1;
-  player_controller->move_speed = 3.0f;
+  player_controller->move_speed = 4.0f;
   player_controller->gun = NULL;
 
   return component;
@@ -129,16 +129,6 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
   static vec3 offset_gun = {
     -0.3f, 0.4f, 0.0f
   };
-
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_UP)) 
-    transform->scale[Y] *= 0.9999f;
-  else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_DOWN)) 
-    transform->scale[Y] *= 1.0001f;
-  else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_LEFT)) 
-    transform->rotation[W] += 1.0f * deltaTime;
-  else if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_RIGHT)) 
-    transform->rotation[W] -= 1.0f * deltaTime;
-
 
   if (direction[X] != 0 || direction[Y] != 0) 
   {
@@ -174,6 +164,7 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
 
   vec2 mouse_pos;
   sfr_input_get_mouse_position(mouse_pos, false);
+  // printf("mouse[%f, %f]\n", mouse_pos[X], mouse_pos[Y]);
 
   SFR_Transform* gun_transform = SFR_COMPONENT_CONVERT(SFR_Transform, controller->gun->components[0]);
   glm_vec3_copy(transform->position, gun_transform->position);
@@ -222,7 +213,6 @@ void _tds_player_controller_change_gun_sprite(SFR_Component* component, bool can
 
     count++;
     int play_animation = count % 2;
-    printf("play_anim: %d\n", play_animation);
     last = can_shoot;
     
     if (play_animation != 0) 

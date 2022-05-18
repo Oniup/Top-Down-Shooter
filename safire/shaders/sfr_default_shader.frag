@@ -19,19 +19,20 @@ uniform int u_textures_count;
 
 
 
-void main() {
+void main() 
+{
   vec4 colour = vec4(1.0, 0.0, 1.0, 1.0);
   colour = texture(u_textures[int(_texture_id)], _uv.xy);
 
   // checking if there is any opasity 
-  if (colour.a < 0.05) {
+  if (colour.a < 0.01) 
     discard;
-  } else {
-    // if there is any overlay colour, then add it
-    if (_overlay_colour.a > 0.05) {
-      vec3 overlay = vec3(_overlay_colour.rgb / _overlay_colour.a);
-      colour = colour + vec4(overlay.rgb, 0.0);
-    }
+
+  // if there is any overlay colour, then add it
+  if (_overlay_colour.a > 0.05) 
+  {
+    vec3 overlay = vec3(_overlay_colour.rgb / _overlay_colour.a);
+    colour = colour + vec4(overlay.rgb, 0.0);
   }
 
   frag_colour = colour;

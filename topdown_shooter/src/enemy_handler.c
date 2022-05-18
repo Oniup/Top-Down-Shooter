@@ -24,7 +24,7 @@ void tds_enemy_handler_load_assets()
 {
   // loading all the enemy textures
   sfr_pipeline_push_texture(sfr_texture(
-    "enemy-blob", "./art/sadge.png", true, 4, false
+    "demon", "./art/enemy001-sprite-sheet.png", true, 4, false
   ));
 }
 
@@ -81,8 +81,8 @@ void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_t
   if (sfr_timer_finished(&timer)) 
   {
     timer = sfr_timer_start(handler->time_btw_waves);
-    tds_instantiate_enemy(handler->spawn_locations[0], TDS_ENEMY_TYPE_BLOB, handler->player);
-    tds_instantiate_enemy(handler->spawn_locations[1], TDS_ENEMY_TYPE_BLOB, handler->player);
+    tds_instantiate_enemy(handler->spawn_locations[0], TDS_ENEMY_TYPE_DEMON, handler->player);
+    tds_instantiate_enemy(handler->spawn_locations[1], TDS_ENEMY_TYPE_DEMON, handler->player);
   }
 }
 

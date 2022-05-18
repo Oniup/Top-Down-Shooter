@@ -78,7 +78,7 @@ void _scene_arena_create_background(SFR_Scene* scene)
   glm_vec2_scale(centre, 0.5f, centre);
 
   vec2 uv_size = {
-    8.0f / 64.0f,
+    0.5f,
     1.0f
   };
 
@@ -94,9 +94,9 @@ void _scene_arena_create_background(SFR_Scene* scene)
 
       SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, tile->components[0]);
       vec3 offset = { x - centre[X], y - centre[Y], 0.0f };
-      glm_vec3_scale(offset, 0.5f, offset);
+      glm_vec3_scale(offset, 1.2f, offset);
       glm_vec3_add(transform->position, offset, transform->position);
-      glm_vec2_copy((vec2) { 0.3f, 0.3f }, transform->scale);
+      glm_vec2_copy((vec2) { 0.6f, 0.6f }, transform->scale);
       
       SFR_Component* sprite_renderer = sfr_ecs_push_component(tile, sfr_sprite_renderer());
       sfr_sprite_renderer_set_texture(sprite_renderer, "tile");

@@ -1,11 +1,12 @@
 # Safire Change logs
 
-## VERSION 0.1.1 (13/5/2022)
+## VERSION 0.1.1 (18/5/2022)
 
 * added mouse position
   * screen and world coords
   * implementation of the view matrix
 * collider now takes in the transform of the entity so that the size of the collider is set to the scale automatically
+* added screen culling
 * more quality of life stuff
 
 ## VERSION 0.1.0 (13/5/2022)

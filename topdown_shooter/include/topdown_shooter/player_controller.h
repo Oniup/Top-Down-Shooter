@@ -1,6 +1,10 @@
 #ifndef __TDS_PLAYER_CONTROLLER_H__
 #define __TDS_PLAYER_CONTROLLER_H__
 
+#ifdef __cplusplus 
+extern "C" {
+#endif
+
 #include <safire/safire.h>
 
 #define TDS_PLAYER_CONTROLLER           "player controller"
@@ -26,5 +30,9 @@ SAFIRE_API void                         tds_player_damage(SFR_Component* player_
 
 
 
+
+#ifdef __cplusplus
+}
+#endif 
 
 #endif // __TDS_PLAYER_CONTROLLER_H__
