@@ -47,6 +47,9 @@ static SFR_Ecs* _ecs = NULL;
 #define SFR_CURRENT_SCENE               _ecs->scenes[_ecs->current_scene]
 
 
+char*                                   _sfr_ecs_name_duplicate_check(const char* name);
+
+
 void                                    _sfr_ecs_move_component(uint32_t target, uint32_t dest);
 void                                    _sfr_ecs_erase_entity(uint32_t index);
 
@@ -101,7 +104,6 @@ void sfr_ecs_free()
   free(_ecs->scenes);
 
   free(_ecs->component_indices);
-  free(_ecs->names_used);
 
   free(_ecs);
   _ecs = NULL;
@@ -124,6 +126,14 @@ void sfr_ecs_clear_stack()
   _ecs->component_indices->functional_start_index = 0;
   _ecs->component_indices->physics_start_index = 0;
   _ecs->component_indices->graphics_start_index = 0;
+
+  for (uint32_t i = 0; i < _ecs->names_used_count; i++)
+  {
+    free(_ecs->names_used[i].name);
+  }
+  free(_ecs->names_used);
+  _ecs->names_used = NULL;
+  _ecs->names_used_count = 0;
 }
 
 void sfr_ecs_remove_erased_entities() 
@@ -377,6 +387,11 @@ void sfr_ecs_load_scene(uint32_t id)
   _ecs->current_scene = id;
   SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
 }
+
+SFR_Scene* sfr_ecs_get_active_scene()
+{
+  return SFR_CURRENT_SCENE;
+}
  
 SFR_Scene* sfr_scene(const char* name, SFR_PtrSceneInit init) 
 {
@@ -394,6 +409,69 @@ uint32_t sfr_find_scene(const char* name)
   return 0;
 }
 
+char* _sfr_ecs_name_duplicate_check(const char* name)
+{
+  uint32_t length = sfr_str_length(name);
+  int target = -1;
+
+  for (uint32_t i = 0; i < _ecs->names_used_count; i++)
+  {
+    if (sfr_str_cmp_length(name, _ecs->names_used[i].name, length))
+    {
+      target = i;
+    }
+  }
+
+  if (target == -1)
+  {
+    _ecs->names_used_count++;
+    if (_ecs->names_used != NULL)
+    {
+      _ecs->names_used = (_SFR_EcsNamesUsed*)realloc(_ecs->names_used, sizeof(_SFR_EcsNamesUsed) * _ecs->names_used_count);
+      SAFIRE_ASSERT(_ecs->names_used, "[SAFIRE::NAME_DUPLICATE_CHECK] failed to resize used name buffer for some reason...");
+    }
+    else 
+    {
+      _ecs->names_used = (_SFR_EcsNamesUsed*)malloc(sizeof(_SFR_EcsNamesUsed) * _ecs->names_used_count);
+      SAFIRE_ASSERT(_ecs->names_used, "[SAFIRE::NAME_DUPLICATE_CHECK] failed to assign memory to used name buffer for some reason...");
+    }
+
+    target = _ecs->names_used_count - 1;
+    _ecs->names_used[target].name = sfr_str(name);
+    _ecs->names_used[target].count = 0;
+  }
+
+  char* new_name = NULL;
+
+  if (target > -1)
+  {
+    if (_ecs->names_used[target].count > 0)
+    {
+      // getting how many digits there is in the number
+      int n = _ecs->names_used[target].count;
+      uint32_t digit_count = 0;
+      while (n != 0)
+      {
+        n = n / 10;
+        digit_count++;
+      }
+
+      // setting the name with the added number on the end of it
+      length = length + digit_count + 1;
+      new_name = (char*)malloc(sizeof(char*) * length);
+      SAFIRE_ASSERT(new_name, "[SAFIRE::NAME_DUPLICATE_CHECK] failed to assign memory to new name");
+      snprintf(new_name, length, "%s%u", name, _ecs->names_used[target].count);
+      new_name[length] = '\0';
+    }
+    else
+      new_name = sfr_str(name);
+
+    _ecs->names_used[target].count++;
+  }
+
+  return new_name;
+}
+
 SFR_Entity* sfr_ecs_push_entity(const char* name, const char* tag) 
 {
 #ifndef NDEBUG
@@ -404,7 +482,7 @@ SFR_Entity* sfr_ecs_push_entity(const char* name, const char* tag)
     {
 #endif
 
-      // incrase entity buffer size
+      // increase entity buffer size
       uint32_t c = _ecs->entities_count;
       _ecs->entities_count++;
       if (_ecs->entities != NULL) 
@@ -422,6 +500,8 @@ SFR_Entity* sfr_ecs_push_entity(const char* name, const char* tag)
       _ecs->entities[c] = (SFR_Entity*)malloc(sizeof(SFR_Entity));
       SAFIRE_ASSERT(_ecs->entities[c], "[SAFIRE::ECS_ENTITY_PUSH] failed to assign memory to entity for some reason");
 
+      _ecs->entities[c]->name = _sfr_ecs_name_duplicate_check(name);
+
       _ecs->entities[c]->name = sfr_str(name);
       _ecs->entities[c]->uuid = sfr_rand_uint64();
       _ecs->entities[c]->tag = tag != NULL ? sfr_str(tag) : NULL;
@@ -430,7 +510,7 @@ SFR_Entity* sfr_ecs_push_entity(const char* name, const char* tag)
       _ecs->entities[c]->components_count = 0;
       
       sfr_ecs_attach_default_comps(_ecs->entities[c]);
-      
+
       return _ecs->entities[c];
 
 #ifndef NDEBUG
@@ -520,7 +600,7 @@ SFR_Component* sfr_ecs_push_component(SFR_Entity* entity, SFR_Component* compone
         SAFIRE_ASSERT(_ecs->components[t_index], "[SAFIRE::_ecs_COMPONENT_PUSH] failed to assign memory to component for some reason"
         );
       }
-      
+
       // setting the entity data 
 
       _ecs->components[t_index]->uuid = sfr_rand_uint64();
@@ -552,11 +632,11 @@ SFR_Component* sfr_ecs_push_component(SFR_Entity* entity, SFR_Component* compone
 SFR_Component* sfr_ecs_component(const char* name, component_update update, component_late_update late_update, component_free free) 
 {
   /*
-  the following line of code caused a memory curroption error that took like 2 hours to figure out
-  curroption code: SFRcomponent_t* component = (SFRcomponent_t*)malloc(sizeof(SFRcomponent_t*)); 
+  the following line of code caused a memory corruption error that took like 2 hours to figure out
+  corruption code: SFRcomponent_t* component = (SFRcomponent_t*)malloc(sizeof(SFRcomponent_t*)); 
   */
   SFR_Component* component = (SFR_Component*)malloc(sizeof(SFR_Component)); 
-  SAFIRE_ASSERT(component, "[SAFIRE::ECS_COMPONENT] failed to assgin memory to component for some reason");
+  SAFIRE_ASSERT(component, "[SAFIRE::ECS_COMPONENT] failed to assign memory to component for some reason");
 
   component->name = sfr_str(name);
   component->update = update;
@@ -802,26 +882,24 @@ void sfr_ecs_debug_print_entities()
 {
   if (_ecs->entities_count > 0) 
   {
-    printf("entity list (%d):\n", _ecs->entities_count);
+    printf("entity list (%u):\n", _ecs->entities_count);
     for (uint32_t i = 0; i < _ecs->entities_count; i++) 
     {
       printf(
-        "[%d]: n('%s'), t('%s'), c(%d)\n", 
+        "[%d]: n('%s'), t('%s'), c(%u)\n", 
         i, _ecs->entities[i]->name, _ecs->entities[i]->tag, _ecs->entities[i]->components_count
       );
     }
   } 
   else 
-  {
     printf("currently no entities in the buffer\n");
-  }
 }
 
 void sfr_ecs_debug_print_components() 
 {
   if (_ecs->components_count > 0) 
   {
-    printf("component list (%d):\n", _ecs->components_count);
+    printf("component list (%u):\n", _ecs->components_count);
     for (uint32_t i = 0; i < _ecs->components_count; i++) 
     {
       printf(
@@ -857,10 +935,22 @@ void sfr_ecs_debug_print_components()
       _ecs->component_indices->graphics_start_index
     );
   }
-   else 
-   {
+  else 
     printf("currently no components in the buffer\n");
+}
+
+void sfr_ecs_debug_print_entities_names()
+{
+  if (_ecs->names_used_count > 0)
+  {
+    printf("name count list (%u):\n", _ecs->names_used_count);
+    for (uint32_t i = 0; i < _ecs->names_used_count; i++)
+    {
+      printf("name: %s, count: %u\n", _ecs->names_used[i].name, _ecs->names_used[i].count);
+    }
   }
+  else
+    printf("currently there no names in the buffer\n");
 }
 
 void _sfr_ecs_move_component(uint32_t target, uint32_t dest) 

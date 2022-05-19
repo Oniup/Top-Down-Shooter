@@ -17,12 +17,14 @@ typedef struct TDS_PlayerController     TDS_PlayerController;
 struct TDS_PlayerController 
 {
   float                                 move_speed;
+  int                                   health;
   int                                   damage;
   SFR_Timer                             shooting_animation_time;
+  float                                 time_btw_bullets;
   SFR_Entity*                           gun;
 };
 
-SAFIRE_API TDS_PlayerController*        tds_player_controller_create_instance();
+SAFIRE_API SFR_Component*               tds_player_controller_create_instance();
 SAFIRE_API void                         tds_player_controller_load_assets();
 
 SAFIRE_API SFR_Component*               tds_player_controller();

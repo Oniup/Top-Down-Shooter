@@ -62,9 +62,12 @@ struct SFR_Collider2D {
   vec2 size;
   vec2 offset;
   float weight;
+  uint32_t id;
 };
 
 SAFIRE_API SFR_Component*                 sfr_collider2d(SFR_Component* transform); 
+
+SAFIRE_API SFR_Component*                 sfr_collider2d_get(SFR_Component* component, uint32_t target);
 
 SAFIRE_API bool                           sfr_collider2d_trigger_enter_tag(SFR_Component* component, const char* target_tag, SFR_Component** get);
 SAFIRE_API bool                           sfr_collider2d_trigger_enter_name(SFR_Component* component, const char* name, SFR_Component** get);
@@ -113,11 +116,15 @@ struct SFR_SpriteAnimator {
 
   uint32_t                                active_animation;
   uint32_t                                current_active_frame;
-  SFR_Timer                              frame_timer;
+  SFR_Timer                               frame_timer;
+
+  bool                                    is_looping;
 
   SFR_SpriteAnimation*                    animations;
   uint32_t                                animations_count;
 };
+
+#define SFR_SPRITE_ANIMATOR_STOP          -1.0f
 
 SAFIRE_API SFR_Component*                 sfr_sprite_animator(SFR_Entity* entity); 
 

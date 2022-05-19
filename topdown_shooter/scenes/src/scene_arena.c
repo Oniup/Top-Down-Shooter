@@ -7,11 +7,16 @@
 #include <topdown_shooter/camera_controller.h>
 
 
+
+
 typedef struct TDS_Arena                TDS_Arena;
 
 struct TDS_Arena 
 {
-  TDS_PlayerController*                 player;
+  SFR_Component*                        player;
+  SFR_Component*                        player_health;
+  SFR_Component*                        camera;
+  
   TDS_EnemyHandler*                     enemy_handler;
 };
 
@@ -38,8 +43,8 @@ void scene_arena_function_pointer(SFR_Scene* scene)
 void _scene_arena_start(SFR_Scene* scene) 
 {
   scene->data = (TDS_Arena*)malloc(sizeof(TDS_Arena));
-  TDS_Arena* data = ((TDS_Arena*)scene->data);
-
+  TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
+  
   sfr_window_set_clear(sfr_pipeline_get_window(), (vec4){ 0.14f, 0.19f, 0.17f, 1.0f });
 
   _scene_arena_load_assets(scene);
@@ -48,21 +53,17 @@ void _scene_arena_start(SFR_Scene* scene)
 
 
   SFR_Entity* camera = sfr_ecs_push_entity("camera", "camera");
-  sfr_ecs_push_component(camera, tds_camera_controller());
-
-  /**
-   * TODO: scene setup
-   * spawn entity into the scene
-    * entity
-    * enemy spawners 
-    * scoring system
-    * entity health system
-  */
+  arena->camera = sfr_ecs_push_component(camera, tds_camera_controller());
 }
 
 void _scene_arena_update(SFR_Scene* scene, float delta_time) 
 {
-
+  TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
+  SFR_Transform* camera_transform = SFR_COMPONENT_CONVERT(SFR_Transform, arena->camera->owner->components[0]);
+  SFR_Transform* player_health_transform = SFR_COMPONENT_CONVERT(SFR_Transform, arena->player_health->owner->components[0]);
+  
+  static vec2 offset = { -8.0f, 4.0f  };
+  glm_vec2_add(camera_transform->position, offset, player_health_transform->position);
 }
 
 void _scene_arena_free(SFR_Scene* scene) 
@@ -86,11 +87,7 @@ void _scene_arena_create_background(SFR_Scene* scene)
   {
     for (uint32_t x = 0; x < TDS_ARENA_TILES_X; x++) 
     {
-      char name[10];
-      sprintf(name, "tile:%u:%u", x, y);
-      name[9] = '\0';
-
-      SFR_Entity* tile = sfr_ecs_push_entity(name, "tile");
+      SFR_Entity* tile = sfr_ecs_push_entity("tile", "tile");
 
       SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, tile->components[0]);
       vec3 offset = { x - centre[X], y - centre[Y], 0.0f };
@@ -141,12 +138,19 @@ void _scene_arena_create_background(SFR_Scene* scene)
 void _scene_arena_world_inits(SFR_Scene* scene) 
 {
   TDS_Arena* arena = ((TDS_Arena*)scene->data);
-
   
-  arena->player        = tds_player_controller_create_instance();
-  SFR_Entity* player  = sfr_ecs_get_target_entity(sfr_ecs_get_entities_count() - 2);
-  arena->enemy_handler = tds_enemy_handler_create_instance(player);
+  arena->player = tds_player_controller_create_instance();
+  arena->enemy_handler = tds_enemy_handler_create_instance(arena->player->owner);
 
+  SFR_Entity* player_health = sfr_ecs_push_entity("Player Health", "player health");
+  player_health->layer = 200;
+  arena->player_health = sfr_ecs_push_component(player_health, sfr_sprite_renderer());
+  sfr_sprite_renderer_set_texture(arena->player_health, "player-health-bar");
+
+  SFR_Transform* player_health_transform = SFR_COMPONENT_CONVERT(SFR_Transform, arena->player_health->owner->components[0]);
+  glm_vec3_copy((vec3){ 0.6f, 0.6f, 0.0f }, player_health_transform->scale);
+
+  scene_arena_set_player_health(scene, 3);
 }
 
 void _scene_arena_load_assets(SFR_Scene* scene) 
@@ -158,4 +162,44 @@ void _scene_arena_load_assets(SFR_Scene* scene)
 
   tds_player_controller_load_assets();
   tds_enemy_handler_load_assets();
+}
+
+void scene_arena_set_player_health(SFR_Scene* scene, uint32_t health)
+{
+  TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
+
+  float uv_size = 16.0f / (4.0f * 16.0f);
+  vec2 uv_left;
+  vec2 uv_right;
+
+  switch (health)
+  {
+  case 0:
+    glm_vec2_copy((vec2) { uv_size * 3.0f, 0.0f }, uv_left);
+    glm_vec2_copy((vec2) { uv_size * 4.0f, 1.0f }, uv_right);
+    break;
+
+  case 1:
+    glm_vec2_copy((vec2) { uv_size * 2.0f, 0.0f }, uv_left);
+    glm_vec2_copy((vec2) { uv_size * 3.0f, 1.0f }, uv_right);
+    break;
+  
+  case 2:
+    glm_vec2_copy((vec2) { uv_size * 1.0f, 0.0f }, uv_left);
+    glm_vec2_copy((vec2) { uv_size * 2.0f, 1.0f }, uv_right);
+    break;
+
+  case 3:
+    glm_vec2_copy((vec2) { uv_size * 0.0f, 0.0f }, uv_left);
+    glm_vec2_copy((vec2) { uv_size * 1.0f, 1.0f }, uv_right);
+    break;
+  }
+
+  sfr_sprite_renderer_set_uv(arena->player_health, uv_left, uv_right);
+}
+
+SFR_Component* scene_arena_get_player(SFR_Scene* scene)
+{
+  TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
+  return arena->player;
 }

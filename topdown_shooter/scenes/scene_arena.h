@@ -16,4 +16,7 @@
 
 SAFIRE_API void                         scene_arena_function_pointer(SFR_Scene* scene);
 
+SAFIRE_API void                         scene_arena_set_player_health(SFR_Scene* scene, uint32_t health);
+SAFIRE_API SFR_Component*               scene_arena_get_player(SFR_Scene* scene);
+
 #endif // __TDH_SCENE_ARENA_H__

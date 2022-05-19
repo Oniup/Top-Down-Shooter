@@ -11,6 +11,7 @@ extern "C" {
 
 typedef struct TDS_EnemyController      TDS_EnemyController;
 typedef enum TDS_EnemyType              TDS_EnemyType;
+typedef enum TDS_EnemyState             TDS_EnemyState;
 
 
 
@@ -18,6 +19,13 @@ typedef enum TDS_EnemyType              TDS_EnemyType;
 enum TDS_EnemyType 
 {
   TDS_ENEMY_TYPE_DEMON                   = 0,
+};
+
+enum TDS_EnemyState
+{
+  TDS_ENEMY_STATE_IDLE                  = 0,
+  TDS_ENEMY_STATE_ATTACKING,
+  TDS_ENEMY_STATE_DEATH
 };
 
 struct TDS_EnemyController 
@@ -29,13 +37,17 @@ struct TDS_EnemyController
   float                                 move_speed;
   bool                                  flip;
 
+  TDS_EnemyState                        state;
+  SFR_Timer                             after_hit_timer;
+  int                                   movement_offset;                                 
+
   SFR_Entity*                           player;
 };
 
 SAFIRE_API SFR_Component*               tds_enemy_controller(TDS_EnemyType type, SFR_Entity* player);
 
 SAFIRE_API SFR_Entity*                  tds_instantiate_enemy(vec2 spawn_pos, TDS_EnemyType type, SFR_Entity* player);
-SAFIRE_API void                         tds_enemy_damage(SFR_Component* component, uint32_t damage);
+SAFIRE_API void                         tds_enemy_damage(SFR_Entity* enemy, uint32_t damage);
 
 
 

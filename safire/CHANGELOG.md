@@ -8,6 +8,8 @@
 * collider now takes in the transform of the entity so that the size of the collider is set to the scale automatically
 * added screen culling
 * more quality of life stuff
+* no entity can have to same name
+  * if they use the same name, then it just adds an number to the end of it
 
 ## VERSION 0.1.0 (13/5/2022)
 

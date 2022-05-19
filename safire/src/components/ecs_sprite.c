@@ -68,7 +68,7 @@ void _sfr_sprite_renderer_update(SFR_Component* component, float delta_time)
 {
   SFR_SpriteRenderer* renderer = SFR_COMPONENT_CONVERT(SFR_SpriteRenderer, component);
 
-  SFR_Vertex vertices[4] = { {}, {} };
+  SFR_Vertex vertices[4];
   _sfr_sprite_renderer_translation(component, vertices);
   if (!renderer->culled)
     sfr_pipeline_push_vertices(vertices, 4, renderer->shader);
@@ -250,6 +250,7 @@ SFR_Component* sfr_sprite_animator(SFR_Entity* entity)
     animator->active_animation = 0;
     animator->current_active_frame = 0;
     animator->frame_timer = 0.0f;
+    animator->is_looping = true;
 
     return component;
   } 
@@ -349,6 +350,7 @@ void sfr_sprite_animator_start_animation_index(SFR_Component* component, uint32_
   animator->active_animation = anim_index;
   animator->current_active_frame = 0;
   animator->frame_timer = 0.0f;
+  animator->is_looping = true;
 }
 
 
@@ -361,37 +363,44 @@ void _sfr_sprite_animator_update(SFR_Component* component, float delta_time)
 
   if (!renderer->culled)
   {
-    if (sfr_timer_finished(&animator->frame_timer)) 
+    if (animator->is_looping)
     {
-      SFR_SpriteAnimation* animation = &animator->animations[animator->active_animation];
+      if (sfr_timer_finished(&animator->frame_timer)) 
+      {
+        SFR_SpriteAnimation* animation = &animator->animations[animator->active_animation];
 
-      // setting the timer
-      animator->frame_timer = sfr_timer_start(animation->time_btw_frames[animator->current_active_frame]);
+        // setting the timer
+        float duration = animation->time_btw_frames[animator->current_active_frame];
+        if (duration == SFR_SPRITE_ANIMATOR_STOP)
+          animator->is_looping = false;
+        else
+          animator->frame_timer = sfr_timer_start(duration);
 
-      ivec2 frame = {
-        animation->frames[animator->current_active_frame][X],
-        animation->frames[animator->current_active_frame][Y]
-      };
+        ivec2 frame = {
+          animation->frames[animator->current_active_frame][X],
+          animation->frames[animator->current_active_frame][Y]
+        };
 
-      // setting the uvs of the sprite renderer to be the correct one
-      vec2 uv_size = { 
-        1.0f / animator->slices_count[X], 
-        1.0f / animator->slices_count[Y]
-      };
-      vec2 bottom_left = {
-        uv_size[X] * frame[X],
-        uv_size[Y] * frame[Y]
-      };
-      vec2 top_right;
-      glm_vec2_copy(bottom_left, top_right);
-      glm_vec2_add(top_right, uv_size, top_right);
+        // setting the uvs of the sprite renderer to be the correct one
+        vec2 uv_size = { 
+          1.0f / animator->slices_count[X], 
+          1.0f / animator->slices_count[Y]
+        };
+        vec2 bottom_left = {
+          uv_size[X] * frame[X],
+          uv_size[Y] * frame[Y]
+        };
+        vec2 top_right;
+        glm_vec2_copy(bottom_left, top_right);
+        glm_vec2_add(top_right, uv_size, top_right);
 
-      sfr_sprite_renderer_set_uv(animator->sprite_renderer, bottom_left, top_right);
+        sfr_sprite_renderer_set_uv(animator->sprite_renderer, bottom_left, top_right);
 
-      // getting the frame index (doing this last so it can play the first frame first, not the second one)
-      animator->current_active_frame++;
-      if (animator->current_active_frame == animation->frame_count)
-        animator->current_active_frame = 0;
+        // getting the frame index (doing this last so it can play the first frame first, not the second one)
+        animator->current_active_frame++;
+        if (animator->current_active_frame == animation->frame_count)
+          animator->current_active_frame = 0;
+      }
     }
   }
 }

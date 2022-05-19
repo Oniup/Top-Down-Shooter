@@ -39,6 +39,7 @@ SAFIRE_API uint32_t                     sfr_ecs_get_component_count();
 SAFIRE_API uint32_t                     sfr_ecs_get_starting_index(SFR_ComponentType type);
 
 SAFIRE_API void                         sfr_ecs_load_scene(uint32_t id);
+SAFIRE_API SFR_Scene*                   sfr_ecs_get_active_scene();
 
 SAFIRE_API void                         sfr_ecs_attach_default_comps(SFR_Entity* entity);
 
@@ -127,6 +128,7 @@ SAFIRE_API uint32_t                     sfr_ecs_component_find_index_uuid(uint32
 
 SAFIRE_API void                         sfr_ecs_debug_print_entities();
 SAFIRE_API void                         sfr_ecs_debug_print_components();
+SAFIRE_API void                         sfr_ecs_debug_print_entities_names();
 
 
 

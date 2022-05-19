@@ -3,7 +3,11 @@
 ## VERSION 0.0.4 (18/5/2022)
 
 * enemy animation and different types setup
-* 
+* more interesting enemy movement for demon type
+* added player health
+  * ui
+  * damage
+  * just no death/game over yet
 
 ## VERSION 0.0.3 (14/5/2022)
 

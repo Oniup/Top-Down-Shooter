@@ -45,8 +45,25 @@ SFR_Component* sfr_collider2d(SFR_Component* transform)
   glm_vec2_copy((vec2){ 0.0f, 0.0f }, collider->offset);
   glm_vec2_scale(collider->size, 0.5f, collider->size);
   collider->weight = 1.0f;
+  collider->id = 0;
 
   return component;
+}
+
+SFR_Component* sfr_collider2d_get(SFR_Component* component, uint32_t target)
+{
+  uint32_t length = sfr_str_length(SFR_COLLIDER2D);
+  for (uint32_t i = 0; i < component->owner->components_count; i++)
+  {
+    if (sfr_str_cmp_length(SFR_COLLIDER2D, component->owner->components[i]->name, length))
+    {
+      SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component->owner->components[i]);
+      if (collider->id == target)
+        return component->owner->components[i];
+    }
+  }
+
+  return NULL;
 }
 
 bool sfr_collider2d_trigger_enter_tag(SFR_Component* component, const char* target_tag, SFR_Component** get) 

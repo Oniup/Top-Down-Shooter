@@ -1,74 +1,16 @@
 #include "../include/topdown_shooter/enemy_controller.h"
 
+#include "../include/topdown_shooter/player_controller.h"
+#include "../scenes/scene_arena.h"
 
 
 
 void                                    _tds_enemy_controller_update(SFR_Component* component, float delta_time);
 
+void                                    _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta_time);
 
+void                                    _tds_enemy_controller_movement_demon(SFR_Component* component, float delta_time);
 
-
-SFR_Component* tds_enemy_controller(TDS_EnemyType type, SFR_Entity* player) 
-{
-  SFR_Component* component = sfr_ecs_component(
-    TDS_ENEMY_CONTROLLER, _tds_enemy_controller_update, NULL, NULL
-  );
-
-  component->data = (TDS_EnemyController*)malloc(sizeof(TDS_EnemyController));
-  TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, component);
-
-  // creating different types of enemies with different stats
-  switch (type) 
-  {
-  case TDS_ENEMY_TYPE_DEMON:
-    controller->health = 3;
-    controller->damage = 1;
-    controller->move_speed = 3.0f;
-    break;
-  }
-
-  controller->type = type;
-  controller->player = player;
-  controller->flip = false;
-
-  return component;
-}
-
-void _tds_enemy_controller_update(SFR_Component* component, float delta_time) 
-{
-  TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, component);
-  SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
-
-  bool colliding =  sfr_collider2d_trigger_enter_uuid(component, controller->player->uuid, NULL);
-  if (colliding) 
-  {
-    // this really isn't a clean and clear way to freeing the current entity or any entity really
-    uint32_t index = sfr_ecs_entity_find_index_uuid(0, component->owner->uuid);
-    if (index != UINT32_MAX) 
-      sfr_ecs_erase_entity(index);
-
-    return;
-  }
-
-  // basic enemy move towards the player
-  SFR_Transform* player_transform = SFR_COMPONENT_CONVERT(SFR_Transform, controller->player->components[0]);
-  vec3 direction = { 0.0f, 0.0f, 0.0f };
-  glm_vec3_sub(player_transform->position, transform->position, direction);
-  glm_vec3_normalize(direction);
-  glm_vec3_scale(direction, controller->move_speed * delta_time, direction);
-  glm_vec3_add(transform->position, direction, transform->position);
-
-  if (direction[X] < 0.0f && !controller->flip)
-  {
-    transform->scale[X] = -transform->scale[X];
-    controller->flip = true;
-  }
-  else if (direction[X] >= 0.0f && controller->flip)
-  {
-    transform->scale[X] = -transform->scale[X];
-    controller->flip = false;
-  }
-}
 
 
 
@@ -122,7 +64,159 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, TDS_EnemyType type, SFR_Entity
   return enemy;
 }
 
-void tds_enemy_damage(SFR_Component* component, uint32_t damage) 
+SFR_Component* tds_enemy_controller(TDS_EnemyType type, SFR_Entity* player) 
 {
+  SFR_Component* component = sfr_ecs_component(
+    TDS_ENEMY_CONTROLLER, _tds_enemy_controller_update, NULL, NULL
+  );
 
+  component->data = (TDS_EnemyController*)malloc(sizeof(TDS_EnemyController));
+  TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, component);
+
+  // creating different types of enemies with different stats
+  switch (type) 
+  {
+  case TDS_ENEMY_TYPE_DEMON:
+    controller->health = 2;
+    controller->damage = 1;
+    controller->move_speed = 3.0f;
+    controller->state = TDS_ENEMY_STATE_ATTACKING;
+    controller->after_hit_timer = 0.0f;
+    controller->movement_offset = rand() % 3;
+    break;
+  }
+
+  controller->type = type;
+  controller->player = player;
+  controller->flip = false;
+
+  return component;
+}
+
+void _tds_enemy_controller_update(SFR_Component* component, float delta_time) 
+{
+  _tds_enemy_controller_behaviour_state(component, delta_time);
+}
+
+
+
+
+void _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta_time)
+{
+  TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, component);
+
+  switch (controller->state)
+  {
+  case TDS_ENEMY_STATE_IDLE:
+    switch (controller->type)
+    {
+    case TDS_ENEMY_TYPE_DEMON:
+      if (sfr_timer_finished(&controller->after_hit_timer))    
+        controller->state = TDS_ENEMY_STATE_ATTACKING;
+      break;
+    }
+    break;
+
+  case TDS_ENEMY_STATE_ATTACKING:
+    switch (controller->type)
+    {
+    case TDS_ENEMY_TYPE_DEMON:
+      _tds_enemy_controller_movement_demon(component, delta_time);
+      break;    
+    }
+    break;
+
+  case TDS_ENEMY_STATE_DEATH:
+    switch (controller->type)
+    {
+    case TDS_ENEMY_TYPE_DEMON:
+      // TODO: ...
+      return;
+      break;
+    }
+    break;
+  }
+}
+
+
+
+
+void _tds_enemy_controller_movement_demon(SFR_Component* component, float delta_time)
+{
+  TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, component);
+  SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
+
+  bool colliding =  sfr_collider2d_trigger_enter_uuid(component, controller->player->uuid, NULL);
+  if (colliding) 
+  {
+    SFR_Scene* scene = sfr_ecs_get_active_scene();
+    tds_player_damage(scene_arena_get_player(scene), controller->damage);
+
+    controller->state = TDS_ENEMY_STATE_IDLE;
+    controller->after_hit_timer = sfr_timer_start(1.0f);
+
+    return;
+  }
+
+  // basic enemy move towards the player
+  SFR_Transform* player_transform = SFR_COMPONENT_CONVERT(SFR_Transform, controller->player->components[0]);
+  vec3 direction = { 0.0f, 0.0f, 0.0f };
+  glm_vec3_sub(player_transform->position, transform->position, direction);
+
+
+  vec3 offset = { 0.0f, 0.0f, 0.0f };
+  switch (controller->movement_offset)
+  {
+  case 0:
+    break;
+
+  case 1:
+    glm_vec3_cross(direction, (vec3){ 0.0f, 0.0f, 1.0f }, offset);
+    glm_vec3_normalize(offset);
+    break;
+
+  case 2:
+    glm_vec3_cross(direction, (vec3){ 0.0f, 0.0f, 1.0f }, offset);
+    glm_vec3_normalize(offset);
+    glm_vec3_scale(offset, -1.0f, offset);
+    break;
+  }
+  offset[Z] = 0.0f;
+  
+  glm_vec3_normalize(direction);
+  glm_vec3_add(direction, offset, direction);
+  float mag = sqrtf(glm_vec2_dot(direction, direction));
+  glm_vec2_divs(direction, mag, direction);
+
+  glm_vec3_scale(direction, controller->move_speed * delta_time, direction);
+  glm_vec2_add(transform->position, direction, transform->position);
+
+  if (direction[X] < 0.0f && !controller->flip)
+  {
+    transform->scale[X] = -transform->scale[X];
+    controller->flip = true;
+  }
+  else if (direction[X] >= 0.0f && controller->flip)
+  {
+    transform->scale[X] = -transform->scale[X];
+    controller->flip = false;
+  }
+}
+
+
+
+
+void tds_enemy_damage(SFR_Entity* enemy, uint32_t damage) 
+{
+  TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, sfr_get_component(enemy->components[0], TDS_ENEMY_CONTROLLER));
+  controller->health -= damage;
+  if (controller->health < 1)
+  {
+    uint32_t index = sfr_ecs_entity_find_index_uuid(0, enemy->uuid);
+    if (index != UINT32_MAX)
+    {
+      // TODO: play death animation and disable colliders 
+      sfr_ecs_erase_entity(index);
+    }
+  }
 }

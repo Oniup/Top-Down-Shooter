@@ -26,15 +26,15 @@ void sfr_run()
   {
     sfr_ecs_remove_erased_entities();
 
-    static SFR_Timer onesec = 0.0f;
-    static uint32_t frame_count = 0;
-    if (sfr_timer_finished(&onesec))
-    {
-      onesec = sfr_timer_start(1.0f);
-      printf("fps: %u\n", frame_count);
-      frame_count = 0;
-    }
-    frame_count++;
+    // static SFR_Timer onesec = 0.0f;
+    // static uint32_t frame_count = 0;
+    // if (sfr_timer_finished(&onesec))
+    // {
+    //   onesec = sfr_timer_start(1.0f);
+    //   printf("fps: %u\n", frame_count);
+    //   frame_count = 0;
+    // }
+    // frame_count++;
 
     float delta_time = calculate_delta_time();
     sfr_ecs_update(delta_time);

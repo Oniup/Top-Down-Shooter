@@ -2,17 +2,19 @@
 
 #include <topdown_shooter/bullet.h>
 
+#include "../scenes/scene_arena.h"
+
 
 
 
 void                                    _tds_player_controller_update(SFR_Component* component, float delta_time);
 
-void                                    _tds_player_controller_change_gun_sprite(SFR_Component* component, bool can_shoot);
+void                                    _tds_player_controller_change_gun_sprite(SFR_Component* component, bool* has_shot);
 
 
 
 
-TDS_PlayerController* tds_player_controller_create_instance() 
+SFR_Component* tds_player_controller_create_instance() 
 {
   SFR_Entity* player = sfr_ecs_push_entity("Player", "player");
 
@@ -25,16 +27,21 @@ TDS_PlayerController* tds_player_controller_create_instance()
 
   sfr_sprite_renderer_set_texture(renderer, "player");
 
-  ivec2 idle_animation[] = { { 0, 0 }, { 1, 0 } };
-  float idle_time[]      = {   1.0f,     1.0f   };
-  ivec2 run_animation[] = { { 0, 0 }, { 1, 0 }, { 2, 0 } };
-  float run_time[]      = {   0.1f,     0.1f,     0.2f   };
+  ivec2 idle_animation[] = { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 1, 0 } };
+  float idle_time[]      = {   0.5f,     1.0f,     0.5f,     1.0f };
+  ivec2 run_animation[] = { { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 }, { 7, 0 } };
+  float run_time[]      = {   0.1f,     0.1f,     0.1f,     0.1f,     0.1f   };
+  ivec2 death_animation[] = { { 8, 0 }, { 9, 0 }, { 10, 0 },     { 11, 0 } };
+  float death_time[]      = {   0.1f,     0.1f,      0.1f, SFR_SPRITE_ANIMATOR_STOP };
 
   sfr_sprite_animator_slice(animator, (ivec2) { 16, 16 });
-  sfr_sprite_animator_load_animation(animator, "idle", idle_animation, idle_time, 2);
-  sfr_sprite_animator_load_animation(animator, "run", run_animation, run_time, 3);
+  sfr_sprite_animator_load_animation(animator, "idle", idle_animation, idle_time, 4);
+  sfr_sprite_animator_load_animation(animator, "run", run_animation, run_time, 5);
+  sfr_sprite_animator_load_animation(animator, "death", death_animation, death_time, 4);
 
   SFR_Component* player_collider = sfr_ecs_push_component(player, sfr_collider2d(player->components[0]));  
+  SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, player_collider);
+  collider->trigger = true;
   TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller);
 
 
@@ -67,7 +74,7 @@ TDS_PlayerController* tds_player_controller_create_instance()
   glm_vec2_copy((vec2) { 0.6f, 0.6f }, player_transform->scale);
   glm_vec2_copy((vec2) { 0.6f, 0.6f }, gun_transform->scale);
 
-  return controller;
+  return player_controller;
 }
 
 void tds_player_controller_load_assets() 
@@ -83,6 +90,10 @@ void tds_player_controller_load_assets()
   sfr_pipeline_push_texture(sfr_texture(
     "bullet001", "./art/bullet001-sprite-sheet.png", false, 4, false
   ));
+
+  sfr_pipeline_push_texture(sfr_texture(
+    "player-health-bar", "./art/health-bar-sprite-sheet.png", true, 4, false
+  ));
 }
 
 SFR_Component* tds_player_controller() 
@@ -95,15 +106,25 @@ SFR_Component* tds_player_controller()
   TDS_PlayerController* player_controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
 
   player_controller->damage = 1;
+  player_controller->health = 3;
   player_controller->move_speed = 4.0f;
   player_controller->gun = NULL;
+  player_controller->time_btw_bullets = 0.3f;
 
   return component;
 }
 
 void tds_player_damage(SFR_Component* player_controller_comp, uint32_t damage) 
 {
+  static SFR_Timer timer = 0.0f;
+  if (sfr_timer_finished(&timer))
+  {
+    TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller_comp);
+    controller->health -= damage;
+    scene_arena_set_player_health(sfr_ecs_get_active_scene(), controller->health);
 
+    timer = sfr_timer_start(2.0f);
+  }
 }
 
 void _tds_player_controller_update(SFR_Component* component, float deltaTime) 
@@ -127,7 +148,7 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
 
   SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
   static vec3 offset_gun = {
-    -0.3f, 0.4f, 0.0f
+    0.0f, 0.1f, 0.0f
   };
 
   if (direction[X] != 0 || direction[Y] != 0) 
@@ -146,8 +167,11 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
       flipped_x = false;
     }
     
-    glm_vec3_scale(direction, controller->move_speed * deltaTime, direction);
-    glm_vec3_add(direction, transform->position, transform->position);
+    float mag = sqrtf(glm_vec2_dot(direction, direction));
+    glm_vec2_divs(direction, mag, direction);
+
+    glm_vec2_scale(direction, controller->move_speed * deltaTime, direction);
+    glm_vec2_add(direction, transform->position, transform->position);
 
     animation = 1;
   }
@@ -164,7 +188,6 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
 
   vec2 mouse_pos;
   sfr_input_get_mouse_position(mouse_pos, false);
-  // printf("mouse[%f, %f]\n", mouse_pos[X], mouse_pos[Y]);
 
   SFR_Transform* gun_transform = SFR_COMPONENT_CONVERT(SFR_Transform, controller->gun->components[0]);
   glm_vec3_copy(transform->position, gun_transform->position);
@@ -174,8 +197,9 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
   gun_transform->rotation[W] = sfr_look_at_target_flip(gun_transform, mouse_pos, &flip);
 
   // shooting the gun
-  static bool can_shoot = true;
-  if (can_shoot && sfr_input_mouse(SFR_INPUT_PRESS, SFR_MOUSE_BUTTON_LEFT)) 
+  static SFR_Timer time_btw_bullets = 0.0f;
+  static bool has_shot = false;
+  if (sfr_timer_finished(&time_btw_bullets) && sfr_input_mouse(SFR_INPUT_PRESS, SFR_MOUSE_BUTTON_LEFT)) 
   {
     vec2 direction;
     glm_vec2_sub(mouse_pos, gun_transform->position, direction);
@@ -190,51 +214,39 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
     bullet_controller->move_speed = 20.0f;
     bullet_controller->damage = controller->damage;
     
-    can_shoot = false;
+    time_btw_bullets = sfr_timer_start(controller->time_btw_bullets);
+    has_shot = true;
   }
 
-  if (!can_shoot && sfr_input_mouse(SFR_INPUT_RELEASE, SFR_MOUSE_BUTTON_LEFT))
-    can_shoot = true;
-
-  _tds_player_controller_change_gun_sprite(component, can_shoot);
+  _tds_player_controller_change_gun_sprite(component, &has_shot);
 }
 
-void _tds_player_controller_change_gun_sprite(SFR_Component* component, bool can_shoot)
+void _tds_player_controller_change_gun_sprite(SFR_Component* component, bool* has_shot)
 {
   TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
-  
-  static bool last = true;  
-  static int count = 0;
 
-
-  if (can_shoot != last) 
+  if (*has_shot) 
   {
-    SFR_Component* gun_renderer = controller->gun->components[1];
-
-    count++;
-    int play_animation = count % 2;
-    last = can_shoot;
+    SFR_Component* gun_renderer = controller->gun->components[1];    
     
-    if (play_animation != 0) 
-    {
-      vec2 uv_size = { 0.5f, 1.0f };
-      sfr_sprite_renderer_set_uv(
-        gun_renderer, 
-        (vec2) {
-          uv_size[X] * 1.0f,
-          uv_size[Y] * 0.0f,
-        },
-        (vec2) {
-          uv_size[X] * 2.0f,
-          uv_size[Y] * 1.0f,
-        }
-      );
+    vec2 uv_size = { 0.5f, 1.0f };
+    sfr_sprite_renderer_set_uv(
+      gun_renderer, 
+      (vec2) {
+        uv_size[X] * 1.0f,
+        uv_size[Y] * 0.0f,
+      },
+      (vec2) {
+        uv_size[X] * 2.0f,
+        uv_size[Y] * 1.0f,
+      }
+    );
 
-      controller->shooting_animation_time = sfr_timer_start(0.05f);
-    }
+    controller->shooting_animation_time = sfr_timer_start(0.05f);
+    *has_shot = false;
   }
 
-  if (count % 2 != 0 && sfr_timer_finished(&controller->shooting_animation_time))
+  if (sfr_timer_finished(&controller->shooting_animation_time))
   {
     SFR_Component* gun_renderer = controller->gun->components[1];
 

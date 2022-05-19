@@ -1,5 +1,7 @@
 #include <topdown_shooter/bullet.h>
 
+#include <topdown_shooter/enemy_controller.h>
+
 
 
 
@@ -75,9 +77,7 @@ void _tds_bullet_update(SFR_Component* component, float delta_time)
     }
     else 
     {
-      uint32_t index = sfr_ecs_entity_find_index_uuid(0, target->owner->uuid);
-      if (index != UINT32_MAX)
-        sfr_ecs_erase_entity(index);
+      tds_enemy_damage(target->owner, bullet->damage);
     }
   }
 
