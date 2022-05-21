@@ -21,6 +21,7 @@ struct TDS_Bullet
   char*                                 target_tag;
   vec2                                  direction;
   SFR_Timer                             lifetime;
+  bool                                  does_damage;
   SFR_Component*                        sprite_animator;
 };
 

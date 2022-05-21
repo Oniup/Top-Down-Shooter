@@ -54,13 +54,14 @@ SFR_Component* tds_bullet(vec2 move_direction, const char* target_tag, float mov
   bullet->lifetime = 0.0f;
   glm_vec2_copy(move_direction, bullet->direction);
   bullet->sprite_animator = NULL;
+  bullet->does_damage = true;
 
   return component;
 }
 
 void _tds_bullet_update(SFR_Component* component, float delta_time)
 {
-  TDS_Bullet* bullet = SFR_COMPONENT_CONVERT(TDS_Bullet, component);
+  TDS_Bullet* bullet = SFR_COMPONENT_CONVERT(TDS_Bullet, component);  
   if (!sfr_timer_finished(&bullet->lifetime)) 
   {
     SFR_Component* target = NULL;

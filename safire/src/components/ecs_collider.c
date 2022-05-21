@@ -78,16 +78,19 @@ bool sfr_collider2d_trigger_enter_tag(SFR_Component* component, const char* targ
     uint32_t length = sfr_str_length(target_tag);
     for (uint32_t i = 0; i < target_count; i++) 
     {
-      if (sfr_str_cmp_length(target_tag, targets[i]->owner->tag, length)) 
+      if (targets[i]->active)
       {
-        bool result = _sfr_collider2d_trigger(component, targets[i]);
-        if (result) 
+        if (sfr_str_cmp_length(target_tag, targets[i]->owner->tag, length)) 
         {
-          if (get != NULL)
-            *get = targets[i];
-          
+          bool result = _sfr_collider2d_trigger(component, targets[i]);
+          if (result) 
+          {
+            if (get != NULL)
+              *get = targets[i];
+            
 
-          return true;
+            return true;
+          }
         }
       }
     }
@@ -105,19 +108,22 @@ bool sfr_collider2d_trigger_enter_name(SFR_Component* component, const char* nam
 
   if (targets != NULL) 
   {
-    // checking the triggerss
+    // checking the triggers
     uint32_t length = sfr_str_length(name);
     for (uint32_t i = 0; i < target_count; i++) 
     {
-      if (sfr_str_cmp_length(name, targets[i]->owner->name, length)) 
+      if (targets[i]->active)
       {
-        bool result = _sfr_collider2d_trigger(component, targets[i]);
-        if (result) 
+        if (sfr_str_cmp_length(name, targets[i]->owner->name, length)) 
         {
-          if (get != NULL)
-            *get = targets[i];
+          bool result = _sfr_collider2d_trigger(component, targets[i]);
+          if (result) 
+          {
+            if (get != NULL)
+              *get = targets[i];
 
-          return true;
+            return true;
+          }
         }
       }
     }
@@ -138,15 +144,18 @@ bool sfr_collider2d_trigger_enter_uuid(SFR_Component* component, SFR_Uuid target
     // checking the triggerss
     for (uint32_t i = 0; i < target_count; i++) 
     {
-      if ((unsigned long long)target_uuid == (unsigned long long)targets[i]->owner->uuid) 
+      if (targets[i]->active)
       {
-        bool result = _sfr_collider2d_trigger(component, targets[i]);
-        if (result) 
+        if ((unsigned long long)target_uuid == (unsigned long long)targets[i]->owner->uuid) 
         {
-          if (get != NULL)
-            *get = targets[i];
+          bool result = _sfr_collider2d_trigger(component, targets[i]);
+          if (result) 
+          {
+            if (get != NULL)
+              *get = targets[i];
 
-          return true;
+            return true;
+          }
         }
       }
     }
@@ -181,7 +190,7 @@ void _sfr_collider2d_late_update(SFR_Component* component, float delta_time)
   SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
 
   // make sure that the collider is not a trigger collider  
-  if (!collider->trigger) 
+  if (!collider->trigger && component->active) 
   {
     // get all the colliders that the current collider is colliding with
     uint32_t target_count = 0;
@@ -194,7 +203,7 @@ void _sfr_collider2d_late_update(SFR_Component* component, float delta_time)
     for (uint32_t i = 0; i < target_count; i++) 
     {
       SFR_Collider2D* target_collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, target[i]);
-      if (!target_collider->trigger) 
+      if (!target_collider->trigger && target[i]->active) 
       {
         _sfr_collider2d_collide(component, target[i]);
       }

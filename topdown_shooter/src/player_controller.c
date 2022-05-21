@@ -4,12 +4,17 @@
 
 #include "../scenes/scene_arena.h"
 
+#include <topdown_shooter/utils.h>
+
 
 
 
 void                                    _tds_player_controller_update(SFR_Component* component, float delta_time);
 
 void                                    _tds_player_controller_change_gun_sprite(SFR_Component* component, bool* has_shot);
+
+void                                    _tds_player_death_update(SFR_Component* component);
+void                                    _tds_player_alive_update(SFR_Component* component, float delta_time);
 
 
 
@@ -118,22 +123,99 @@ void tds_player_damage(SFR_Component* player_controller_comp, uint32_t damage)
 {
   static SFR_Timer timer = 0.0f;
   if (sfr_timer_finished(&timer))
-  {
+  {    
     TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller_comp);
-    controller->health -= damage;
-    scene_arena_set_player_health(sfr_ecs_get_active_scene(), controller->health);
+    SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, player_controller_comp->owner->components[0]);
 
-    timer = sfr_timer_start(2.0f);
+    tds_instantiate_blood(transform->position, 2);
+
+    if (controller->health > 0)    
+    {
+      controller->health -= damage;    
+      scene_arena_set_player_health(sfr_ecs_get_active_scene(), controller->health);
+
+      if (controller->health < 1)
+      {
+        SFR_Component* animator = sfr_get_component(player_controller_comp, SFR_SPRITE_ANIMATOR);
+        sfr_sprite_animator_start_animation(animator, "death");
+
+        uint32_t index = sfr_ecs_entity_find_index_uuid(0, controller->gun->uuid);
+        sfr_ecs_erase_entity(index);
+        controller->gun = NULL;
+      }
+
+      timer = sfr_timer_start(2.0f);
+    }
+    else
+      timer = sfr_timer_start(FLT_MAX);
   }
 }
 
-void _tds_player_controller_update(SFR_Component* component, float deltaTime) 
+void _tds_player_controller_update(SFR_Component* component, float delta_time) 
 {
-  uint32_t animation = 0;
-  static uint32_t last_animation = 0;
-
   TDS_PlayerController* controller = ((TDS_PlayerController*)component->data);
 
+  if (controller->health < 1)
+    _tds_player_death_update(component);
+  else
+    _tds_player_alive_update(component, delta_time);
+}
+
+void _tds_player_controller_change_gun_sprite(SFR_Component* component, bool* has_shot)
+{
+  TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
+
+  if (*has_shot) 
+  {
+    SFR_Component* gun_renderer = controller->gun->components[1];    
+    
+    vec2 uv_size = { 0.5f, 1.0f };
+    sfr_sprite_renderer_set_uv(
+      gun_renderer, 
+      (vec2) {
+        uv_size[X] * 1.0f,
+        uv_size[Y] * 0.0f,
+      },
+      (vec2) {
+        uv_size[X] * 2.0f,
+        uv_size[Y] * 1.0f,
+      }
+    );
+
+    controller->shooting_animation_time = sfr_timer_start(0.05f);
+    *has_shot = false;
+  }
+
+  if (sfr_timer_finished(&controller->shooting_animation_time))
+  {
+    SFR_Component* gun_renderer = controller->gun->components[1];
+
+    vec2 uv_size = { 0.5f, 1.0f };
+    sfr_sprite_renderer_set_uv(
+      gun_renderer, 
+      (vec2) {
+        uv_size[X] * 0.0f,
+        uv_size[Y] * 0.0f,
+      },
+      (vec2) {
+        uv_size[X] * 1.0f,
+        uv_size[Y] * 1.0f,
+      }
+    );
+  }
+}
+
+void _tds_player_death_update(SFR_Component* component)
+{
+
+}
+
+void _tds_player_alive_update(SFR_Component* component, float delta_time)
+{
+  TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
+
+  uint32_t animation = 0;
+  static uint32_t last_animation = 0;
   // movement controller
 
   vec3 direction = { 0, 0, 0 };
@@ -170,7 +252,7 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
     float mag = sqrtf(glm_vec2_dot(direction, direction));
     glm_vec2_divs(direction, mag, direction);
 
-    glm_vec2_scale(direction, controller->move_speed * deltaTime, direction);
+    glm_vec2_scale(direction, controller->move_speed * delta_time, direction);
     glm_vec2_add(direction, transform->position, transform->position);
 
     animation = 1;
@@ -221,46 +303,3 @@ void _tds_player_controller_update(SFR_Component* component, float deltaTime)
   _tds_player_controller_change_gun_sprite(component, &has_shot);
 }
 
-void _tds_player_controller_change_gun_sprite(SFR_Component* component, bool* has_shot)
-{
-  TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
-
-  if (*has_shot) 
-  {
-    SFR_Component* gun_renderer = controller->gun->components[1];    
-    
-    vec2 uv_size = { 0.5f, 1.0f };
-    sfr_sprite_renderer_set_uv(
-      gun_renderer, 
-      (vec2) {
-        uv_size[X] * 1.0f,
-        uv_size[Y] * 0.0f,
-      },
-      (vec2) {
-        uv_size[X] * 2.0f,
-        uv_size[Y] * 1.0f,
-      }
-    );
-
-    controller->shooting_animation_time = sfr_timer_start(0.05f);
-    *has_shot = false;
-  }
-
-  if (sfr_timer_finished(&controller->shooting_animation_time))
-  {
-    SFR_Component* gun_renderer = controller->gun->components[1];
-
-    vec2 uv_size = { 0.5f, 1.0f };
-    sfr_sprite_renderer_set_uv(
-      gun_renderer, 
-      (vec2) {
-        uv_size[X] * 0.0f,
-        uv_size[Y] * 0.0f,
-      },
-      (vec2) {
-        uv_size[X] * 1.0f,
-        uv_size[Y] * 1.0f,
-      }
-    );
-  }
-}

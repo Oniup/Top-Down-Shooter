@@ -1,6 +1,20 @@
 # Top-Down Shooter Game Change logs
 
-## VERSION 0.0.4 (18/5/2022)
+## VERSION 0.0.5 (22/5/2022)
+
+* added enemy death animation
+* blood spills when the enemy and the player lose health
+* better camera movement
+* started development of the wave system
+  * kill count
+  * score count
+  * wave number
+* player death
+  * enemy handler stops spawning enemies in
+  * death animation
+* reload scene
+
+## VERSION 0.0.4 (19/5/2022)
 
 * enemy animation and different types setup
 * more interesting enemy movement for demon type

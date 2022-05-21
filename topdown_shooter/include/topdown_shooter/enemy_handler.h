@@ -17,6 +17,7 @@ extern "C" {
 
 typedef struct TDS_EnemyHandler         TDS_EnemyHandler;
 typedef struct TDS_EnemySpawner         TDS_EnemySpawner;
+typedef struct TDS_PlayerController     TDS_PlayerController;
 
 
 
@@ -33,9 +34,10 @@ struct TDS_EnemyHandler
   vec2*                                 spawn_locations;
 
   SFR_Entity*                           player;
+  TDS_PlayerController*                 player_controller;
 };
 
-SAFIRE_API TDS_EnemyHandler*            tds_enemy_handler_create_instance(SFR_Entity* player);
+SAFIRE_API SFR_Component*               tds_enemy_handler_create_instance(SFR_Entity* player);
 SAFIRE_API void                         tds_enemy_handler_load_assets();
 SAFIRE_API void                         tds_enemy_handler_add_kill(SFR_Component* component, uint32_t kill_points);
 

@@ -16,7 +16,8 @@ typedef struct TDS_CameraController     TDS_CameraController;
 
 struct TDS_CameraController 
 {
-  SFR_Transform*                        target;
+  SFR_Transform*                        player;
+  SFR_Transform*                        cursor;
 };
 
 SAFIRE_API SFR_Component*               tds_camera_controller();

@@ -49,8 +49,6 @@ static SFR_Ecs* _ecs = NULL;
 
 char*                                   _sfr_ecs_name_duplicate_check(const char* name);
 
-
-void                                    _sfr_ecs_move_component(uint32_t target, uint32_t dest);
 void                                    _sfr_ecs_erase_entity(uint32_t index);
 
 
@@ -188,7 +186,7 @@ void sfr_ecs_update(float delta_time)
 
   for (uint32_t i = start_index; i < end_index; i++) 
   {
-    if (_ecs->components[i]->update != NULL) 
+    if (_ecs->components[i]->update != NULL && _ecs->components[i]->active) 
       _ecs->components[i]->update(_ecs->components[i], delta_time);
   }  
 
@@ -203,7 +201,7 @@ void sfr_ecs_late_update(float late_delta_time)
 
   for (uint32_t i = start_index; i < end_index; i++) 
   {
-    if (_ecs->components[i]->late_update != NULL)
+    if (_ecs->components[i]->late_update != NULL && _ecs->components[i]->active)
       _ecs->components[i]->late_update(_ecs->components[i], late_delta_time);
   }  
 
@@ -218,7 +216,7 @@ void sfr_ecs_render_update()
 
   for (uint32_t i = start_index; i < end_index; i++) 
   {
-    if (_ecs->components[i]->update != NULL) 
+    if (_ecs->components[i]->update != NULL && _ecs->components[i]->active) 
       _ecs->components[i]->update(_ecs->components[i], 0.0f);    
   }  
 }
@@ -386,6 +384,18 @@ void sfr_ecs_load_scene(uint32_t id)
 
   _ecs->current_scene = id;
   SFR_CURRENT_SCENE->start(SFR_CURRENT_SCENE);
+}
+
+uint32_t sfr_ecs_get_scene(const char* name)
+{
+  uint32_t length = sfr_str_length(name);
+  for (uint32_t i = 0; i < _ecs->scenes_count; i++)
+  {
+    if (sfr_str_cmp_length(name, _ecs->scenes[i]->name, length))
+      return i;
+  }
+
+  return UINT32_MAX;
 }
 
 SFR_Scene* sfr_ecs_get_active_scene()
@@ -565,7 +575,7 @@ SFR_Component* sfr_ecs_push_component(SFR_Entity* entity, SFR_Component* compone
         break;
 
       case SFR_COMPONENT_TYPE_GRAPHICS:
-        // incerting component into correct location based on the entity layer
+        // inserting component into correct location based on the entity layer
         t_index = _ecs->component_indices->graphics_start_index;
         uint32_t old_size = _ecs->components_count - 1;
 
@@ -579,7 +589,7 @@ SFR_Component* sfr_ecs_push_component(SFR_Entity* entity, SFR_Component* compone
         break;
       }
 
-      // incert component into correct location
+      // insert component into correct location
       if (t_index < _ecs->components_count - 1) 
       {
         uint32_t temp_size = _ecs->components_count - t_index - 1;
@@ -638,6 +648,7 @@ SFR_Component* sfr_ecs_component(const char* name, component_update update, comp
   SFR_Component* component = (SFR_Component*)malloc(sizeof(SFR_Component)); 
   SAFIRE_ASSERT(component, "[SAFIRE::ECS_COMPONENT] failed to assign memory to component for some reason");
 
+  component->active = true;
   component->name = sfr_str(name);
   component->update = update;
   component->late_update = late_update;
@@ -951,10 +962,4 @@ void sfr_ecs_debug_print_entities_names()
   }
   else
     printf("currently there no names in the buffer\n");
-}
-
-void _sfr_ecs_move_component(uint32_t target, uint32_t dest) 
-{
-  // TODO: move the target entity to the correct location and a move everything down/up in both directions
-  // for this project it is out of scope
 }

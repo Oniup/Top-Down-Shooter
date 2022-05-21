@@ -37,16 +37,21 @@ struct TDS_EnemyController
   float                                 move_speed;
   bool                                  flip;
 
+  uint32_t                              kill_points;
+
   TDS_EnemyState                        state;
   SFR_Timer                             after_hit_timer;
-  int                                   movement_offset;                                 
+  int                                   movement_offset;
+
+  bool                                  spawn_blood;
 
   SFR_Entity*                           player;
+  SFR_Component*                        enemy_handler;
 };
 
-SAFIRE_API SFR_Component*               tds_enemy_controller(TDS_EnemyType type, SFR_Entity* player);
+SAFIRE_API SFR_Component*               tds_enemy_controller(TDS_EnemyType type, SFR_Component* enemy_handler, SFR_Entity* player);
 
-SAFIRE_API SFR_Entity*                  tds_instantiate_enemy(vec2 spawn_pos, TDS_EnemyType type, SFR_Entity* player);
+SAFIRE_API SFR_Entity*                  tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, TDS_EnemyType type, SFR_Entity* player);
 SAFIRE_API void                         tds_enemy_damage(SFR_Entity* enemy, uint32_t damage);
 
 

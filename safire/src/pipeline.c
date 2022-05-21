@@ -125,7 +125,7 @@ void sfr_pipeline_init(const char* window_title, int window_width, int window_he
   sfr_pipeline_set_projection_matrix(SFR_PIPELINE_PROJECTION_ORTHOGRAPHIC);
   glm_mat4_identity(_pipeline->view);
 
-  sfr_pipeline_set_culling_centre((vec3){ 0.0f, 0.0f, 0.0f });
+sfr_pipeline_set_culling_centre((vec3){ 0.0f, 0.0f, 0.0f });
   sfr_pipeline_set_culling_size((vec3){ 16.0f * 0.7f, 9.0f * 0.7f, 5.0f });
 }
 
@@ -320,6 +320,18 @@ void sfr_pipeline_push_shader(SFR_Shader* shader)
 {
   if (shader != NULL) 
   {
+    uint32_t length = sfr_str_length(shader->name);
+    for (uint32_t i = 0; i < _pipeline->shaders_count; i++)
+    {
+      if (sfr_str_cmp_length(shader->name, _pipeline->shaders[i]->name, length))
+      {
+        sfr_shader_free(shader);
+        
+        return;
+      }
+    }
+
+
     _pipeline->shaders_count++;
 
     if (_pipeline->shaders != NULL) 
@@ -342,7 +354,18 @@ void sfr_pipeline_push_shader(SFR_Shader* shader)
 void sfr_pipeline_push_texture(SFR_Texture* texture) 
 {
   if (texture != NULL) 
-  {
+  {  
+    uint32_t length = sfr_str_length(texture->name);
+    for (uint32_t i = 0; i < _pipeline->textures_count; i++)
+    {
+      if (sfr_str_cmp_length(texture->name, _pipeline->textures[i]->name, length))
+      {
+        sfr_texture_free(texture);
+        
+        return;
+      }
+    }
+
     _pipeline->textures_count++;
 
     if (_pipeline->textures != NULL) 
@@ -461,10 +484,10 @@ void _sfr_renderer_init()
   glBindBuffer(GL_ARRAY_BUFFER, _renderer->vbo);
   glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 
-  glEnableVertexAttribArray(0);         // vertices       (vec3)
+  glEnableVertexAttribArray(0);         // vertex         (vec3)
   glEnableVertexAttribArray(1);         // uv coords      (vec2)
   glEnableVertexAttribArray(2);         // overlay colour (vec4)
-  glEnableVertexAttribArray(3);         // texture coord  (float)
+  glEnableVertexAttribArray(3);         // texture id     (float)
 
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (const void*)0);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 10, (const void*)(sizeof(float) * 3));

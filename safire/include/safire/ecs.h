@@ -39,6 +39,7 @@ SAFIRE_API uint32_t                     sfr_ecs_get_component_count();
 SAFIRE_API uint32_t                     sfr_ecs_get_starting_index(SFR_ComponentType type);
 
 SAFIRE_API void                         sfr_ecs_load_scene(uint32_t id);
+SAFIRE_API uint32_t                     sfr_ecs_get_scene(const char* name);
 SAFIRE_API SFR_Scene*                   sfr_ecs_get_active_scene();
 
 SAFIRE_API void                         sfr_ecs_attach_default_comps(SFR_Entity* entity);
@@ -94,6 +95,8 @@ typedef void (*component_free)          (SFR_Component*);
 
 struct SFR_Component 
 {
+  bool                                  active;
+
   SFR_Uuid                              uuid;
   char*                                 name;
   SFR_Entity*                           owner;
