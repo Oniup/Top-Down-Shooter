@@ -1,5 +1,12 @@
 # Top-Down Shooter Game Change logs
 
+## VERSION 0.0.6 (29/5/2022)
+
+* added wave system
+* destroy target after time limit component
+  * used for dead enemies and blood stains
+* started dash component
+
 ## VERSION 0.0.5 (22/5/2022)
 
 * added enemy death animation

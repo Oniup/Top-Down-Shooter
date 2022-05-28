@@ -388,10 +388,9 @@ void sfr_ecs_load_scene(uint32_t id)
 
 uint32_t sfr_ecs_get_scene(const char* name)
 {
-  uint32_t length = sfr_str_length(name);
   for (uint32_t i = 0; i < _ecs->scenes_count; i++)
   {
-    if (sfr_str_cmp_length(name, _ecs->scenes[i]->name, length))
+    if (sfr_str_cmp(name, _ecs->scenes[i]->name))
       return i;
   }
 
@@ -421,12 +420,11 @@ uint32_t sfr_find_scene(const char* name)
 
 char* _sfr_ecs_name_duplicate_check(const char* name)
 {
-  uint32_t length = sfr_str_length(name);
   int target = -1;
 
   for (uint32_t i = 0; i < _ecs->names_used_count; i++)
   {
-    if (sfr_str_cmp_length(name, _ecs->names_used[i].name, length))
+    if (sfr_str_cmp(name, _ecs->names_used[i].name))
     {
       target = i;
     }
@@ -467,7 +465,7 @@ char* _sfr_ecs_name_duplicate_check(const char* name)
       }
 
       // setting the name with the added number on the end of it
-      length = length + digit_count + 1;
+      uint32_t length = sfr_str_length(name) + digit_count + 1;
       new_name = (char*)malloc(sizeof(char*) * length);
       SAFIRE_ASSERT(new_name, "[SAFIRE::NAME_DUPLICATE_CHECK] failed to assign memory to new name");
       snprintf(new_name, length, "%s%u", name, _ecs->names_used[target].count);
@@ -719,10 +717,9 @@ void sfr_ecs_entity_set_layer(SFR_Entity* entity, uint32_t layer)
 SFR_Entity* sfr_ecs_find_entity_name(const char* name) 
 {
   // Im pre sure that there is a better way of doing this, but idk how to improve this
-  uint32_t length = sfr_str_length(name);
   for (uint32_t i = 0; i < _ecs->entities_count; i++) 
   {
-    if (sfr_str_cmp_length(name, _ecs->entities[i]->name, length)) 
+    if (sfr_str_cmp(name, _ecs->entities[i]->name)) 
     {
       return _ecs->entities[i];
     }
@@ -735,11 +732,10 @@ SFR_Entity** sfr_ecs_find_list_entities(const char* tag, uint32_t* entity_count)
 {
   SFR_Entity** buffer = NULL;
   uint32_t count = 0;
-  uint32_t length = sfr_str_length(tag);
 
   for (uint32_t i = 0; i < _ecs->entities_count; i++) 
   {
-    if (sfr_str_cmp_length(tag, _ecs->entities[i]->tag, length)) 
+    if (sfr_str_cmp(tag, _ecs->entities[i]->tag)) 
     {
       count += 1;
       if (buffer != NULL) {
@@ -770,7 +766,7 @@ SFR_Entity** sfr_ecs_find_list_entities(const char* tag, uint32_t* entity_count)
         }
       }
 
-      buffer[i] = _ecs->entities[i];
+      buffer[count - 1] = _ecs->entities[i];
     }
   }
 
@@ -806,11 +802,10 @@ SFR_Component** sfr_ecs_find_list_components(const char* name, uint32_t* compone
 {
   SFR_Component** buffer = NULL;
   uint32_t count = 0;
-  uint32_t length = sfr_str_length(name);
 
   for (uint32_t i = 0; i < _ecs->components_count; i++) 
   {
-    if (sfr_str_cmp_length(name, _ecs->components[i]->name, length)) 
+    if (sfr_str_cmp(name, _ecs->components[i]->name)) 
     {
       count += 1;
       if (buffer != NULL) {
@@ -852,10 +847,9 @@ SFR_Component** sfr_ecs_find_list_components(const char* name, uint32_t* compone
 uint32_t sfr_ecs_entity_find_index_name(uint32_t offset, const char* name) 
 {
   // Im pre sure that there is a better way of doing this, but idk how to improve this
-  uint32_t length = sfr_str_length(name);
   for (uint32_t i = offset; i < _ecs->entities_count; i++) 
   {
-    if (sfr_str_cmp_length(name, _ecs->entities[i]->name, length)) 
+    if (sfr_str_cmp(name, _ecs->entities[i]->name)) 
       return i;
   }
 

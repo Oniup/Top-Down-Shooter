@@ -2,9 +2,7 @@
 
 #include "../include/topdown_shooter/enemy_controller.h"
 #include "../include/topdown_shooter/player_controller.h"
-
-
-#define TDS_ENEMY_HANDLER_SPAWNER_COUNT 4
+#include "../scenes/scene_arena.h"
 
 
 void                                    _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_time);
@@ -34,8 +32,14 @@ void tds_enemy_handler_load_assets()
 void tds_enemy_handler_add_kill(SFR_Component* component, uint32_t kill_points)
 {
   TDS_EnemyHandler* handler = SFR_COMPONENT_CONVERT(TDS_EnemyHandler, component);
-  handler->kills++;
-  handler->score += kill_points;
+
+  if (handler->player_controller->health > 0)
+  {
+    handler->kills++;
+    handler->score += kill_points;
+    
+    handler->kills_until_next_wave -= 1;
+  }
 }
 
 SFR_Component* tds_enemy_handler(SFR_Entity* player) 
@@ -47,11 +51,13 @@ SFR_Component* tds_enemy_handler(SFR_Entity* player)
   component->data = (TDS_EnemyHandler*)malloc(sizeof(TDS_EnemyHandler));
   TDS_EnemyHandler* handler = SFR_COMPONENT_CONVERT(TDS_EnemyHandler, component);
 
-  handler->spawn_rate = 1;
   handler->wave = 1;
+  handler->spawn_rate = 8;
+  handler->kills_until_next_wave = 8;
+
   handler->kills = 0;
   handler->score = 0;
-  handler->time_btw_waves = 4.0f;
+
   handler->player = player;
 
   SFR_Component* player_controller = sfr_get_component(player->components[0], TDS_PLAYER_CONTROLLER);
@@ -80,39 +86,73 @@ SFR_Component* tds_enemy_handler(SFR_Entity* player)
 void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_time) 
 {
   TDS_EnemyHandler* handler = SFR_COMPONENT_CONVERT(TDS_EnemyHandler, component);
-
+  
   if (handler->player_controller->health > 0)
   {
     // rotating the 4 spawn locations around the map 
     static float angle = 0.0f;
     angle += 200.0f * late_delta_time;
+        
 
-    float theta = angle;
-    for (uint32_t i = 0; i < TDS_ENEMY_HANDLER_SPAWNER_COUNT; i++) 
+    static uint32_t spawn_count = 0;
+    static bool spawning = true;
+    static SFR_Timer btw_spawn = 0.0f; 
+    static SFR_Timer btw_wave = 0.0f;   
+
+    SFR_Transform* player_transform = SFR_COMPONENT_CONVERT(SFR_Transform, handler->player->components[0]);
+
+    if (spawning)
     {
-      float radius = sqrtf(glm_vec2_dot(handler->spawn_locations[i], handler->spawn_locations[i]));
-
-      vec2 position = { 
-        cosf(theta) * radius,
-        sinf(theta) * radius
-      };
-
-      glm_vec2_copy(position, handler->spawn_locations[i]);
-      theta += 1.5708f;
-    }
-
-    static SFR_Timer timer = 0.0f;
-    if (sfr_timer_finished(&timer)) 
-    {
-      timer = sfr_timer_start(handler->time_btw_waves);
-
-      SFR_Transform* player_transform = SFR_COMPONENT_CONVERT(SFR_Transform, handler->player->components[0]);
-
-      for (uint32_t i = 0; i < TDS_ENEMY_HANDLER_SPAWNER_COUNT; i++)
+      if (sfr_timer_finished(&btw_spawn))
       {
-        vec2 location;  
-        glm_vec2_add(handler->spawn_locations[i], player_transform->position, location);
-        tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_DEMON, handler->player);
+        float theta = angle;
+        for (uint32_t i = 0; i < TDS_ENEMY_HANDLER_SPAWNER_COUNT; i++) 
+        {
+          float radius = sqrtf(glm_vec2_dot(handler->spawn_locations[i], handler->spawn_locations[i]));
+
+          vec2 position = { 
+            cosf(theta) * radius,
+            sinf(theta) * radius
+          };
+
+          glm_vec2_copy(position, handler->spawn_locations[i]);
+          theta += 1.5708f;
+        }
+
+        for (uint32_t i = 0; i < TDS_ENEMY_HANDLER_SPAWNER_COUNT; i++)
+        {
+          vec2 location;  
+          glm_vec2_add(handler->spawn_locations[i], player_transform->position, location);
+          tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_DEMON, handler->player);
+
+          spawn_count++;
+
+          if (spawn_count >= handler->spawn_rate)
+          {
+            spawning = false;
+            btw_wave = sfr_timer_start(TDS_ENEMY_HANDLER_T_BTW_WAVE);
+            break;
+          }
+        }
+
+        btw_spawn = sfr_timer_start(TDS_ENEMY_HANDLER_T_BTW_SPAWN);
+      }
+    }
+    else
+    {
+      if (sfr_timer_finished(&btw_wave) || handler->kills_until_next_wave == 0)
+      {
+        spawning = true;
+        spawn_count = 0;
+        handler->spawn_rate += roundf(handler->spawn_rate * 0.15);
+        handler->kills_until_next_wave = handler->spawn_rate;
+        handler->wave++;
+
+        if (handler->player_controller->health < 3)
+        {
+          handler->player_controller->health++;
+          scene_arena_set_player_health(sfr_ecs_get_active_scene(), handler->player_controller->health);
+        }
       }
     }
   }

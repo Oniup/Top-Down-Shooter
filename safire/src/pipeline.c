@@ -680,7 +680,7 @@ void _sfr_renderer_increase_vertices_buffer(SFR_Vertex* vertices, uint32_t quad_
       v[br].vertex[X], v[br].vertex[Y], v[br].vertex[Z], 
       v[br].uv[X], v[br].uv[Y], 
       v[br].overlay_colour[R], v[br].overlay_colour[G], v[br].overlay_colour[B], v[br].overlay_colour[A], 
-      t,
+      t
     };
     
     // pushing the quad vertex data to the vertices batch renderer buffer

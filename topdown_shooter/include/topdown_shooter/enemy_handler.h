@@ -20,16 +20,21 @@ typedef struct TDS_EnemySpawner         TDS_EnemySpawner;
 typedef struct TDS_PlayerController     TDS_PlayerController;
 
 
+#define TDS_ENEMY_HANDLER_T_BTW_WAVE    20.0f
+#define TDS_ENEMY_HANDLER_T_BTW_SPAWN   1.0f
+#define TDS_ENEMY_HANDLER_SPAWNER_COUNT 4
 
 
 struct TDS_EnemyHandler 
 {
   uint32_t                              wave;
+  float                                 spawn_rate;
+  SFR_Timer                             spawn_timer;
+  uint32_t                              kills_until_next_wave;
+
   uint32_t                              kills;
   uint32_t                              score;
 
-  uint32_t                              spawn_rate;
-  float                                 time_btw_waves;
 
   vec2*                                 spawn_locations;
 

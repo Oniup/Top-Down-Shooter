@@ -2,6 +2,7 @@
 
 #include "../include/topdown_shooter/player_controller.h"
 #include "../include/topdown_shooter/enemy_handler.h"
+#include "../include/topdown_shooter/destroy_target.h"
 #include "../scenes/scene_arena.h"
 
 #include <topdown_shooter/utils.h>
@@ -58,6 +59,7 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
   glm_vec2_add(collider_data->size, (vec2) { 0.1f, 0.1f, }, collider_data->size);
 
   collider = sfr_ecs_push_component(enemy, sfr_collider2d(enemy->components[0]));
+  
   collider_data = SFR_COMPONENT_CONVERT(SFR_Collider2D, collider);
   collider_data->weight = 5.0f;
 
@@ -67,6 +69,8 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
 
   sfr_str_free(&name);
   sfr_str_free(&texture_name);
+
+  sfr_ecs_push_component(enemy, tds_destroy_target(180.0f)); // 3 min of having the dead body on the ground
 
   return enemy;
 }
@@ -241,15 +245,17 @@ void tds_enemy_damage(SFR_Entity* enemy, uint32_t damage)
     sfr_sprite_animator_start_animation(animator, "death");
     controller->state = TDS_ENEMY_STATE_DEATH;
 
+    SFR_Component* destroy_target_comp = sfr_get_component(animator, TDS_DESTROY_TARGET);
+    tds_destroy_target_start(destroy_target_comp);
+
     uint32_t length = sfr_str_length(SFR_COLLIDER2D);
     for (uint32_t i = 0; i < enemy->components_count; i++)
     {
       if (sfr_str_cmp_length(SFR_COLLIDER2D, enemy->components[i]->name, length))
-      {
-        tds_enemy_handler_add_kill(controller->enemy_handler, controller->kill_points);
         enemy->components[i]->active = false;
-      }
     }
+
+    tds_enemy_handler_add_kill(controller->enemy_handler, controller->kill_points);
 
     return;
   }

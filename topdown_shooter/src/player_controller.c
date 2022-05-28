@@ -1,10 +1,12 @@
-#include <topdown_shooter/player_controller.h>
+#include "../include/topdown_shooter/player_controller.h"
 
-#include <topdown_shooter/bullet.h>
+#include "../include/topdown_shooter/bullet.h"
+#include "../include/topdown_shooter/enemy_controller.h"
+#include "../include/topdown_shooter/dash.h"
 
 #include "../scenes/scene_arena.h"
 
-#include <topdown_shooter/utils.h>
+#include "../include/topdown_shooter/utils.h"
 
 
 
@@ -48,6 +50,8 @@ SFR_Component* tds_player_controller_create_instance()
   SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, player_collider);
   collider->trigger = true;
   TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller);
+
+  controller->dash = sfr_ecs_push_component(player, tds_dash(1.0f, 8.0f));
 
 
   
@@ -119,7 +123,7 @@ SFR_Component* tds_player_controller()
   return component;
 }
 
-void tds_player_damage(SFR_Component* player_controller_comp, uint32_t damage) 
+void tds_player_damage(SFR_Component* player_controller_comp, int damage) 
 {
   static SFR_Timer timer = 0.0f;
   if (sfr_timer_finished(&timer))
@@ -127,7 +131,8 @@ void tds_player_damage(SFR_Component* player_controller_comp, uint32_t damage)
     TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller_comp);
     SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, player_controller_comp->owner->components[0]);
 
-    tds_instantiate_blood(transform->position, 2);
+    if (damage > 0.0f)
+      tds_instantiate_blood(transform->position, 2);
 
     if (controller->health > 0)    
     {
@@ -142,6 +147,15 @@ void tds_player_damage(SFR_Component* player_controller_comp, uint32_t damage)
         uint32_t index = sfr_ecs_entity_find_index_uuid(0, controller->gun->uuid);
         sfr_ecs_erase_entity(index);
         controller->gun = NULL;
+
+        uint32_t count = 0;
+        SFR_Entity** enemies = sfr_ecs_find_list_entities("enemy", &count);
+        for (uint32_t i = 0; i < count; i++)
+        {
+          tds_enemy_damage(enemies[i], 1000);
+        }
+
+        free(enemies);
       }
 
       timer = sfr_timer_start(2.0f);
@@ -218,20 +232,23 @@ void _tds_player_alive_update(SFR_Component* component, float delta_time)
   static uint32_t last_animation = 0;
   // movement controller
 
-  vec3 direction = { 0, 0, 0 };
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A)) 
-    direction[X] = -1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_D)) 
-    direction[X] = 1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_S)) 
-    direction[Y] = -1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_W)) 
-    direction[Y] = 1;
-
   SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
+  TDS_Dash* dash = SFR_COMPONENT_CONVERT(TDS_Dash, controller->dash);
+
   static vec3 offset_gun = {
     0.0f, 0.1f, 0.0f
   };
+
+
+  vec3 direction = { 0, 0, 0 };
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A) && transform->position[X] > -19.7f) 
+    direction[X] = -1;
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_D) && transform->position[X] < 19.7f) 
+    direction[X] = 1;
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_S) && transform->position[Y] > -19.7f) 
+    direction[Y] = -1;
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_W) && transform->position[Y] < 19.7f) 
+    direction[Y] = 1;
 
   if (direction[X] != 0 || direction[Y] != 0) 
   {
@@ -251,6 +268,11 @@ void _tds_player_alive_update(SFR_Component* component, float delta_time)
     
     float mag = sqrtf(glm_vec2_dot(direction, direction));
     glm_vec2_divs(direction, mag, direction);
+
+    if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_LEFT_SHIFT))
+    {
+
+    }
 
     glm_vec2_scale(direction, controller->move_speed * delta_time, direction);
     glm_vec2_add(direction, transform->position, transform->position);
@@ -287,14 +309,12 @@ void _tds_player_alive_update(SFR_Component* component, float delta_time)
     glm_vec2_sub(mouse_pos, gun_transform->position, direction);
     glm_vec2_normalize(direction);
 
-    SFR_Component* bullet = tds_bullet_create_instance(direction, "enemy", 10.0f, 1);
+    SFR_Component* bullet = tds_bullet_create_instance(direction, "enemy", 20.0f, controller->damage);
     SFR_Transform* bullet_transform = SFR_COMPONENT_CONVERT(SFR_Transform, bullet->owner->components[0]);
     glm_vec3_copy(gun_transform->position, bullet_transform->position);
     
     TDS_Bullet* bullet_controller = SFR_COMPONENT_CONVERT(TDS_Bullet, bullet);
     bullet_controller->lifetime = sfr_timer_start(1.0f);
-    bullet_controller->move_speed = 20.0f;
-    bullet_controller->damage = controller->damage;
     
     time_btw_bullets = sfr_timer_start(controller->time_btw_bullets);
     has_shot = true;

@@ -14,7 +14,7 @@ typedef struct TDS_DestroyTarget        TDS_DestroyTarget;
 
 struct TDS_DestroyTarget 
 {
-  bool                                  running;
+  bool                                  timer_started;
   float                                 timer;
 };
 

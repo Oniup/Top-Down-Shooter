@@ -61,11 +61,6 @@ void _scene_arena_start(SFR_Scene* scene)
 
 void _scene_arena_update(SFR_Scene* scene, float delta_time) 
 {
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_R))
-  {
-    sfr_ecs_load_scene(sfr_ecs_get_scene("Arena"));
-  }
-
   TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
 
   SFR_Transform* player_health_transform = SFR_COMPONENT_CONVERT(SFR_Transform, arena->player_health->owner->components[0]);
