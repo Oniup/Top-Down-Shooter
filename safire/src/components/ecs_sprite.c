@@ -23,7 +23,7 @@ void                                    _sfr_sprite_animator_free(SFR_Component*
 SFR_Component*  sfr_sprite_renderer() 
 {
   SFR_Component* component = sfr_ecs_component(
-    SFR_SPRITE_RENDERER, _sfr_sprite_renderer_update, NULL, _sfr_sprite_renderer_free
+    SFR_SPRITE_RENDERER, _sfr_sprite_renderer_update, NULL, NULL, _sfr_sprite_renderer_free
   );
 
   component->type = SFR_COMPONENT_TYPE_GRAPHICS;
@@ -234,7 +234,7 @@ SFR_Component* sfr_sprite_animator(SFR_Entity* entity)
   if (renderer != NULL) 
   {
     SFR_Component* component = sfr_ecs_component(
-      SFR_SPRITE_ANIMATOR, _sfr_sprite_animator_update, NULL, _sfr_sprite_animator_free
+      SFR_SPRITE_ANIMATOR, _sfr_sprite_animator_update, NULL, NULL, _sfr_sprite_animator_free
     );
 
     // sprite animator creation

@@ -11,7 +11,7 @@ void                                    _tds_tile_late_update(SFR_Component* com
 SFR_Component* tds_tile(vec2 location) 
 {
   SFR_Component* component = sfr_ecs_component(
-    TDS_TILE, NULL, _tds_tile_late_update, NULL
+    TDS_TILE, NULL, _tds_tile_late_update, NULL, NULL
   );
 
   return component;

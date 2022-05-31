@@ -1,7 +1,7 @@
 #version 450 core
 
 #define NULL 0;
-#define MAX_TEXTURE_COUNT 8 
+#define MAX_TEXTURE_COUNT 36 
 
 
 out vec4 frag_colour;

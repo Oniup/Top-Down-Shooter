@@ -42,7 +42,7 @@ SFR_Component* tds_bullet_create_instance(vec2 move_direction, const char* targe
 SFR_Component* tds_bullet(vec2 move_direction, const char* target_tag, float move_speed, int damage) 
 {
   SFR_Component* component = sfr_ecs_component(
-    TDS_BULLET, _tds_bullet_update, NULL, NULL
+    TDS_BULLET, _tds_bullet_update, NULL, NULL, NULL
   );
 
   component->data = (TDS_Bullet*)malloc(sizeof(TDS_Bullet));

@@ -7,6 +7,7 @@ extern "C" {
 
 #include "utils.h"
 
+
 typedef struct SFR_Ecs                  SFR_Ecs;
 typedef struct SFR_Entity               SFR_Entity;
 typedef struct SFR_Component            SFR_Component;
@@ -15,6 +16,11 @@ typedef struct SFR_Scene                SFR_Scene;
 typedef enum SFR_ComponentType          SFR_ComponentType;
 
 typedef uint64_t                        SFR_Uuid;
+
+
+#define SFR_ECS_FIXED_UPDATE_CALLS      120.0f
+
+
 
 SAFIRE_API void                         sfr_ecs_init(SFR_Scene** scenes, uint32_t scenes_count);
 SAFIRE_API SFR_Ecs*                     sfr_ecs_instance();
@@ -25,6 +31,7 @@ SAFIRE_API void                         sfr_ecs_remove_erased_entities();
 
 SAFIRE_API void                         sfr_ecs_update(float delta_time);                             // calls all the components update loops that have it
 SAFIRE_API void                         sfr_ecs_late_update(float late_delta_time);                   // calls al the components late update loops that have it
+SAFIRE_API void                         sfr_ecs_fixed_update(float fixed_delta_time);                 // called SFR_ECS_FIXED_UPDATE_CALLS every frame 
 SAFIRE_API void                         sfr_ecs_render_update();                                      // calls all the graphics components loops that have it
 
 SAFIRE_API void                         sfr_ecs_erase_entity(uint32_t index);                         // removes the target entity from the stack
@@ -91,6 +98,7 @@ enum SFR_ComponentType
 
 typedef void (*component_update)        (SFR_Component*, float);
 typedef void (*component_late_update)   (SFR_Component*, float);
+typedef void (*component_fixed_update)  (SFR_Component*, float);
 typedef void (*component_free)          (SFR_Component*);
 
 struct SFR_Component 
@@ -105,14 +113,15 @@ struct SFR_Component
 
   component_update                      update;
   component_late_update                 late_update;
+  component_fixed_update                fixed_update;
   component_free                        free;
 };
 
 SAFIRE_API SFR_Entity*                  sfr_ecs_push_entity(const char* name, const char* tag);
 SAFIRE_API SFR_Component*               sfr_ecs_push_component(SFR_Entity* entity, SFR_Component* component);
 
-SAFIRE_API SFR_Component*               sfr_ecs_component(const char* name, component_update update, 
-                                              component_late_update late_update, component_free free);
+SAFIRE_API SFR_Component*               sfr_ecs_component(const char* name, component_update update, component_late_update late_update, 
+                                                          component_fixed_update fixed_update, component_free free);
 
 SAFIRE_API void                         sfr_ecs_entity_free(SFR_Entity* entity);
 SAFIRE_API void                         sfr_ecs_component_free(SFR_Component* component);

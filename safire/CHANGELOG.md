@@ -1,5 +1,10 @@
 # Safire Change logs
 
+## VERSION 0.1.2 (31/5/2022)
+
+* increase collision detection performance
+* implementation of fixed update
+
 ## VERSION 0.1.1 (18/5/2022)
 
 * added mouse position

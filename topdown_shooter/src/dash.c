@@ -10,7 +10,7 @@ void                                    _tds_dash_update(SFR_Component* componen
 
 SFR_Component* tds_dash(float duration, float speed)
 {
-  SFR_Component* component = sfr_ecs_component(TDS_DASH, _tds_dash_update, NULL, NULL);
+  SFR_Component* component = sfr_ecs_component(TDS_DASH, _tds_dash_update, NULL, NULL, NULL);
 
   component->data = (TDS_Dash*)malloc(sizeof(TDS_Dash));
   TDS_Dash* dash = SFR_COMPONENT_CONVERT(TDS_Dash, component);

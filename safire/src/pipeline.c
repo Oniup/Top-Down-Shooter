@@ -26,7 +26,6 @@
 #include <stb/stb_image.h>
 
 // just to be safe, idk how to check how many textures the hardware will allow, 8 will work for everyone in the modern times
-#define SFR_MAX_TEXTURES_COUNT 8 
 
 
 
@@ -52,6 +51,8 @@ struct SFR_Pipeline
   vec3                                  culling_size;
   vec3                                  culling_left;
   vec3                                  culling_right;
+
+  int                                   max_texture_count;
 };
 
 static SFR_Pipeline*                    _pipeline = NULL;
@@ -67,7 +68,7 @@ struct SFR_Renderer
 
   uint32_t                              active_shader;
 
-  uint32_t                              active_textures[SFR_MAX_TEXTURES_COUNT];
+  uint32_t                              active_textures[36];
   uint32_t                              active_textures_count;
 
   uint32_t                              vao;
@@ -102,6 +103,9 @@ void sfr_pipeline_init(const char* window_title, int window_width, int window_he
   _pipeline->shaders_count = 0;
   _pipeline->textures_count = 0;
 
+  // getting the max amount of textures that can be passed into the fragment shader
+  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &_pipeline->max_texture_count);
+  _pipeline->max_texture_count = 8;
 
   sfr_pipeline_push_shader(
     sfr_shader(
@@ -385,8 +389,8 @@ void sfr_pipeline_push_texture(SFR_Texture* texture)
     printf("[SAFIRE_WARNING::PIPELINE_TEXTURE_PUSH] cannot push texture, as the texture doesn't exist");
 }
 
-void sfr_pipeline_clear_assets_stack() {
-
+void sfr_pipeline_clear_assets_stack() 
+{
   if (_pipeline->shaders != NULL) 
   {
     for (uint32_t i = 0; i < _pipeline->shaders_count; i++) 
@@ -412,8 +416,8 @@ void sfr_pipeline_clear_assets_stack() {
   }
 }
 
-void sfr_pipeline_push_vertices(SFR_Vertex* vertices, uint32_t count, uint32_t shader) {
-
+void sfr_pipeline_push_vertices(SFR_Vertex* vertices, uint32_t count, uint32_t shader) 
+{
   _sfr_renderer_push_data(vertices, count, shader);
 }
 
@@ -470,7 +474,7 @@ void _sfr_renderer_init()
 
   _renderer->active_shader = 0; // the index to the shader in the pipeline
 
-  memset(_renderer->active_textures, 0, sizeof(uint32_t) * SFR_MAX_TEXTURES_COUNT);
+  memset(_renderer->active_textures, 0, sizeof(uint32_t) * _pipeline->max_texture_count);
   _renderer->active_textures_count = 0;
 
   glGenVertexArrays(1, &_renderer->vao);
@@ -499,7 +503,7 @@ void _sfr_renderer_init()
 
 void _sfr_renderer_flush() 
 {
-  if (_renderer->vertices != NULL) 
+  if (_renderer->vertices != NULL)
   {
     uint32_t shader = _renderer->active_shader;    
 
@@ -618,7 +622,7 @@ void _sfr_renderer_increase_vertices_buffer(SFR_Vertex* vertices, uint32_t quad_
     if (!found) 
     {
       // flush because we can't fit anymore textures in the buffer
-      if (_renderer->active_textures_count == SFR_MAX_TEXTURES_COUNT) 
+      if (_renderer->active_textures_count == _pipeline->max_texture_count) 
       {
         // flush and clear the buffers
         _sfr_renderer_flush();
@@ -981,9 +985,10 @@ SFR_Texture* sfr_texture(const char* name, const char* path, bool flip, uint32_t
 {
   if (name != NULL) 
   {
-    if (sfr_str_length(name) > 0) {
-
-      if (path != NULL) {
+    if (sfr_str_length(name) > 0) 
+    {
+      if (path != NULL) 
+      {
         stbi_set_flip_vertically_on_load(flip);
 
         int width, height, channel;

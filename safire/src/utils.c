@@ -244,7 +244,8 @@ uint32_t sfr_str_length(const char* src)
 bool sfr_str_cmp(const char* str1, const char* str2) 
 {
   uint32_t i = 0;
-  while (i < 100000) {
+  while (i < 100000) 
+  {
     if (str1[i] == '\0' && str2[i] == '\0') 
       return true;
     else if(str1[i] != str2[i]) 

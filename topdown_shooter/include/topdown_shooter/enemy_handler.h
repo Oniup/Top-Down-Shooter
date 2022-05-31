@@ -16,13 +16,22 @@ extern "C" {
 
 
 typedef struct TDS_EnemyHandler         TDS_EnemyHandler;
-typedef struct TDS_EnemySpawner         TDS_EnemySpawner;
 typedef struct TDS_PlayerController     TDS_PlayerController;
 
 
-#define TDS_ENEMY_HANDLER_T_BTW_WAVE    20.0f
+#define TDS_ENEMY_HANDLER_T_BTW_WAVE    40.0f
 #define TDS_ENEMY_HANDLER_T_BTW_SPAWN   1.0f
 #define TDS_ENEMY_HANDLER_SPAWNER_COUNT 4
+
+#define TDS_ENEMY_CAN_WAVE_DEMON        0
+#define TDS_ENEMY_CAN_WAVE_SLENDER_MAN  15
+#define TDS_ENEMY_CAN_WAVE_GIGACHAD     10
+
+#define TDS_ENEMY_CAN_SPAWN_DEMON       0
+#define TDS_ENEMY_CAN_SPAWN_SLENDER_MAN 80
+#define TDS_ENEMY_CAN_SPAWN_GIGACHAD    40
+
+
 
 
 struct TDS_EnemyHandler 
@@ -34,7 +43,6 @@ struct TDS_EnemyHandler
 
   uint32_t                              kills;
   uint32_t                              score;
-
 
   vec2*                                 spawn_locations;
 

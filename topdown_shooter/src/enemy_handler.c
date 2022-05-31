@@ -27,6 +27,10 @@ void tds_enemy_handler_load_assets()
   sfr_pipeline_push_texture(sfr_texture(
     "demon", "./art/enemy001-sprite-sheet.png", true, 4, false
   ));  
+
+  sfr_pipeline_push_texture(sfr_texture(
+    "gigachad", "./art/enemy002-sprite-sheet.png", true, 4, false
+  ));
 }
 
 void tds_enemy_handler_add_kill(SFR_Component* component, uint32_t kill_points)
@@ -45,7 +49,7 @@ void tds_enemy_handler_add_kill(SFR_Component* component, uint32_t kill_points)
 SFR_Component* tds_enemy_handler(SFR_Entity* player) 
 {
   SFR_Component* component =  sfr_ecs_component(
-    TDS_ENEMY_HANDLER, NULL, _tds_enemy_handler_late_update, NULL
+    TDS_ENEMY_HANDLER, NULL, _tds_enemy_handler_late_update, NULL, NULL
   );
 
   component->data = (TDS_EnemyHandler*)malloc(sizeof(TDS_EnemyHandler));
@@ -97,7 +101,7 @@ void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_t
     static uint32_t spawn_count = 0;
     static bool spawning = true;
     static SFR_Timer btw_spawn = 0.0f; 
-    static SFR_Timer btw_wave = 0.0f;   
+    static SFR_Timer btw_wave = 0.0f;
 
     SFR_Transform* player_transform = SFR_COMPONENT_CONVERT(SFR_Transform, handler->player->components[0]);
 
@@ -121,11 +125,25 @@ void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_t
 
         for (uint32_t i = 0; i < TDS_ENEMY_HANDLER_SPAWNER_COUNT; i++)
         {
-          vec2 location;  
+          vec2 location;
           glm_vec2_add(handler->spawn_locations[i], player_transform->position, location);
-          tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_DEMON, handler->player);
+
+          // spawning enemies
+          if (spawn_count % TDS_ENEMY_CAN_SPAWN_GIGACHAD == 0 && handler->wave > TDS_ENEMY_CAN_WAVE_GIGACHAD)
+          {
+            printf("spawn gigachad!!!\n");
+          }
+          else if (spawn_count % TDS_ENEMY_CAN_SPAWN_SLENDER_MAN == 0 && handler->wave > TDS_ENEMY_CAN_WAVE_SLENDER_MAN)
+          {
+            printf("spawn slender man!!!\n");
+          }
+          else // just spawn the generic demon enemy
+          {
+            tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_DEMON, handler->player);
+          }
 
           spawn_count++;
+          // printf("spawn count: %u\n", spawn_count);
 
           if (spawn_count >= handler->spawn_rate)
           {
@@ -147,6 +165,8 @@ void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_t
         handler->spawn_rate += roundf(handler->spawn_rate * 0.15);
         handler->kills_until_next_wave = handler->spawn_rate;
         handler->wave++;
+
+        printf("wave: %u, spawning: %f\n", handler->wave, handler->spawn_rate);
 
         if (handler->player_controller->health < 3)
         {

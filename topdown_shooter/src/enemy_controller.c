@@ -12,7 +12,11 @@ void                                    _tds_enemy_controller_update(SFR_Compone
 
 void                                    _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta_time);
 
+void                                    _tds_enemy_controller_idle_demon(SFR_Component* component);
 void                                    _tds_enemy_controller_movement_demon(SFR_Component* component, float delta_time);
+
+void                                    _tds_enemy_controller_idle_gigachad(SFR_Component* component);
+void                                    _tds_enemy_controller_movement_gigachad(SFR_Component* component, float delta_time);
 
 
 
@@ -22,12 +26,20 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
 {
   char* name = NULL;
   char* texture_name = NULL;
+  float weight = 0.0f;
 
   switch (type) 
   {
   case TDS_ENEMY_TYPE_DEMON:
     name = sfr_str("enemy:demon");
     texture_name = sfr_str("demon");
+    weight = 0.5f;
+    break;
+  
+  case TDS_ENEMY_TYPE_GIGACHAD:
+    name = sfr_str("enemy:gigachad");
+    texture_name = sfr_str("gigachad");
+    weight = 1.0f;
     break;
   }  
 
@@ -53,15 +65,10 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
   sfr_sprite_animator_load_animation(animator, "idle", idle, idle_time, 4);
   sfr_sprite_animator_load_animation(animator, "death", death, death_time, 3);
 
-  SFR_Component* collider =  sfr_ecs_push_component(enemy, sfr_collider2d(enemy->components[0]));
-  SFR_Collider2D* collider_data = SFR_COMPONENT_CONVERT(SFR_Collider2D, collider);
-  collider_data->trigger = true;
-  glm_vec2_add(collider_data->size, (vec2) { 0.1f, 0.1f, }, collider_data->size);
-
-  collider = sfr_ecs_push_component(enemy, sfr_collider2d(enemy->components[0]));
+  SFR_Component* collider = sfr_ecs_push_component(enemy, sfr_collider2d(enemy->components[0]));
   
-  collider_data = SFR_COMPONENT_CONVERT(SFR_Collider2D, collider);
-  collider_data->weight = 5.0f;
+  SFR_Collider2D* collider_data = SFR_COMPONENT_CONVERT(SFR_Collider2D, collider);
+  collider_data->weight = weight;
 
   SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, enemy->components[0]);
   glm_vec2_add(transform->position, spawn_pos, transform->position);
@@ -70,7 +77,7 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
   sfr_str_free(&name);
   sfr_str_free(&texture_name);
 
-  sfr_ecs_push_component(enemy, tds_destroy_target(180.0f)); // 3 min of having the dead body on the ground
+  sfr_ecs_push_component(enemy, tds_destroy_target(60.0f)); // 3 min of having the dead body on the ground
 
   return enemy;
 }
@@ -78,7 +85,7 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
 SFR_Component* tds_enemy_controller(TDS_EnemyType type, SFR_Component* enemy_handler, SFR_Entity* player) 
 {
   SFR_Component* component = sfr_ecs_component(
-    TDS_ENEMY_CONTROLLER, _tds_enemy_controller_update, NULL, NULL
+    TDS_ENEMY_CONTROLLER, _tds_enemy_controller_update, NULL, NULL, NULL
   );
 
   component->data = (TDS_EnemyController*)malloc(sizeof(TDS_EnemyController));
@@ -93,8 +100,16 @@ SFR_Component* tds_enemy_controller(TDS_EnemyType type, SFR_Component* enemy_han
     controller->move_speed = 3.0f;
     controller->kill_points = 1;
     controller->state = TDS_ENEMY_STATE_ATTACKING;
-    controller->after_hit_timer = 0.0f;
     controller->movement_offset = rand() % 3;
+    break;
+
+  case TDS_ENEMY_TYPE_GIGACHAD:
+    controller->health = 10;
+    controller->damage = 2;
+    controller->move_speed = 2.0f;
+    controller->kill_points = 5;
+    controller->state = TDS_ENEMY_STATE_ATTACKING;
+    controller->movement_offset = 0;
     break;
   }
 
@@ -103,6 +118,7 @@ SFR_Component* tds_enemy_controller(TDS_EnemyType type, SFR_Component* enemy_han
   controller->enemy_handler = enemy_handler;
   controller->flip = false;
   controller->spawn_blood = false;
+  controller->after_hit_timer = 0.0f;
 
   return component;
 }
@@ -133,12 +149,11 @@ void _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta
     switch (controller->type)
     {
     case TDS_ENEMY_TYPE_DEMON:
-      if (sfr_timer_finished(&controller->after_hit_timer))    
-      {
-        SFR_Component* animator = sfr_get_component(component, SFR_SPRITE_ANIMATOR);
-        sfr_sprite_animator_start_animation(animator, "running");
-        controller->state = TDS_ENEMY_STATE_ATTACKING;
-      }
+      _tds_enemy_controller_idle_demon(component);
+      break;
+
+    case TDS_ENEMY_TYPE_GIGACHAD:
+      _tds_enemy_controller_idle_gigachad(component);
       break;
     }
     break;
@@ -148,7 +163,11 @@ void _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta
     {
     case TDS_ENEMY_TYPE_DEMON:
       _tds_enemy_controller_movement_demon(component, delta_time);
-      break;    
+      break;
+
+    case TDS_ENEMY_TYPE_GIGACHAD:
+      _tds_enemy_controller_movement_gigachad(component, delta_time);
+      break;
     }
     break;
 
@@ -158,7 +177,10 @@ void _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta
     case TDS_ENEMY_TYPE_DEMON:
       // TODO: ...
       return;
-      break;
+
+    case TDS_ENEMY_TYPE_GIGACHAD:
+      // TODO: ...
+      return;
     }
     break;
   }
@@ -167,24 +189,20 @@ void _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta
 
 
 
+/* =========================================== DEMON ============================================ */
+
+void _tds_enemy_controller_idle_demon(SFR_Component* component)
+{
+  TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, component);
+
+  if (sfr_timer_finished(&controller->after_hit_timer))
+    tds_enemy_change_state(component, TDS_ENEMY_STATE_ATTACKING);
+}
+
 void _tds_enemy_controller_movement_demon(SFR_Component* component, float delta_time)
 {
   TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, component);
   SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, component->owner->components[0]);
-  bool colliding =  sfr_collider2d_trigger_enter_uuid(component, controller->player->uuid, NULL);
-  if (colliding) 
-  {
-    SFR_Scene* scene = sfr_ecs_get_active_scene();
-    tds_player_damage(scene_arena_get_player(scene), controller->damage);
-
-    SFR_Component* animator = sfr_get_component(component, SFR_SPRITE_ANIMATOR);
-    sfr_sprite_animator_start_animation(animator, "idle");
-
-    controller->state = TDS_ENEMY_STATE_IDLE;
-    controller->after_hit_timer = sfr_timer_start(1.0f);
-
-    return;
-  }
 
   // basic enemy move towards the player
   SFR_Transform* player_transform = SFR_COMPONENT_CONVERT(SFR_Transform, controller->player->components[0]);
@@ -195,7 +213,7 @@ void _tds_enemy_controller_movement_demon(SFR_Component* component, float delta_
   vec3 offset = { 0.0f, 0.0f, 0.0f };
   switch (controller->movement_offset)
   {
-  case 0:
+case 0:
     break;
 
   case 1:
@@ -234,6 +252,23 @@ void _tds_enemy_controller_movement_demon(SFR_Component* component, float delta_
 
 
 
+/* ========================================== GIGACHAD ========================================== */
+
+void _tds_enemy_controller_idle_gigachad(SFR_Component* component)
+{
+  // TODO: ...
+}
+
+void _tds_enemy_controller_movement_gigachad(SFR_Component* component, float delta_time)
+{
+  // TODO: ...
+}
+
+
+
+
+/* ======================================== RELATED TO ALL ====================================== */
+
 void tds_enemy_damage(SFR_Entity* enemy, uint32_t damage) 
 {
   TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, sfr_get_component(enemy->components[0], TDS_ENEMY_CONTROLLER));
@@ -241,24 +276,86 @@ void tds_enemy_damage(SFR_Entity* enemy, uint32_t damage)
 
   if (controller->health < 1)
   {
-    SFR_Component* animator = sfr_get_component(enemy->components[0], SFR_SPRITE_ANIMATOR);
+    tds_enemy_change_state(enemy->components[0], TDS_ENEMY_STATE_DEATH);
+
+    return;
+  }
+
+  controller->spawn_blood = true;
+}
+
+void tds_enemy_change_state(SFR_Component* component, TDS_EnemyState state)
+{
+  component = sfr_get_component(component, TDS_ENEMY_CONTROLLER);
+  TDS_EnemyController* controller = SFR_COMPONENT_CONVERT(TDS_EnemyController, component);
+
+  switch (state)
+  {
+  case TDS_ENEMY_STATE_IDLE:
+  {
+    switch (controller->type)
+    {
+    case TDS_ENEMY_TYPE_DEMON:
+    {
+      SFR_Scene* scene = sfr_ecs_get_active_scene();
+      tds_player_damage(scene_arena_get_player(scene), controller->damage);
+
+      SFR_Component* animator = sfr_get_component(component, SFR_SPRITE_ANIMATOR);
+      sfr_sprite_animator_start_animation(animator, "idle");
+
+      controller->after_hit_timer = sfr_timer_start(1.0f);
+    }
+      break;
+    case TDS_ENEMY_TYPE_GIGACHAD:
+    {
+      // TODO: ...
+    }
+    break;
+    }
+  }
+  break;
+
+  case TDS_ENEMY_STATE_ATTACKING:
+  {
+    switch (controller->type)
+    {
+    case TDS_ENEMY_TYPE_DEMON:
+    {
+      SFR_Component* animator = sfr_get_component(component, SFR_SPRITE_ANIMATOR);
+      sfr_sprite_animator_start_animation(animator, "running");
+    }
+      break;
+    case TDS_ENEMY_TYPE_GIGACHAD:
+    {
+      // TODO: ...
+    }
+      break;
+    }
+    break;
+  }
+  break;
+
+  case TDS_ENEMY_STATE_DEATH:
+  {
+    SFR_Component* animator = sfr_get_component(component, SFR_SPRITE_ANIMATOR);
     sfr_sprite_animator_start_animation(animator, "death");
     controller->state = TDS_ENEMY_STATE_DEATH;
 
     SFR_Component* destroy_target_comp = sfr_get_component(animator, TDS_DESTROY_TARGET);
     tds_destroy_target_start(destroy_target_comp);
 
+    // deactivating the circle colliders attached to the enemy, because there isn't really a good way to remove them and can't be bothered
     uint32_t length = sfr_str_length(SFR_COLLIDER2D);
-    for (uint32_t i = 0; i < enemy->components_count; i++)
+    for (uint32_t i = 0; i < component->owner->components_count; i++)
     {
-      if (sfr_str_cmp_length(SFR_COLLIDER2D, enemy->components[i]->name, length))
-        enemy->components[i]->active = false;
+      if (sfr_str_cmp_length(SFR_COLLIDER2D, component->owner->components[i]->name, length))
+        component->owner->components[i]->active = false;
     }
 
     tds_enemy_handler_add_kill(controller->enemy_handler, controller->kill_points);
-
-    return;
+  }
+  break;
   }
 
-  controller->spawn_blood = true;
+  controller->state = state;
 }

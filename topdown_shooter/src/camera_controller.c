@@ -10,7 +10,7 @@ void                                    _tds_camera_controller_late_update(SFR_C
 SFR_Component* tds_camera_controller() 
 {
   SFR_Component* component = sfr_ecs_component(
-    TDS_CAMERA_CONTROLLER, NULL, _tds_camera_controller_late_update, NULL
+    TDS_CAMERA_CONTROLLER, NULL, _tds_camera_controller_late_update, NULL, NULL
   );
 
   component->data = (TDS_CameraController*)malloc(sizeof(TDS_CameraController));

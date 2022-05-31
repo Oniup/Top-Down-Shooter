@@ -117,7 +117,7 @@ void _scene_arena_create_background(SFR_Scene* scene)
       // walkable tile texture
       if (x > TDS_ARENA_TILES_WALLS_X && x < TDS_ARENA_TILES_X - TDS_ARENA_TILES_WALLS_X) 
       {
-        if (y > TDS_ARENA_TILES_WALLS_X && y < TDS_ARENA_TILES_Y - TDS_ARENA_TILES_WALLS_X) 
+        if (y > TDS_ARENA_TILES_WALLS_Y && y < TDS_ARENA_TILES_Y - TDS_ARENA_TILES_WALLS_Y) 
         {
           sfr_sprite_renderer_set_uv(
             sprite_renderer, 

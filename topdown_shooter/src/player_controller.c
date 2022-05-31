@@ -49,6 +49,7 @@ SFR_Component* tds_player_controller_create_instance()
   SFR_Component* player_collider = sfr_ecs_push_component(player, sfr_collider2d(player->components[0]));  
   SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, player_collider);
   collider->trigger = true;
+
   TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller);
 
   controller->dash = sfr_ecs_push_component(player, tds_dash(1.0f, 8.0f));
@@ -108,7 +109,7 @@ void tds_player_controller_load_assets()
 SFR_Component* tds_player_controller() 
 {
   SFR_Component* component = sfr_ecs_component(
-    TDS_PLAYER_CONTROLLER, _tds_player_controller_update, NULL, NULL
+    TDS_PLAYER_CONTROLLER, _tds_player_controller_update, NULL, NULL, NULL
   );
 
   component->data = (TDS_PlayerController*)malloc(sizeof(TDS_PlayerController));
@@ -241,13 +242,13 @@ void _tds_player_alive_update(SFR_Component* component, float delta_time)
 
 
   vec3 direction = { 0, 0, 0 };
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A) && transform->position[X] > -19.7f) 
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A) && transform->position[X] > -11.2f) 
     direction[X] = -1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_D) && transform->position[X] < 19.7f) 
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_D) && transform->position[X] < 11.2f) 
     direction[X] = 1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_S) && transform->position[Y] > -19.7f) 
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_S) && transform->position[Y] > -11.2f) 
     direction[Y] = -1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_W) && transform->position[Y] < 19.7f) 
+  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_W) && transform->position[Y] < 11.2f) 
     direction[Y] = 1;
 
   if (direction[X] != 0 || direction[Y] != 0) 
@@ -321,5 +322,13 @@ void _tds_player_alive_update(SFR_Component* component, float delta_time)
   }
 
   _tds_player_controller_change_gun_sprite(component, &has_shot);
+
+
+
+  // checking if any enemies are in range
+  SFR_Component* enemy = NULL;
+  bool colliding = sfr_collider2d_trigger_enter_tag(component, "enemy", &enemy);
+  if (colliding)
+    tds_enemy_change_state(enemy, TDS_ENEMY_STATE_IDLE);
 }
 

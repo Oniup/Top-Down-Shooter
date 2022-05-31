@@ -3,7 +3,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-float calculate_delta_time();
+
+#define SFR_TIME_BTW_FIXED_UPDATE_CALLS 1.0f / SFR_ECS_FIXED_UPDATE_CALLS
+
+
+float                                   calculate_delta_time();
+
+
+
 
 void safire(const char* window_title, int window_width, int window_height, bool fullscreen, SFR_Scene** scenes, uint32_t scenes_count) 
 {  
@@ -22,30 +29,39 @@ void sfr_free()
 
 void sfr_run() 
 {
+  SFR_Timer fixupd_timer = 0.0f;
+
   while (!sfr_pipeline_window_closing()) 
   {
     sfr_ecs_remove_erased_entities();
 
-    // static SFR_Timer onesec = 0.0f;
-    // static uint32_t frame_count = 0;
-    // if (sfr_timer_finished(&onesec))
-    // {
-    //   onesec = sfr_timer_start(1.0f);
-    //   printf("fps: %u\n", frame_count);
-    //   frame_count = 0;
-    // }
-    // frame_count++;
+    static SFR_Timer onesec = 0.0f;
+    static uint32_t frame_count = 0;
+    if (sfr_timer_finished(&onesec))
+    {
+      onesec = sfr_timer_start(1.0f);
+      printf("fps: %u\n", frame_count);
+      frame_count = 0;
+    }
+    frame_count++;
 
     float delta_time = calculate_delta_time();
     sfr_ecs_update(delta_time);
     delta_time = calculate_delta_time();
     sfr_ecs_late_update(delta_time);
 
+    if (sfr_timer_finished(&fixupd_timer))
+    {
+      delta_time = calculate_delta_time();
+      sfr_ecs_fixed_update(delta_time);
+
+      fixupd_timer = sfr_timer_start(SFR_TIME_BTW_FIXED_UPDATE_CALLS);
+    }
+
     sfr_ecs_render_update();
 
     glfwPollEvents();
     sfr_pipeline_render();
-
   }
 }
 

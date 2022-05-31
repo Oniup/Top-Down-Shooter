@@ -19,6 +19,7 @@ typedef enum TDS_EnemyState             TDS_EnemyState;
 enum TDS_EnemyType 
 {
   TDS_ENEMY_TYPE_DEMON                   = 0,
+  TDS_ENEMY_TYPE_GIGACHAD
 };
 
 enum TDS_EnemyState
@@ -53,6 +54,8 @@ SAFIRE_API SFR_Component*               tds_enemy_controller(TDS_EnemyType type,
 
 SAFIRE_API SFR_Entity*                  tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, TDS_EnemyType type, SFR_Entity* player);
 SAFIRE_API void                         tds_enemy_damage(SFR_Entity* enemy, uint32_t damage);
+
+SAFIRE_API void                         tds_enemy_change_state(SFR_Component* component, TDS_EnemyState state);
 
 
 

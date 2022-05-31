@@ -58,16 +58,18 @@ enum SFR_Collide2DType
 
 struct SFR_Collider2D {
   SFR_Collide2DType type;
+  
   bool trigger;
+
   vec2 size;
   vec2 offset;
+
   float weight;
+
   uint32_t id;
 };
 
 SAFIRE_API SFR_Component*                 sfr_collider2d(SFR_Component* transform); 
-
-SAFIRE_API SFR_Component*                 sfr_collider2d_get(SFR_Component* component, uint32_t target);
 
 SAFIRE_API bool                           sfr_collider2d_trigger_enter_tag(SFR_Component* component, const char* target_tag, SFR_Component** get);
 SAFIRE_API bool                           sfr_collider2d_trigger_enter_name(SFR_Component* component, const char* name, SFR_Component** get);

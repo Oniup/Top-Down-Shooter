@@ -10,7 +10,7 @@ void                                    _tds_destroy_target_update(SFR_Component
 SFR_Component* tds_destroy_target(float timer_length)
 {
   SFR_Component* component = sfr_ecs_component(
-    TDS_DESTROY_TARGET, _tds_destroy_target_update, NULL, NULL
+    TDS_DESTROY_TARGET, _tds_destroy_target_update, NULL, NULL, NULL
   );
 
   component->data = (TDS_DestroyTarget*)malloc(sizeof(TDS_DestroyTarget));

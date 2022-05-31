@@ -7,11 +7,11 @@
 
 
 // world size
-#define TDS_ARENA_TILES_X               50
-#define TDS_ARENA_TILES_Y               50
+#define TDS_ARENA_TILES_X               44
+#define TDS_ARENA_TILES_Y               32
 // non walkable space in world
-#define TDS_ARENA_TILES_WALLS_X         8  // non walkable space but still visable at the edge of the world
-#define TDS_ARENA_TILES_WALLS_Y         8 
+#define TDS_ARENA_TILES_WALLS_X         12  // non walkable space but still visable at the edge of the world
+#define TDS_ARENA_TILES_WALLS_Y         6 
 
 
 

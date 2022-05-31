@@ -209,6 +209,18 @@ void sfr_ecs_late_update(float late_delta_time)
     SFR_CURRENT_SCENE->late_update(SFR_CURRENT_SCENE, late_delta_time);
 }
 
+void sfr_ecs_fixed_update(float fixed_delta_time)
+{
+  uint32_t start_index = _ecs->component_indices->functional_start_index;
+  uint32_t end_index = _ecs->component_indices->graphics_start_index;
+
+  for (uint32_t i = start_index; i < end_index; i++) 
+  {
+    if (_ecs->components[i]->fixed_update != NULL && _ecs->components[i]->active)
+      _ecs->components[i]->fixed_update(_ecs->components[i], fixed_delta_time);
+  }  
+}
+
 void sfr_ecs_render_update() 
 {
   uint32_t start_index = _ecs->component_indices->graphics_start_index;
@@ -637,7 +649,7 @@ SFR_Component* sfr_ecs_push_component(SFR_Entity* entity, SFR_Component* compone
 #endif
 }
 
-SFR_Component* sfr_ecs_component(const char* name, component_update update, component_late_update late_update, component_free free) 
+SFR_Component* sfr_ecs_component(const char* name, component_update update, component_late_update late_update, component_fixed_update fixed_update, component_free free) 
 {
   /*
   the following line of code caused a memory corruption error that took like 2 hours to figure out
@@ -650,6 +662,7 @@ SFR_Component* sfr_ecs_component(const char* name, component_update update, comp
   component->name = sfr_str(name);
   component->update = update;
   component->late_update = late_update;
+  component->fixed_update = fixed_update;
   component->free = free;
   component->type = SFR_COMPONENT_TYPE_FUNCTIONAL;
 
@@ -738,7 +751,8 @@ SFR_Entity** sfr_ecs_find_list_entities(const char* tag, uint32_t* entity_count)
     if (sfr_str_cmp(tag, _ecs->entities[i]->tag)) 
     {
       count += 1;
-      if (buffer != NULL) {
+      if (buffer != NULL) 
+      {
         SFR_Entity** temp =  (SFR_Entity**)realloc(buffer, sizeof(SFR_Entity*) * count);
         if (temp != NULL) 
         {
@@ -808,7 +822,8 @@ SFR_Component** sfr_ecs_find_list_components(const char* name, uint32_t* compone
     if (sfr_str_cmp(name, _ecs->components[i]->name)) 
     {
       count += 1;
-      if (buffer != NULL) {
+      if (buffer != NULL) 
+      {
         SFR_Component** temp =  (SFR_Component**)realloc(buffer, sizeof(SFR_Component*) * count);
         if (temp != NULL) 
         {
