@@ -98,7 +98,7 @@ void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_t
     angle += 200.0f * late_delta_time;
         
 
-    static uint32_t spawn_count = 0;
+    static uint32_t spawn_cost = 0;
     static bool spawning = true;
     static SFR_Timer btw_spawn = 0.0f; 
     static SFR_Timer btw_wave = 0.0f;
@@ -129,23 +129,29 @@ void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_t
           glm_vec2_add(handler->spawn_locations[i], player_transform->position, location);
 
           // spawning enemies
-          if (spawn_count % TDS_ENEMY_CAN_SPAWN_GIGACHAD == 0 && handler->wave > TDS_ENEMY_CAN_WAVE_GIGACHAD)
+          if (spawn_cost % TDS_ENEMY_CAN_SPAWN_GIGACHAD == 0 && handler->wave > TDS_ENEMY_CAN_WAVE_GIGACHAD)
           {
             printf("spawn gigachad!!!\n");
+            tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_GIGACHAD, handler->player);
+            spawn_cost += TDS_ENEMY_HANDLER_COST_GIGACHAD;
           }
-          else if (spawn_count % TDS_ENEMY_CAN_SPAWN_SLENDER_MAN == 0 && handler->wave > TDS_ENEMY_CAN_WAVE_SLENDER_MAN)
-          {
-            printf("spawn slender man!!!\n");
-          }
+          // else if (spawn_cost % TDS_ENEMY_CAN_SPAWN_SLENDER == 0 && handler->wave > TDS_ENEMY_CAN_WAVE_SLENDER)
+          // {
+          //   // TODO: add slender enemy type ...
+          //   printf("spawn slender!!!\n");
+            
+          // }
           else // just spawn the generic demon enemy
           {
-            tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_DEMON, handler->player);
+            // tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_DEMON, handler->player);
+            tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_GIGACHAD, handler->player);
+            
+            spawn_cost += TDS_ENEMY_HANDLER_COST_DEMON;
           }
 
-          spawn_count++;
-          // printf("spawn count: %u\n", spawn_count);
+          // printf("spawn count: %u\n", spawn_cost);
 
-          if (spawn_count >= handler->spawn_rate)
+          if (spawn_cost >= handler->spawn_rate)
           {
             spawning = false;
             btw_wave = sfr_timer_start(TDS_ENEMY_HANDLER_T_BTW_WAVE);
@@ -161,12 +167,12 @@ void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_t
       if (sfr_timer_finished(&btw_wave) || handler->kills_until_next_wave == 0)
       {
         spawning = true;
-        spawn_count = 0;
+        spawn_cost = 0;
         handler->spawn_rate += roundf(handler->spawn_rate * 0.15);
         handler->kills_until_next_wave = handler->spawn_rate;
         handler->wave++;
 
-        printf("wave: %u, spawning: %f\n", handler->wave, handler->spawn_rate);
+        printf("wave: %u, kills: %u, score: %u\n", handler->wave, handler->kills, handler->score);
 
         if (handler->player_controller->health < 3)
         {

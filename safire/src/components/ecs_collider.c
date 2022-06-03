@@ -51,9 +51,8 @@ SFR_Component* sfr_collider2d(SFR_Component* transform)
   SFR_Collider2D* collider = SFR_COMPONENT_CONVERT(SFR_Collider2D, component);
   collider->type = SFR_COLLIDER2D_TYPE_CIRCLE;
   collider->trigger = false;
-  glm_vec2_copy(trans->scale, collider->size);
+  glm_vec2_copy((vec2){ 1.0f, 1.0f }, collider->size);
   glm_vec2_copy((vec2){ 0.0f, 0.0f }, collider->offset);
-  glm_vec2_scale(collider->size, 0.5f, collider->size);
   collider->weight = 1.0f;
   collider->id = _collider_comps_count;
 
@@ -357,12 +356,15 @@ void _sfr_collider2d_calc_circle(SFR_Component* component, SFR_Component* target
   vec3 direction;
   glm_vec3_sub(targ_transform->position, comp_transform->position, direction);
   float length = glm_vec3_dot(direction, direction);
-  float max_distance = comp_collider->size[X] + targ_collider->size[X];
+
+  float comp_radius = fabsf(comp_transform->scale[X]) * comp_collider->size[X];
+  float targ_radius = fabsf(targ_transform->scale[X]) * targ_collider->size[X];  
+  float max_distance = comp_radius + targ_radius;
 
   // if they are overlapping, else do nothing
   if (length < max_distance * max_distance) 
   {
-    length = max_distance - length;
+    length = max_distance - sqrtf(length);
     glm_vec3_normalize(direction);
     glm_vec3_scale(direction, length, direction);
 
@@ -462,9 +464,12 @@ bool _sfr_collider2d_calc_trigger_circle(SFR_Component* component, SFR_Component
   vec3 direction;
   glm_vec3_sub(targ_transform->position, comp_transform->position, direction);
   float length = sqrtf(glm_vec3_dot(direction, direction));
-  float max_distance = comp_collider->size[X] + targ_collider->size[X];
 
-  if (length < comp_collider->size[X] + targ_collider->size[X]) 
+  float comp_radius = fabsf(comp_transform->scale[X]) * comp_collider->size[X];
+  float targ_radius = fabsf(targ_transform->scale[X]) * targ_collider->size[X];
+  float max_distance = comp_radius + targ_radius;
+
+  if (length < max_distance) 
   {
     return true;
   } 

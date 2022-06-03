@@ -3,6 +3,7 @@
 ## VERSION 0.1.2 (31/5/2022)
 
 * increase collision detection performance
+* circle collider/trigger scales based on the transform scale
 * implementation of fixed update
 
 ## VERSION 0.1.1 (18/5/2022)

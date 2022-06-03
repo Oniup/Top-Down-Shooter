@@ -22,6 +22,7 @@ typedef struct SFR_Shader               SFR_Shader;
 typedef struct SFR_Texture              SFR_Texture;
 typedef struct SFR_Renderer             SFR_Renderer;
 typedef struct SFR_Vertex               SFR_Vertex;
+typedef struct SFR_Font                 SFR_Font;
 
 
 
@@ -133,6 +134,17 @@ SAFIRE_API void                         sfr_texture_bind(SFR_Shader* shader, SFR
 SAFIRE_API void                         sfr_texture_unbind(uint32_t id);
 SAFIRE_API void                         sfr_texture_free(SFR_Texture* texture);
 
+
+
+
+struct SFR_Font
+{
+  char*                                 name;
+  uint32_t                              texture_id;
+};
+
+SAFIRE_API SFR_Font*                    sfr_font(const char* name, const char* location);
+SAFIRE_API SFR_Font*                    sfr_font_bind(SFR_Font* font, char character);
 
 
 

@@ -27,19 +27,26 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
   char* name = NULL;
   char* texture_name = NULL;
   float weight = 0.0f;
+  vec2 size;
 
   switch (type) 
   {
   case TDS_ENEMY_TYPE_DEMON:
+  {
     name = sfr_str("enemy:demon");
     texture_name = sfr_str("demon");
     weight = 0.5f;
+    glm_vec2_copy((vec2){ 0.6f, 0.6f }, size);
+  }
     break;
   
   case TDS_ENEMY_TYPE_GIGACHAD:
+  {
     name = sfr_str("enemy:gigachad");
     texture_name = sfr_str("gigachad");
-    weight = 1.0f;
+    weight = 5.0f;
+    glm_vec2_copy((vec2){ 1.2f, 1.2f }, size);
+  }
     break;
   }  
 
@@ -51,20 +58,6 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
   SFR_Component* renderer = sfr_ecs_push_component(enemy, sfr_sprite_renderer());
   sfr_sprite_renderer_set_texture(renderer, texture_name);
 
-  SFR_Component* animator = sfr_ecs_push_component(enemy, sfr_sprite_animator(enemy));
-  sfr_sprite_animator_slice(animator, (ivec2){ 16, 16 });
-
-  ivec2 running[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 2.0f, 0.0f }, { 3.0f, 0.0f }, { 4.0f, 0.0f }, { 5.0f, 0.0f }, { 6.0f, 0.0f }};
-  float running_time[] = { 0.1f,           0.1f,           0.1f,           0.1f,           0.1f,           0.1f,           0.1f };
-  ivec2 idle[] = { { 7.0f, 0.0f }, { 8.0f, 0.0f }, { 9.0f, 0.0f }, { 10.0f, 0.0f }};
-  float idle_time[] = { 0.3f,           0.3f,           0.3f,           0.3f };
-  ivec2 death[] = { { 11.0f, 0.0f }, { 12.0f, 0.0f }, { 13.0f, 0.0f }};
-  float death_time[] = { 0.1f,           0.1f,     SFR_SPRITE_ANIMATOR_STOP };
-
-  sfr_sprite_animator_load_animation(animator, "running", running, running_time, 7);
-  sfr_sprite_animator_load_animation(animator, "idle", idle, idle_time, 4);
-  sfr_sprite_animator_load_animation(animator, "death", death, death_time, 3);
-
   SFR_Component* collider = sfr_ecs_push_component(enemy, sfr_collider2d(enemy->components[0]));
   
   SFR_Collider2D* collider_data = SFR_COMPONENT_CONVERT(SFR_Collider2D, collider);
@@ -72,12 +65,60 @@ SFR_Entity* tds_instantiate_enemy(vec2 spawn_pos, SFR_Component* enemy_handler, 
 
   SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, enemy->components[0]);
   glm_vec2_add(transform->position, spawn_pos, transform->position);
-  glm_vec2_copy((vec2){ 0.6f, 0.6f }, transform->scale);
+  glm_vec2_copy(size, transform->scale);
 
   sfr_str_free(&name);
   sfr_str_free(&texture_name);
 
   sfr_ecs_push_component(enemy, tds_destroy_target(60.0f)); // 3 min of having the dead body on the ground
+
+  // setting the animations
+  SFR_Component* animator = sfr_ecs_push_component(enemy, sfr_sprite_animator(enemy));
+
+  switch (type)
+  {
+  case TDS_ENEMY_TYPE_DEMON:
+  {
+    sfr_sprite_animator_slice(animator, (ivec2){ 16, 16 });
+
+    ivec2 running[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 2.0f, 0.0f }, { 3.0f, 0.0f }, { 4.0f, 0.0f }, { 5.0f, 0.0f }, { 6.0f, 0.0f }};
+    float running_time[] = { 0.1f,           0.1f,           0.1f,           0.1f,           0.1f,           0.1f,           0.1f };
+    ivec2 idle[] = { { 7.0f, 0.0f }, { 8.0f, 0.0f }, { 9.0f, 0.0f }, { 10.0f, 0.0f }};
+    float idle_time[] = { 0.3f,           0.3f,           0.3f,           0.3f };
+    ivec2 death[] = { { 11.0f, 0.0f }, { 12.0f, 0.0f }, { 13.0f, 0.0f }};
+    float death_time[] = { 0.1f,           0.1f,     SFR_SPRITE_ANIMATOR_STOP };
+
+    sfr_sprite_animator_load_animation(animator, "running", running, running_time, 7);
+    sfr_sprite_animator_load_animation(animator, "idle", idle, idle_time, 4);
+    sfr_sprite_animator_load_animation(animator, "death", death, death_time, 3);
+  } 
+    break;
+  case TDS_ENEMY_TYPE_GIGACHAD:
+  {
+    sfr_sprite_animator_slice(animator, (ivec2){ 32, 32 });
+
+    ivec2 running[] = { { 6, 0 }, { 7, 0 }, { 8, 0 }, { 9, 0 }, { 10, 0 }, { 11, 0 } };
+    float running_time[] = { 0.2f, 0.2f, 0.2f, 0.2f, 0.2f, 0.2f };
+    ivec2 idle[] = { { 0, 0 }, { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 0 }, { 5, 0 } };
+    float idle_time[] = { 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f };
+    ivec2 death[] = { { 23, 0 }, { 24, 0 }, { 25, 0 }, { 26, 0 } };
+    float death_time[] = { 0.1f,  0.1f, 0.1f, SFR_SPRITE_ANIMATOR_STOP };
+    ivec2 attack[] = { 
+      { 12, 0 }, { 13, 0 }, { 14, 0 }, { 15, 0 }, { 16, 0 }, { 17, 0 },
+      { 18, 0 }, { 19, 0 }, { 20, 0 }, { 21, 0 }, { 22, 0 }
+    };
+    float attack_time[] = { 
+      0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 
+      0.1f, 0.1f, 0.1f, 0.1f, 0.1f,  
+    };
+
+    sfr_sprite_animator_load_animation(animator, "running", running, running_time, 6);
+    sfr_sprite_animator_load_animation(animator, "idle", idle, idle_time, 6);
+    sfr_sprite_animator_load_animation(animator, "death", death, death_time, 4);
+    sfr_sprite_animator_load_animation(animator, "attack", attack, attack_time, 11);
+  }
+    break;
+  }
 
   return enemy;
 }
@@ -153,7 +194,8 @@ void _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta
       break;
 
     case TDS_ENEMY_TYPE_GIGACHAD:
-      _tds_enemy_controller_idle_gigachad(component);
+      // _tds_enemy_controller_idle_gigachad(component);
+      _tds_enemy_controller_idle_demon(component);
       break;
     }
     break;
@@ -166,7 +208,9 @@ void _tds_enemy_controller_behaviour_state(SFR_Component* component, float delta
       break;
 
     case TDS_ENEMY_TYPE_GIGACHAD:
-      _tds_enemy_controller_movement_gigachad(component, delta_time);
+      // _tds_enemy_controller_movement_gigachad(component, delta_time);
+      _tds_enemy_controller_movement_demon(component, delta_time);
+
       break;
     }
     break;
@@ -241,6 +285,7 @@ case 0:
   {
     transform->scale[X] = -transform->scale[X];
     controller->flip = true;
+    printf("flip\n");
   }
   else if (direction[X] >= 0.0f && controller->flip)
   {
@@ -309,6 +354,13 @@ void tds_enemy_change_state(SFR_Component* component, TDS_EnemyState state)
     case TDS_ENEMY_TYPE_GIGACHAD:
     {
       // TODO: ...
+      SFR_Scene* scene = sfr_ecs_get_active_scene();
+      tds_player_damage(scene_arena_get_player(scene), controller->damage);
+
+      SFR_Component* animator = sfr_get_component(component, SFR_SPRITE_ANIMATOR);
+      sfr_sprite_animator_start_animation(animator, "idle");
+
+      controller->after_hit_timer = sfr_timer_start(1.0f);
     }
     break;
     }

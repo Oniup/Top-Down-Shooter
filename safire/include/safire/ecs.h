@@ -104,9 +104,9 @@ typedef void (*component_free)          (SFR_Component*);
 struct SFR_Component 
 {
   bool                                  active;
+  char*                                 name;
 
   SFR_Uuid                              uuid;
-  char*                                 name;
   SFR_Entity*                           owner;
   void*                                 data;
   SFR_ComponentType                     type;

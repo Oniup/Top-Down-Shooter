@@ -70,6 +70,7 @@ void _sfr_sprite_renderer_update(SFR_Component* component, float delta_time)
 
   SFR_Vertex vertices[4];
   _sfr_sprite_renderer_translation(component, vertices);
+  
   if (!renderer->culled)
     sfr_pipeline_push_vertices(vertices, 4, renderer->shader);
 }

@@ -1,5 +1,9 @@
 # Top-Down Shooter Game Change logs
 
+## VERSION 0.0.7 (3/5/2022)
+
+* gigachad rendering and spawning
+
 ## VERSION 0.0.6 (29/5/2022)
 
 * added wave system

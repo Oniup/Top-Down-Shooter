@@ -37,6 +37,9 @@ struct SFR_Pipeline
 
   SFR_Texture**                         textures;
   uint32_t                              textures_count;
+  
+  SFR_Font**                            fonts;
+  uint32_t                              fonts_count;
 
   SFR_Window*                           window;
 
@@ -83,7 +86,6 @@ void                                    _sfr_renderer_flush();
 
 void                                    _sfr_renderer_increase_vertices_buffer(SFR_Vertex* vertices, uint32_t quad_count);
 
-void                                    _sfr_renderer_push_data(SFR_Vertex* vertices, uint32_t count, uint32_t shader);
 void                                    _sfr_renderer_clear_buffers();
 
 void                                    _sfr_renderer_free();
@@ -102,10 +104,13 @@ void sfr_pipeline_init(const char* window_title, int window_width, int window_he
   _pipeline->textures = NULL;
   _pipeline->shaders_count = 0;
   _pipeline->textures_count = 0;
+  _pipeline->fonts = NULL;
+  _pipeline->fonts_count = 0;
 
   // getting the max amount of textures that can be passed into the fragment shader
   glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &_pipeline->max_texture_count);
-  _pipeline->max_texture_count = 8;
+  printf("texture_count: %d\n", _pipeline->max_texture_count);
+
 
   sfr_pipeline_push_shader(
     sfr_shader(
@@ -418,7 +423,25 @@ void sfr_pipeline_clear_assets_stack()
 
 void sfr_pipeline_push_vertices(SFR_Vertex* vertices, uint32_t count, uint32_t shader) 
 {
-  _sfr_renderer_push_data(vertices, count, shader);
+  SAFIRE_ASSERT(count != 0, "[SAFIRE::PIPELINE_RENDERER_PUSH_DATA] failed to push data to the buffer as the vertices count is set to 0");
+
+  // everything in the buffer must be using the same shader
+  if (shader != _renderer->active_shader) 
+  {
+    if (_renderer->vertices != NULL) 
+    {
+      _sfr_renderer_flush();
+      _sfr_renderer_clear_buffers();
+    }
+    
+    glUseProgram(shader);
+
+    _renderer->active_shader = shader;
+  }
+
+  // increase and push the data to the batch renderer's buffers
+  uint32_t quad_count = count * 0.25;
+  _sfr_renderer_increase_vertices_buffer(vertices, quad_count);
 }
 
 void sfr_pipeline_print_vertices_debug() 
@@ -642,7 +665,7 @@ void _sfr_renderer_increase_vertices_buffer(SFR_Vertex* vertices, uint32_t quad_
 
       _renderer->active_textures[_renderer->active_textures_count] = (uint32_t)v[tr].texture_id;
 
-      // should never be larger than 14 characters, largets: u_textures[10]
+      // should never be larger than 14 characters, largest: u_textures[10]
       char variable[14];
       sprintf(variable, "u_textures[%u]", _renderer->active_textures_count);
 
@@ -699,29 +722,6 @@ void _sfr_renderer_increase_vertices_buffer(SFR_Vertex* vertices, uint32_t quad_
 
     tr += 4;
   }
-}
-
-void _sfr_renderer_push_data(SFR_Vertex* vertices, uint32_t count, uint32_t shader) 
-{
-  SAFIRE_ASSERT(count != 0, "[SAFIRE::PIPELINE_RENDERER_PUSH_DATA] failed to push data to the buffer as the vertices count is set to 0");
-
-  // everything in the buffer must be using the same shader
-  if (shader != _renderer->active_shader) 
-  {
-    if (_renderer->vertices != NULL) 
-    {
-      _sfr_renderer_flush();
-      _sfr_renderer_clear_buffers();
-    }
-    
-    glUseProgram(shader);
-
-    _renderer->active_shader = shader;
-  }
-
-  // increase and push the data to the batch renderer's buffers
-  uint32_t quad_count = count * 0.25;
-  _sfr_renderer_increase_vertices_buffer(vertices, quad_count);
 }
 
 void _sfr_renderer_clear_buffers() 
@@ -813,6 +813,8 @@ SFR_Window* sfr_window(const char* window_title, int window_width, int window_he
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // this is some blend function, idk too much about this
 
   glm_vec4_copy((vec4){ 0.0f, 0.0f, 0.0f, 1.0f }, window->clear_colour);
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // need to use 1 byte for colour in 
 
   return window;
 }

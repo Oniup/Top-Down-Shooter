@@ -7,27 +7,31 @@ extern "C" {
 
 #include "utils.h"
 
-typedef struct SFR_Entity                SFR_Entity;
-typedef struct SFR_Component             SFR_Component;
-typedef struct SFR_Vertex                SFR_Vertex;
+typedef struct SFR_Entity                 SFR_Entity;
+typedef struct SFR_Component              SFR_Component;
+typedef struct SFR_Vertex                 SFR_Vertex;
 
 // don't change these especially the transform and sprite renderer names as that will break the ecs 
-#define SFR_TRANSFORM                   "SFRtransform"
-#define SFR_COLLIDER2D                  "SFRcollider2d"
-#define SFR_SPRITE_RENDERER             "SFRsprite_renderer"
-#define SFR_SPRITE_ANIMATOR             "SFRsprite_animator"
+#define SFR_TRANSFORM                     "SFRtransform"
+#define SFR_COLLIDER2D                    "SFRcollider2d"
+#define SFR_SPRITE_RENDERER               "SFRsprite_renderer"
+#define SFR_SPRITE_ANIMATOR               "SFRsprite_animator"
 
-typedef struct SFR_Transform            SFR_Transform;
-typedef struct SFR_Collider2D           SFR_Collider2D;
-typedef struct SFR_SpriteRenderer       SFR_SpriteRenderer;
-typedef struct SFR_SpriteAnimator       SFR_SpriteAnimator;
-typedef struct SFR_SpriteAnimation      SFR_SpriteAnimation;
+typedef struct SFR_Transform              SFR_Transform;
+typedef struct SFR_Collider2D             SFR_Collider2D;
+typedef struct SFR_SpriteRenderer         SFR_SpriteRenderer;
+typedef struct SFR_SpriteAnimator         SFR_SpriteAnimator;
+typedef struct SFR_SpriteAnimation        SFR_SpriteAnimation;
 
-typedef enum   SFR_Collide2DType        SFR_Collide2DType;
+typedef struct SFR_TextRenderer           SFR_TextRenderer;
+typedef struct SFR_TextRendererChar       SFR_TextRendererChar;
+typedef struct SFR_Font                   SFR_Font;
 
-typedef struct SFR_Texture              SFR_Texture;
-typedef struct SFR_Shader               SFR_Shader;
-typedef uint64_t                        SFR_Uuid;
+typedef enum   SFR_Collide2DType          SFR_Collide2DType;
+
+typedef struct SFR_Texture                SFR_Texture;
+typedef struct SFR_Shader                 SFR_Shader;
+typedef uint64_t                          SFR_Uuid;
 
 
 
@@ -44,7 +48,7 @@ struct SFR_Transform
   vec4                                    rotation;
 };
 
-SAFIRE_API SFR_Component*  sfr_transform();
+SAFIRE_API SFR_Component*                 sfr_transform();
 
 
 
@@ -136,6 +140,21 @@ SAFIRE_API void                           sfr_sprite_animator_start_animation(SF
 SAFIRE_API void                           sfr_sprite_animator_start_animation_index(SFR_Component* component, uint32_t anim_index);
 
 SAFIRE_API void                           sfr_sprite_animator_slice(SFR_Component* component, ivec2 slice_size);
+
+
+
+
+struct SFR_TextRenderer
+{
+  SFR_TextRendererChar*                   characters;
+  uint32_t                                characters_count;
+
+  SFR_Font*                               font;
+  uint32_t                                size;
+};
+
+SAFIRE_API SFR_Component*                 sfr_text_renderer(SFR_Font* font);
+SAFIRE_API void                           sfr_text_renderer_set_size(SFR_Component* component, uint32_t size);
 
 
 
