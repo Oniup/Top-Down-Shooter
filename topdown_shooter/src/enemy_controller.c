@@ -285,7 +285,6 @@ case 0:
   {
     transform->scale[X] = -transform->scale[X];
     controller->flip = true;
-    printf("flip\n");
   }
   else if (direction[X] >= 0.0f && controller->flip)
   {

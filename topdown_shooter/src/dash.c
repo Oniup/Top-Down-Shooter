@@ -8,7 +8,7 @@ void                                    _tds_dash_update(SFR_Component* componen
 
 
 
-SFR_Component* tds_dash(float duration, float speed)
+SFR_Component* tds_dash(float duration, float cool_down_duration, float speed)
 {
   SFR_Component* component = sfr_ecs_component(TDS_DASH, _tds_dash_update, NULL, NULL, NULL);
 
@@ -16,6 +16,7 @@ SFR_Component* tds_dash(float duration, float speed)
   TDS_Dash* dash = SFR_COMPONENT_CONVERT(TDS_Dash, component);
 
   dash->duration = duration;
+  dash->cool_down_duration = cool_down_duration;
   dash->speed = speed;
   glm_vec2_copy((vec2){ 0.0f, 0.0f }, dash->direction);
   dash->is_dashing = false;
@@ -40,14 +41,23 @@ void tds_set_trail(SFR_Component* component, tds_trail_instantiate trail_instant
   }
 }
 
-void tds_enable_dash(SFR_Component* component,  vec2 direction)
+bool tds_enable_dash(SFR_Component* component,  vec2 direction)
 {
   component = sfr_get_component(component, TDS_DASH);
   TDS_Dash* dash = SFR_COMPONENT_CONVERT(TDS_Dash, component);
 
-  dash->is_dashing = true;
+  // checking if the cool down has finished
+  if (sfr_timer_finished(&dash->timer))
+  {
+    dash->is_dashing = true;
+    glm_vec2_copy(direction, dash->direction);
 
-  dash->timer = sfr_timer_start(dash->duration);
+    dash->timer = sfr_timer_start(dash->duration);
+
+    return true;
+  }
+
+  return false;
 }
 
 void _tds_dash_update(SFR_Component* component, float delta_time)
@@ -57,6 +67,7 @@ void _tds_dash_update(SFR_Component* component, float delta_time)
   {
     if (sfr_timer_finished(&dash->timer))
     {
+      dash->timer = sfr_timer_start(dash->cool_down_duration);
       dash->is_dashing = false;
       return;
     }

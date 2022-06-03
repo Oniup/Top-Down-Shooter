@@ -15,7 +15,6 @@ void                                    _tds_player_controller_update(SFR_Compon
 
 void                                    _tds_player_controller_change_gun_sprite(SFR_Component* component, bool* has_shot);
 
-void                                    _tds_player_death_update(SFR_Component* component);
 void                                    _tds_player_alive_update(SFR_Component* component, float delta_time);
 
 
@@ -52,9 +51,7 @@ SFR_Component* tds_player_controller_create_instance()
 
   TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller);
 
-  controller->dash = sfr_ecs_push_component(player, tds_dash(1.0f, 8.0f));
-
-
+  controller->dash = sfr_ecs_push_component(player, tds_dash(0.3f, 2.0f, 10.0f));  
   
   SFR_Entity* player_gun = sfr_ecs_push_entity("Player Gun", "gun");
 
@@ -130,39 +127,44 @@ void tds_player_damage(SFR_Component* player_controller_comp, int damage)
   if (sfr_timer_finished(&timer))
   {    
     TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, player_controller_comp);
-    SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, player_controller_comp->owner->components[0]);
-
-    if (damage > 0.0f)
-      tds_instantiate_blood(transform->position, 2);
-
-    if (controller->health > 0)    
+    TDS_Dash* dash = SFR_COMPONENT_CONVERT(TDS_Dash, controller->dash);
+    
+    if (!dash->is_dashing)
     {
-      controller->health -= damage;    
-      scene_arena_set_player_health(sfr_ecs_get_active_scene(), controller->health);
+      SFR_Transform* transform = SFR_COMPONENT_CONVERT(SFR_Transform, player_controller_comp->owner->components[0]);
 
-      if (controller->health < 1)
+      if (damage > 0.0f)
+        tds_instantiate_blood(transform->position, 2);
+
+      if (controller->health > 0)    
       {
-        SFR_Component* animator = sfr_get_component(player_controller_comp, SFR_SPRITE_ANIMATOR);
-        sfr_sprite_animator_start_animation(animator, "death");
+        controller->health -= damage;    
+        scene_arena_set_player_health(sfr_ecs_get_active_scene(), controller->health);
 
-        uint32_t index = sfr_ecs_entity_find_index_uuid(0, controller->gun->uuid);
-        sfr_ecs_erase_entity(index);
-        controller->gun = NULL;
-
-        uint32_t count = 0;
-        SFR_Entity** enemies = sfr_ecs_find_list_entities("enemy", &count);
-        for (uint32_t i = 0; i < count; i++)
+        if (controller->health < 1)
         {
-          tds_enemy_damage(enemies[i], 1000);
+          SFR_Component* animator = sfr_get_component(player_controller_comp, SFR_SPRITE_ANIMATOR);
+          sfr_sprite_animator_start_animation(animator, "death");
+
+          uint32_t index = sfr_ecs_entity_find_index_uuid(0, controller->gun->uuid);
+          sfr_ecs_erase_entity(index);
+          controller->gun = NULL;
+
+          uint32_t count = 0;
+          SFR_Entity** enemies = sfr_ecs_find_list_entities("enemy", &count);
+          for (uint32_t i = 0; i < count; i++)
+          {
+            tds_enemy_damage(enemies[i], 1000);
+          }
+
+          free(enemies);
         }
 
-        free(enemies);
+        timer = sfr_timer_start(2.0f);
       }
-
-      timer = sfr_timer_start(2.0f);
+      else
+        timer = sfr_timer_start(FLT_MAX); 
     }
-    else
-      timer = sfr_timer_start(FLT_MAX);
   }
 }
 
@@ -170,9 +172,7 @@ void _tds_player_controller_update(SFR_Component* component, float delta_time)
 {
   TDS_PlayerController* controller = ((TDS_PlayerController*)component->data);
 
-  if (controller->health < 1)
-    _tds_player_death_update(component);
-  else
+  if (controller->health > 0)
     _tds_player_alive_update(component, delta_time);
 }
 
@@ -220,11 +220,6 @@ void _tds_player_controller_change_gun_sprite(SFR_Component* component, bool* ha
   }
 }
 
-void _tds_player_death_update(SFR_Component* component)
-{
-
-}
-
 void _tds_player_alive_update(SFR_Component* component, float delta_time)
 {
   TDS_PlayerController* controller = SFR_COMPONENT_CONVERT(TDS_PlayerController, component);
@@ -240,46 +235,53 @@ void _tds_player_alive_update(SFR_Component* component, float delta_time)
     0.0f, 0.1f, 0.0f
   };
 
-
-  vec3 direction = { 0, 0, 0 };
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A) && transform->position[X] > -11.2f) 
-    direction[X] = -1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_D) && transform->position[X] < 11.2f) 
-    direction[X] = 1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_S) && transform->position[Y] > -11.2f) 
-    direction[Y] = -1;
-  if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_W) && transform->position[Y] < 11.2f) 
-    direction[Y] = 1;
-
-  if (direction[X] != 0 || direction[Y] != 0) 
+  if (!dash->is_dashing)
   {
-    static bool flipped_x = false;
-    if (direction[X] < -0.0f && !flipped_x) 
+    vec3 direction = { 0, 0, 0 };
+    if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_A) && transform->position[X] > -11.2f) 
+      direction[X] = -1;
+    if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_D) && transform->position[X] < 11.2f) 
+      direction[X] = 1;
+    if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_S) && transform->position[Y] > -11.2f) 
+      direction[Y] = -1;
+    if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_W) && transform->position[Y] < 11.2f) 
+      direction[Y] = 1;
+
+    if (direction[X] != 0 || direction[Y] != 0) 
     {
-      transform->scale[X] = -transform->scale[X];
-      offset_gun[X] = -offset_gun[X];
-      flipped_x = true;
-    } 
-    else if (direction[X] > 0.0f && flipped_x) 
-    {
-      transform->scale[X] = -transform->scale[X];
-      offset_gun[X] = -offset_gun[X];
-      flipped_x = false;
+      static bool flipped_x = false;
+      if (direction[X] < -0.0f && !flipped_x) 
+      {
+        transform->scale[X] = -transform->scale[X];
+        offset_gun[X] = -offset_gun[X];
+        flipped_x = true;
+      } 
+      else if (direction[X] > 0.0f && flipped_x) 
+      {
+        transform->scale[X] = -transform->scale[X];
+        offset_gun[X] = -offset_gun[X];
+        flipped_x = false;
+      }
+      
+      float mag = sqrtf(glm_vec2_dot(direction, direction));
+      glm_vec2_divs(direction, mag, direction);
+
+      bool apply_direction = true;
+      if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_LEFT_SHIFT))
+      {
+        apply_direction = !tds_enable_dash(controller->dash, direction);
+      }
+
+      if (apply_direction)
+      {
+        glm_vec2_scale(direction, controller->move_speed * delta_time, direction);
+        glm_vec2_add(direction, transform->position, transform->position);
+      }
+
+      animation = 1;
     }
-    
-    float mag = sqrtf(glm_vec2_dot(direction, direction));
-    glm_vec2_divs(direction, mag, direction);
-
-    if (sfr_input_keyboard(SFR_INPUT_PRESS, SFR_KEY_LEFT_SHIFT))
-    {
-
-    }
-
-    glm_vec2_scale(direction, controller->move_speed * delta_time, direction);
-    glm_vec2_add(direction, transform->position, transform->position);
-
-    animation = 1;
   }
+  
 
   if (animation != last_animation) 
   {

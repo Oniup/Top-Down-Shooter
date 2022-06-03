@@ -143,8 +143,7 @@ void _tds_enemy_handler_late_update(SFR_Component* component, float late_delta_t
           // }
           else // just spawn the generic demon enemy
           {
-            // tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_DEMON, handler->player);
-            tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_GIGACHAD, handler->player);
+            tds_instantiate_enemy(location, component, TDS_ENEMY_TYPE_DEMON, handler->player);            
             
             spawn_cost += TDS_ENEMY_HANDLER_COST_DEMON;
           }
