@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(safire VERSION 0.1.1 LANGUAGES C)
+project(safire VERSION 0.1.3 LANGUAGES C)
 
 set(SAFIRE_NAME safire)
 
@@ -36,3 +36,13 @@ target_include_directories(
   PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/dependencies"
   PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/"
 )
+
+add_custom_target(safire_shaders
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+  ${CMAKE_CURRENT_BINARY_DIR}/shaders
+)
+add_custom_target(safire_textures
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/textures
+  ${CMAKE_CURRENT_BINARY_DIR}/textures
+)
+add_dependencies(${SAFIRE_NAME} safire_shaders safire_textures)

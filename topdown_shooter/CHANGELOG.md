@@ -1,5 +1,9 @@
 # Top-Down Shooter Game Change logs
 
+## VERSION 0.0.7 (6/7/2022)
+
+* automatically moves the assets to the binary directory when building through cmake
+
 ## VERSION 0.0.7 (3/5/2022)
 
 * gigachad rendering and spawning

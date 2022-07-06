@@ -1,5 +1,9 @@
 # Safire Change logs
 
+## VERSION 0.1.3 (6/7/2022)
+
+* automatically moves the assets to the binary directory when building through cmake
+
 ## VERSION 0.1.2 (31/5/2022)
 
 * increase collision detection performance

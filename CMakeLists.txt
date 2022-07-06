@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(shooter_game VERSION 0.0.3 LANGUAGES C)
+project(shooter_game VERSION 0.0.7 LANGUAGES C)
 
 add_subdirectory(safire)
 
@@ -25,3 +25,9 @@ target_link_libraries(
   ${CMAKE_PROJECT_NAME} 
   PRIVATE safire
 )
+
+add_custom_target(shooter_game_art
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/topdown_shooter/art
+  ${CMAKE_CURRENT_BINARY_DIR}/art
+)
+add_dependencies(${CMAKE_PROJECT_NAME} shooter_game_art)
