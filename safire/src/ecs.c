@@ -522,6 +522,7 @@ SFR_Entity* sfr_ecs_push_entity(const char* name, const char* tag)
 
       _ecs->entities[c]->name = _sfr_ecs_name_duplicate_check(name);
 
+      // Why am i setting this twice???
       _ecs->entities[c]->name = sfr_str(name);
       _ecs->entities[c]->uuid = sfr_rand_uint64();
       _ecs->entities[c]->tag = tag != NULL ? sfr_str(tag) : NULL;

@@ -11,7 +11,7 @@ add_subdirectory(dependencies/glfw)
 find_package(OpenGL REQUIRED)
 
 file(GLOB_RECURSE SAFIRE_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*.c")
-file(GLOB_RECURSE SAFIRE_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include/safire*.h")
+file(GLOB_RECURSE SAFIRE_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include/*.h")
 
 add_library(
   glad STATIC

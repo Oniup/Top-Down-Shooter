@@ -1,11 +1,23 @@
 #include "../include/safire/utils.h"
 
 #include "../include/safire/components.h"
+#include "../include/safire/ecs.h"
 
 #include <time.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#if !defined(NDEBUG) || defined(__MINGW32__) || !defined(_WIN32)
+
+void* internal_sfr_convert_component(SFR_Component* component)
+{
+  SAFIRE_ASSERT(component, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component given doesn't exist");
+  SAFIRE_ASSERT(component->data, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component's custom data isn't the target type");
+  return component->data;
+}
+
+#endif
 
 
 

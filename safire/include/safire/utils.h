@@ -42,17 +42,12 @@ extern "C" {
 #define A 3
 
 
+#if !defined(NDEBUG) || defined(__MINGW32__) || !defined(_WIN32)
 
-
-#if !defined(NDEBUG) || defined(__MINGW32__) || !defined(__WIN32)
+void* internal_sfr_convert_component(struct SFR_Component* component);
 
 // for some reason MSVC doesn't like this syntax
-#define SFR_COMPONENT_CONVERT(Ty, component) ({\
-  SAFIRE_ASSERT(component != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component given doesn't exist");\
-  Ty* result = ((Ty*)component->data);\
-  SAFIRE_ASSERT(result != NULL, "[SAFIRE::COMPONENT_CONVERT]: failed to convert component custom data as the component's custom data isn't the target type");\
-  result;\
-})\
+#define SFR_COMPONENT_CONVERT(Ty, component) (Ty*)internal_sfr_convert_component(component)
 
 #else
 

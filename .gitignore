@@ -1,3 +1,27 @@
-.vscode/*
-build/*
-bin/*
+# Build
+build/
+bin/
+
+# CMake
+*.cmake
+cmake_install.txt
+CMakeCache.txt
+CMakeFiles/
+
+# JetBrains Rider
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Visual Studio
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+*.sln
+.vs/
+out/
+
+# Other
+*.pc
+*.swp

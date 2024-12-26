@@ -44,7 +44,7 @@ void scene_arena_function_pointer(SFR_Scene* scene)
 void _scene_arena_start(SFR_Scene* scene) 
 {
   scene->data = (TDS_Arena*)malloc(sizeof(TDS_Arena));
-  TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
+  TDS_Arena* arena = (TDS_Arena*)scene->data;
   
   sfr_window_set_clear(sfr_pipeline_get_window(), (vec4){ 0.14f, 0.19f, 0.17f, 1.0f });
 
@@ -61,7 +61,7 @@ void _scene_arena_start(SFR_Scene* scene)
 
 void _scene_arena_update(SFR_Scene* scene, float delta_time) 
 {
-  TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
+  TDS_Arena* arena = (TDS_Arena*)scene->data;
 
   SFR_Transform* player_health_transform = SFR_COMPONENT_CONVERT(SFR_Transform, arena->player_health->owner->components[0]);
   SFR_Transform* player_transform = SFR_COMPONENT_CONVERT(SFR_Transform, arena->player->owner->components[0]);
@@ -197,7 +197,7 @@ void _scene_arena_load_assets(SFR_Scene* scene)
 
 void scene_arena_set_player_health(SFR_Scene* scene, uint32_t health)
 {
-  TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
+  TDS_Arena* arena = (TDS_Arena*)scene->data;
 
   float uv_size = 16.0f / (4.0f * 16.0f);
   vec2 uv_left;
@@ -231,6 +231,6 @@ void scene_arena_set_player_health(SFR_Scene* scene, uint32_t health)
 
 SFR_Component* scene_arena_get_player(SFR_Scene* scene)
 {
-  TDS_Arena* arena = SFR_COMPONENT_CONVERT(TDS_Arena, scene);
+  TDS_Arena* arena = (TDS_Arena*)scene->data;
   return arena->player;
 }
